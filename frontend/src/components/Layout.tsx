@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   BarChart3,
   Box,
@@ -43,6 +43,7 @@ const navItems: NavItem[] = [
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
