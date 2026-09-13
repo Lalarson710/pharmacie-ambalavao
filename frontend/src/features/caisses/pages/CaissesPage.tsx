@@ -1,12 +1,21 @@
+import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { PageTabs } from '@/components/PageTabs';
 import { caisses, mouvementsCaisse } from '@/data/mockData';
 import { formatCurrency, formatDateTime, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
 import type { Caisse, MouvementCaisse } from '@/types';
 
+const caisseTabs = [
+  { id: 'caisses', label: 'Caisse' },
+  { id: 'mouvements', label: 'Mouvements' },
+];
+
 export function CaissesPage() {
+  const [activeTab, setActiveTab] = useState('caisses');
+
   const columns: Column<Caisse>[] = [
     { key: 'id', label: '#' },
     {
@@ -91,21 +100,31 @@ export function CaissesPage() {
         subtitle={`${caisses.length} caisse(s) enregistrée(s)`}
       />
 
-      <SectionCard title="Liste des caisses">
-        <DataTable
-          data={caisses}
-          columns={columns}
-          emptyMessage="Aucune caisse enregistrée."
-        />
-      </SectionCard>
+      <PageTabs
+        tabs={caisseTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      <SectionCard title="Mouvements de caisse" subtitle={`${mouvementsCaisse.length} mouvement(s)`}>
-        <DataTable
-          data={mouvementsCaisse}
-          columns={mouvementColumns}
-          emptyMessage="Aucun mouvement de caisse."
-        />
-      </SectionCard>
+      {activeTab === 'caisses' && (
+        <SectionCard title="Liste des caisses">
+          <DataTable
+            data={caisses}
+            columns={columns}
+            emptyMessage="Aucune caisse enregistrée."
+          />
+        </SectionCard>
+      )}
+
+      {activeTab === 'mouvements' && (
+        <SectionCard title="Mouvements de caisse" subtitle={`${mouvementsCaisse.length} mouvement(s)`}>
+          <DataTable
+            data={mouvementsCaisse}
+            columns={mouvementColumns}
+            emptyMessage="Aucun mouvement de caisse."
+          />
+        </SectionCard>
+      )}
     </div>
   );
 }

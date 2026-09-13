@@ -1,12 +1,23 @@
+import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { PageTabs } from '@/components/PageTabs';
 import { statistiquesVentes, produitsPlusVendus, chiffreAffaires, ventes } from '@/data/mockData';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import type { Vente, ProduitPlusVendu } from '@/types';
 
+const statistiquesTabs = [
+  { id: 'resume', label: 'Résumé des ventes' },
+  { id: 'ca', label: "Chiffre d'affaires" },
+  { id: 'ventes', label: 'Ventes' },
+  { id: 'produits', label: 'Produits les plus vendus' },
+];
+
 export function StatistiquesPage() {
+  const [activeTab, setActiveTab] = useState('resume');
+
   const venteColumns: Column<Vente>[] = [
     { key: 'id', label: '#' },
     { key: 'numero', label: 'N°' },
@@ -46,7 +57,13 @@ export function StatistiquesPage() {
         subtitle="Analyse des ventes et du chiffre d’affaires"
       />
 
-      <div className="stats-summary-grid">
+      <PageTabs
+        tabs={statistiquesTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
+      {activeTab === 'resume' && (
         <SectionCard title="Résumé des ventes">
           <div className="stat-mini-group">
             <div className="stat-mini">
@@ -59,7 +76,9 @@ export function StatistiquesPage() {
             </div>
           </div>
         </SectionCard>
+      )}
 
+      {activeTab === 'ca' && (
         <SectionCard title="Chiffre d’affaires">
           <div className="stat-mini-group">
             <div className="stat-mini">
@@ -76,23 +95,27 @@ export function StatistiquesPage() {
             </div>
           </div>
         </SectionCard>
-      </div>
+      )}
 
-      <SectionCard title="Ventes" subtitle={`${statistiquesVentes.ventes.length} vente(s)`}>
-        <DataTable
-          data={statistiquesVentes.ventes}
-          columns={venteColumns}
-          emptyMessage="Aucune vente."
-        />
-      </SectionCard>
+      {activeTab === 'ventes' && (
+        <SectionCard title="Ventes" subtitle={`${statistiquesVentes.ventes.length} vente(s)`}>
+          <DataTable
+            data={statistiquesVentes.ventes}
+            columns={venteColumns}
+            emptyMessage="Aucune vente."
+          />
+        </SectionCard>
+      )}
 
-      <SectionCard title="Produits plus vendus" subtitle={`${produitsPlusVendus.length} produit(s)`}>
-        <DataTable
-          data={produitsPlusVendus}
-          columns={produitColumns}
-          emptyMessage="Aucun produit vendu."
-        />
-      </SectionCard>
+      {activeTab === 'produits' && (
+        <SectionCard title="Produits plus vendus" subtitle={`${produitsPlusVendus.length} produit(s)`}>
+          <DataTable
+            data={produitsPlusVendus}
+            columns={produitColumns}
+            emptyMessage="Aucun produit vendu."
+          />
+        </SectionCard>
+      )}
     </div>
   );
 }

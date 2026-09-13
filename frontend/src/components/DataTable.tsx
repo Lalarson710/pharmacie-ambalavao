@@ -13,6 +13,8 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   emptyMessage?: string;
   striped?: boolean;
+  actions?: (row: T) => ReactNode;
+  actionsHeaderLabel?: string;
 }
 
 export function DataTable<T extends { id: number | string }>({
@@ -20,13 +22,20 @@ export function DataTable<T extends { id: number | string }>({
   columns,
   emptyMessage = 'Aucune donnée disponible.',
   striped = true,
+  actions,
+  actionsHeaderLabel = 'Actions',
 }: DataTableProps<T>) {
+  const hasActions = !!actions;
+  const allColumns = hasActions
+    ? [...columns, { key: '__actions', label: actionsHeaderLabel, className: 'actions-col' }]
+    : columns;
+
   return (
     <div className="table-container">
       <table className={`data-table ${striped ? 'striped' : ''}`}>
         <thead>
           <tr>
-            {columns.map((col) => (
+            {allColumns.map((col) => (
               <th
                 key={col.key}
                 className={col.headerClassName}
@@ -39,18 +48,20 @@ export function DataTable<T extends { id: number | string }>({
         <tbody>
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="empty-cell">
+              <td colSpan={allColumns.length} className="empty-cell">
                 {emptyMessage}
               </td>
             </tr>
           ) : (
             data.map((row, index) => (
               <tr key={row.id}>
-                {columns.map((col) => (
+                {allColumns.map((col) => (
                   <td key={col.key} className={col.className}>
-                    {col.render
-                      ? col.render(row, index)
-                      : (row as Record<string, unknown>)[col.key]?.toString() ?? '—'}
+                    {col.key === '__actions'
+                      ? actions(row)
+                      : col.render
+                        ? col.render(row, index)
+                        : (row as Record<string, unknown>)[col.key]?.toString() ?? '—'}
                   </td>
                 ))}
               </tr>

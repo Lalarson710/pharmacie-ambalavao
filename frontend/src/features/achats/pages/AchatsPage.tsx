@@ -1,12 +1,22 @@
+import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { PageTabs } from '@/components/PageTabs';
 import { achats, achatsLignes, fournisseurs } from '@/data/mockData';
 import { formatCurrency, formatDate, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
 import type { Achat, AchatLigne } from '@/types';
 
+const achatsTabs = [
+  { id: 'achats', label: 'Achats' },
+  { id: 'lignes', label: 'Lignes d’achat' },
+  { id: 'fournisseurs', label: 'Fournisseurs associés' },
+];
+
 export function AchatsPage() {
+  const [activeTab, setActiveTab] = useState('achats');
+
   const columns: Column<Achat>[] = [
     { key: 'id', label: '#' },
     { key: 'numero', label: 'N°' },
@@ -70,34 +80,46 @@ export function AchatsPage() {
         subtitle={`${achats.length} achat(s) enregistré(s)`}
       />
 
-      <SectionCard title="Liste des achats">
-        <DataTable
-          data={achats}
-          columns={columns}
-          emptyMessage="Aucun achat enregistré."
-        />
-      </SectionCard>
+      <PageTabs
+        tabs={achatsTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      <SectionCard title="Lignes d’achat" subtitle={`${achatsLignes.length} ligne(s)`}>
-        <DataTable
-          data={achatsLignes}
-          columns={ligneColumns}
-          emptyMessage="Aucune ligne d’achat."
-        />
-      </SectionCard>
+      {activeTab === 'achats' && (
+        <SectionCard title="Liste des achats">
+          <DataTable
+            data={achats}
+            columns={columns}
+            emptyMessage="Aucun achat enregistré."
+          />
+        </SectionCard>
+      )}
 
-      <SectionCard title="Fournisseurs associés" subtitle={`${fournisseurs.length} fournisseur(s)`}>
-        <DataTable
-          data={fournisseurs}
-          columns={[
-            { key: 'id', label: '#' },
-            { key: 'nom', label: 'Nom' },
-            { key: 'telephone', label: 'Téléphone' },
-            { key: 'email', label: 'Email' },
-          ]}
-          emptyMessage="Aucun fournisseur."
-        />
-      </SectionCard>
+      {activeTab === 'lignes' && (
+        <SectionCard title="Lignes d’achat" subtitle={`${achatsLignes.length} ligne(s)`}>
+          <DataTable
+            data={achatsLignes}
+            columns={ligneColumns}
+            emptyMessage="Aucune ligne d’achat."
+          />
+        </SectionCard>
+      )}
+
+      {activeTab === 'fournisseurs' && (
+        <SectionCard title="Fournisseurs associés" subtitle={`${fournisseurs.length} fournisseur(s)`}>
+          <DataTable
+            data={fournisseurs}
+            columns={[
+              { key: 'id', label: '#' },
+              { key: 'nom', label: 'Nom' },
+              { key: 'telephone', label: 'Téléphone' },
+              { key: 'email', label: 'Email' },
+            ]}
+            emptyMessage="Aucun fournisseur."
+          />
+        </SectionCard>
+      )}
     </div>
   );
 }

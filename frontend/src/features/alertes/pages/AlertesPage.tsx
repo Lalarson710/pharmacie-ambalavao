@@ -1,12 +1,22 @@
+import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { PageTabs } from '@/components/PageTabs';
 import { alertesStockFaible, alertesRupture, alertesPeremption } from '@/data/mockData';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import type { AlerteStockFaible, AlerteRupture, AlertePeremption } from '@/types';
 
+const alertesTabs = [
+  { id: 'stocks-faibles', label: 'Stocks faibles' },
+  { id: 'ruptures', label: 'Ruptures de stock' },
+  { id: 'peremptions', label: 'Péremptions proches' },
+];
+
 export function AlertesPage() {
+  const [activeTab, setActiveTab] = useState('stocks-faibles');
+
   const stockFaibleColumns: Column<AlerteStockFaible>[] = [
     { key: 'id', label: '#' },
     { key: 'nom', label: 'Produit' },
@@ -57,38 +67,41 @@ export function AlertesPage() {
         subtitle="Produits nécessitant une attention"
       />
 
-      <SectionCard
-        title="Stocks faibles"
-        subtitle={`${alertesStockFaible.length} alerte(s)`}
-      >
-        <DataTable
-          data={alertesStockFaible}
-          columns={stockFaibleColumns}
-          emptyMessage="Aucun stock faible."
-        />
-      </SectionCard>
+      <PageTabs
+        tabs={alertesTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      <SectionCard
-        title="Ruptures de stock"
-        subtitle={`${alertesRupture.length} alerte(s)`}
-      >
-        <DataTable
-          data={alertesRupture}
-          columns={ruptureColumns}
-          emptyMessage="Aucune rupture de stock."
-        />
-      </SectionCard>
+      {activeTab === 'stocks-faibles' && (
+        <SectionCard title="Stocks faibles" subtitle={`${alertesStockFaible.length} alerte(s)`}>
+          <DataTable
+            data={alertesStockFaible}
+            columns={stockFaibleColumns}
+            emptyMessage="Aucun stock faible."
+          />
+        </SectionCard>
+      )}
 
-      <SectionCard
-        title="Pérémations proches"
-        subtitle={`${alertesPeremption.length} alerte(s)`}
-      >
-        <DataTable
-          data={alertesPeremption}
-          columns={peremptionColumns}
-          emptyMessage="Aucune pérémentation proche."
-        />
-      </SectionCard>
+      {activeTab === 'ruptures' && (
+        <SectionCard title="Ruptures de stock" subtitle={`${alertesRupture.length} alerte(s)`}>
+          <DataTable
+            data={alertesRupture}
+            columns={ruptureColumns}
+            emptyMessage="Aucune rupture de stock."
+          />
+        </SectionCard>
+      )}
+
+      {activeTab === 'peremptions' && (
+        <SectionCard title="Péremptions proches" subtitle={`${alertesPeremption.length} alerte(s)`}>
+          <DataTable
+            data={alertesPeremption}
+            columns={peremptionColumns}
+            emptyMessage="Aucune pérémentation proche."
+          />
+        </SectionCard>
+      )}
     </div>
   );
 }

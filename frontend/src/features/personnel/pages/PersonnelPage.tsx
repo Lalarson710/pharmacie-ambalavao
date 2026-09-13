@@ -1,12 +1,21 @@
+import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
-import { personnel, utilisateurs, roles, permissions } from '@/data/mockData';
+import { PageTabs } from '@/components/PageTabs';
+import { personnel, utilisateurs } from '@/data/mockData';
 import { formatDate } from '@/utils/formatters';
-import type { Personnel, User, Role, Permission } from '@/types';
+import type { Personnel, User } from '@/types';
+
+const personnelTabs = [
+  { id: 'personnel', label: 'Personnel' },
+  { id: 'utilisateurs', label: 'Utilisateurs' },
+];
 
 export function PersonnelPage() {
+  const [activeTab, setActiveTab] = useState('personnel');
+
   const personnelColumns: Column<Personnel>[] = [
     { key: 'id', label: '#' },
     { key: 'nom', label: 'Nom' },
@@ -42,19 +51,6 @@ export function PersonnelPage() {
     },
   ];
 
-  const roleColumns: Column<Role>[] = [
-    { key: 'id', label: '#' },
-    { key: 'nom', label: 'Nom (technique)' },
-    { key: 'nom_affichage', label: 'Nom affiché' },
-  ];
-
-  const permissionColumns: Column<Permission>[] = [
-    { key: 'id', label: '#' },
-    { key: 'code', label: 'Code' },
-    { key: 'nom', label: 'Nom' },
-    { key: 'description', label: 'Description' },
-  ];
-
   return (
     <div className="page-container">
       <PageHeader
@@ -62,15 +58,23 @@ export function PersonnelPage() {
         subtitle={`${personnel.length} membre(s) enregistré(s)`}
       />
 
-      <SectionCard title="Liste du personnel">
-        <DataTable
-          data={personnel}
-          columns={personnelColumns}
-          emptyMessage="Aucun membre du personnel."
-        />
-      </SectionCard>
+      <PageTabs
+        tabs={personnelTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      <div className="two-col-grid">
+      {activeTab === 'personnel' && (
+        <SectionCard title="Liste du personnel">
+          <DataTable
+            data={personnel}
+            columns={personnelColumns}
+            emptyMessage="Aucun membre du personnel."
+          />
+        </SectionCard>
+      )}
+
+      {activeTab === 'utilisateurs' && (
         <SectionCard title="Utilisateurs" subtitle={`${utilisateurs.length} utilisateur(s)`}>
           <DataTable
             data={utilisateurs}
@@ -78,23 +82,7 @@ export function PersonnelPage() {
             emptyMessage="Aucun utilisateur."
           />
         </SectionCard>
-
-        <SectionCard title="Rôles" subtitle={`${roles.length} rôle(s)`}>
-          <DataTable
-            data={roles}
-            columns={roleColumns}
-            emptyMessage="Aucun rôle."
-          />
-        </SectionCard>
-      </div>
-
-      <SectionCard title="Permissions" subtitle={`${permissions.length} permission(s)`}>
-        <DataTable
-          data={permissions}
-          columns={permissionColumns}
-          emptyMessage="Aucune permission."
-        />
-      </SectionCard>
+      )}
     </div>
   );
 }

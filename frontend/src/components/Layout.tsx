@@ -1,25 +1,20 @@
-import { type ReactNode, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useState, type ReactNode } from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
 import {
   BarChart3,
   Box,
   Building,
   ClipboardList,
   FileText,
-  History,
   LayoutDashboard,
   LogOut,
+  Menu,
   Package,
-  PackageOpen,
-  Percent,
   PiggyBank,
   Receipt,
   ShoppingCart,
-  TrendingUp,
   Users,
   Warehouse,
-  Menu,
-  X,
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/store/authStore';
 
@@ -31,34 +26,24 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Tableau de bord', to: '/dashboard', icon: <LayoutDashboard size={18} /> },
-  { label: 'Produits', to: '/produits', icon: <Package size={18} /> },
-  { label: 'Lots', to: '/lots', icon: <PackageOpen size={18} /> },
-  { label: 'Catégories', to: '/categories', icon: <Box size={18} /> },
-  { label: 'Unités', to: '/unites', icon: <Percent size={18} /> },
-  { label: 'Stock', to: '/stock', icon: <Warehouse size={18} /> },
-  { label: 'Mouvements de stock', to: '/mouvements-stock', icon: <History size={18} /> },
-  { label: 'Inventaires', to: '/inventaires', icon: <ClipboardList size={18} /> },
   { label: 'Fournisseurs', to: '/fournisseurs', icon: <Building size={18} /> },
-  { label: 'Achats', to: '/achats', icon: <ShoppingCart size={18} /> },
+  { label: 'Produits', to: '/produits', icon: <Package size={18} /> },
   { label: 'Clients', to: '/clients', icon: <Users size={18} /> },
+  { label: 'Achats', to: '/achats', icon: <ShoppingCart size={18} /> },
+  { label: 'Stock', to: '/stock', icon: <Warehouse size={18} /> },
   { label: 'Ventes', to: '/ventes', icon: <Receipt size={18} /> },
-  { label: 'Factures', to: '/factures', icon: <FileText size={18} /> },
-  { label: 'Règlements', to: '/reglements', icon: <Percent size={18} /> },
   { label: 'Caisse', to: '/caisses', icon: <PiggyBank size={18} /> },
-  { label: 'Mouvements de caisse', to: '/mouvements-caisse', icon: <History size={18} /> },
   { label: 'Personnel', to: '/personnels', icon: <Users size={18} /> },
-  { label: 'Utilisateurs', to: '/utilisateurs', icon: <Users size={18} /> },
   { label: 'Rôles & Permissions', to: '/roles', icon: <Box size={18} /> },
-  { label: 'Alertes', to: '/alertes', icon: <Percent size={18} /> },
+  { label: 'Alertes', to: '/alertes', icon: <ClipboardList size={18} /> },
   { label: 'Statistiques', to: '/statistiques', icon: <BarChart3 size={18} /> },
   { label: 'Rapports', to: '/rapports', icon: <FileText size={18} /> },
   { label: 'Sauvegardes', to: '/sauvegardes', icon: <Package size={18} /> },
 ];
 
 export function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const { user, logout } = useAuth();
-  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
@@ -66,60 +51,38 @@ export function Layout() {
 
   return (
     <div className="app-layout">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="mobile-overlay"
-          onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
       {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          <div className="brand-lockup-sidebar">
-            <img
-              src="/logo pharmacie.png"
-              alt="Logo Pharmacie"
-              className="sidebar-logo"
-            />
-            <div>
-              <span className="sidebar-brand">PHARMA<span>GESTION</span> PRO</span>
-              <span className="sidebar-subtitle">Ambalavao</span>
-            </div>
-          </div>
           <button
-            className="sidebar-close"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Fermer le menu"
+            className="sidebar-toggle"
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? 'Développer le menu' : 'Replier le menu'}
+            title={collapsed ? 'Développer le menu' : 'Replier le menu'}
           >
-            <X size={20} />
+            <Menu size={18} />
           </button>
         </div>
 
         <nav className="sidebar-nav">
           <ul>
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.to;
-              return (
-                <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    className={`nav-link ${isActive ? 'active' : ''}`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </NavLink>
-                </li>
-              );
-            })}
+            {navItems.map((item) => (
+              <li key={item.to}>
+                <NavLink
+                  to={item.to}
+                  className={`nav-link ${location.pathname === item.to ? 'active' : ''}`}
+                  title={collapsed ? item.label : undefined}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </NavLink>
+              </li>
+            ))}
           </ul>
         </nav>
 
         <div className="sidebar-footer">
-          <button className="logout-button" onClick={handleLogout}>
+          <button className="logout-button" onClick={handleLogout} title="Déconnexion">
             <LogOut size={18} />
             <span>Déconnexion</span>
           </button>
@@ -127,15 +90,19 @@ export function Layout() {
       </aside>
 
       {/* Main content */}
-      <div className="main-content">
+      <div className={`main-content ${collapsed ? 'sidebar-collapsed' : ''}`}>
         <header className="top-header">
-          <button
-            className="menu-toggle"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Ouvrir le menu"
-          >
-            <Menu size={20} />
-          </button>
+          <div className="brand-lockup-header">
+            <img
+              src="/logo pharmacie.png"
+              alt="Logo Pharmacie"
+              className="header-logo"
+            />
+            <div>
+              <span className="header-brand">PHARMA<span>GESTION</span> PRO</span>
+              <span className="header-subtitle">Ambalavao</span>
+            </div>
+          </div>
           <div className="user-info">
             <span className="user-name">{user?.name ?? 'Utilisateur'}</span>
             <span className="user-role">

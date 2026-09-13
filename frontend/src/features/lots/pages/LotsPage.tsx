@@ -2,9 +2,9 @@ import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
-import { lots, produits } from '@/data/mockData';
+import { lots } from '@/data/mockData';
 import { formatDate, formatCurrency } from '@/utils/formatters';
-import type { Lot, Produit } from '@/types';
+import type { Lot } from '@/types';
 
 export function LotsPage() {
   const columns: Column<Lot>[] = [
@@ -33,21 +33,6 @@ export function LotsPage() {
     },
   ];
 
-  const produitColumns: Column<Produit>[] = [
-    { key: 'id', label: '#' },
-    { key: 'nom', label: 'Produit' },
-    { key: 'code_barres', label: 'Code-barres' },
-    {
-      key: 'prix_vente',
-      label: 'Prix de vente',
-      render: (row) => formatCurrency(row.prix_vente),
-    },
-    {
-      key: 'stock_minimum',
-      label: 'Stock min.',
-    },
-  ];
-
   return (
     <div className="page-container">
       <PageHeader
@@ -60,14 +45,6 @@ export function LotsPage() {
           data={lots}
           columns={columns}
           emptyMessage="Aucun lot enregistré."
-        />
-      </SectionCard>
-
-      <SectionCard title="Produits associés" subtitle={`${produits.length} produit(s)`}>
-        <DataTable
-          data={produits}
-          columns={produitColumns}
-          emptyMessage="Aucun produit."
         />
       </SectionCard>
     </div>
