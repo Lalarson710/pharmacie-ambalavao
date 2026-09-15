@@ -2,8 +2,8 @@ import { Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface PageToolbarProps {
-  search: string;
-  onSearch: (value: string) => void;
+  search?: string;
+  onSearch?: (value: string) => void;
   placeholder?: string;
   actions?: ReactNode;
   ariaLabel?: string;
@@ -18,16 +18,18 @@ export function PageToolbar({
 }: PageToolbarProps) {
   return (
     <div className="page-toolbar">
-      <div className="page-search">
-        <Search size={16} aria-hidden="true" />
-        <input
-          aria-label={ariaLabel}
-          type="search"
-          value={search}
-          onChange={(event) => onSearch(event.target.value)}
-          placeholder={placeholder}
-        />
-      </div>
+      {onSearch && search !== undefined && (
+        <div className="page-search">
+          <Search size={16} aria-hidden="true" />
+          <input
+            aria-label={ariaLabel}
+            type="search"
+            value={search}
+            onChange={(event) => onSearch(event.target.value)}
+            placeholder={placeholder}
+          />
+        </div>
+      )}
       {actions && <div className="page-toolbar-actions">{actions}</div>}
     </div>
   );

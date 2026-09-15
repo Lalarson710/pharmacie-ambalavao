@@ -1,0 +1,43 @@
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-switch-inner {
+  position: absolute;
+  inset: 0;
+  background: #ccc;
+  border-radius: 20px;
+  transition: 0.3s;
+}
+
+.toggle-switch-switch {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.toggle-switch input:checked + .toggle-switch-inner {
+  background: #67af1a;
+}
+
+.toggle-switch input:checked + .toggle-switch-inner .toggle-switch-switch {
+  transform: translateX(16px);
+}

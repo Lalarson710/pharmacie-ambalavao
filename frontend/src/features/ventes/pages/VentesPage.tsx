@@ -576,13 +576,7 @@ export function VentesPage() {
             data={filteredReglements}
             columns={reglementColumns}
             emptyMessage="Aucun règlement."
-            actionsHeaderLabel="Actions"
-            actions={(row) => (
-              <RowActions
-                onEdit={() => openEdit('reglement', row)}
-                onDelete={() => setDeleteTarget({ kind: 'reglement', item: row })}
-              />
-            )}
+            
           />
         </SectionCard>
       )}

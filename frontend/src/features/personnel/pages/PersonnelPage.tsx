@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Shield } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
@@ -14,15 +15,22 @@ import { formatDate } from '@/utils/formatters';
 import type { Personnel, Role, User } from '@/types';
 
 const personnelTabs = [
-  { id: 'personnel', label: 'Personnel' },
+  { id: 'roles', label: 'Rôles' },
+  { id: 'personnel', label: 'Personnels' },
   { id: 'utilisateurs', label: 'Utilisateurs' },
 ];
 
 type PersonnelModalKind = 'personnel' | 'utilisateur';
+type RolesModalKind = 'role';
 
 interface PersonnelModalState {
   kind: PersonnelModalKind;
   item: Personnel | User | null;
+}
+
+interface RolesModalState {
+  kind: RolesModalKind;
+  item: Role | null;
 }
 
 interface PersonnelDeleteTarget {
@@ -30,13 +38,29 @@ interface PersonnelDeleteTarget {
   item: Personnel | User;
 }
 
+interface RolesDeleteTarget {
+  kind: 'role';
+  item: Role;
+}
+
 export function PersonnelPage() {
-  const [activeTab, setActiveTab] = useState('personnel');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') === 'utilisateurs'
+      ? 'utilisateurs'
+      : 'personnel'
+  );
   const [personnelData, setPersonnelData] = useState<Personnel[]>(personnel);
   const [usersData, setUsersData] = useState<User[]>(utilisateurs);
-  const [modal, setModal] = useState<PersonnelModalState | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<PersonnelDeleteTarget | null>(null);
+  const [rolesData, setRolesData] = useState<Role[]>(roles);
+  const [modal, setModal] = useState<PersonnelModalState | RolesModalState | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PersonnelDeleteTarget | RolesDeleteTarget | null>(null);
   const [search, setSearch] = useState('');
+
+  // Utilisateurs tab state
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   const filteredPersonnel = search
     ? personnelData.filter((row) =>
@@ -63,6 +87,14 @@ export function PersonnelPage() {
       )
     : usersData;
 
+  const filteredRoles = search
+    ? rolesData.filter((row) =>
+        [row.id, row.nom, row.nom_affichage]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(search.toLowerCase()))
+      )
+    : rolesData;
+
   const personnelColumns: Column<Personnel>[] = [
     { key: 'id', label: '#' },
     { key: 'nom', label: 'Nom' },
@@ -87,7 +119,27 @@ export function PersonnelPage() {
     },
   ];
 
+  const roleColumns: Column<Role>[] = [
+    { key: 'id', label: '#' },
+    { key: 'nom', label: 'Nom' },
+    { key: 'nom_affichage', label: 'Affichage' },
+  ];
+
   const utilisateurColumns: Column<User>[] = [
+    {
+      key: 'select',
+      label: '',
+      render: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedUserId === row.id}
+          onChange={() => {
+            setSelectedUserId(selectedUserId === row.id ? null : row.id);
+          }}
+          aria-label={`Sélectionner ${row.name}`}
+        />
+      ),
+    },
     { key: 'id', label: '#' },
     { key: 'name', label: 'Nom' },
     { key: 'email', label: 'Email' },
@@ -106,8 +158,34 @@ export function PersonnelPage() {
     setModal({ kind, item });
   };
 
+  const openAddRole = () => {
+    setModal({ kind: 'role', item: null });
+  };
+
+  const openEditRole = (item: Role) => {
+    setModal({ kind: 'role', item });
+  };
+
   const handleSave = (formData: Record<string, unknown>) => {
     if (!modal) return;
+
+    if (modal.kind === 'role') {
+      const roleData = {
+        nom: String(formData.nom),
+        nom_affichage: String(formData.nom_affichage),
+      };
+
+      setRolesData((prev) => {
+        if (modal.item) {
+          return prev.map((row) =>
+            row.id === modal.item?.id ? { ...row, ...roleData } : row
+          );
+        }
+
+        const nextId = prev.length > 0 ? Math.max(...prev.map((row) => row.id)) + 1 : 1;
+        return [...prev, { id: nextId, ...roleData }];
+      });
+    }
 
     if (modal.kind === 'personnel') {
       const personnelData = {
@@ -167,14 +245,16 @@ export function PersonnelPage() {
 
     if (deleteTarget.kind === 'personnel') {
       setPersonnelData((prev) => prev.filter((row) => row.id !== deleteTarget.item.id));
-    } else {
+    } else if (deleteTarget.kind === 'utilisateur') {
       setUsersData((prev) => prev.filter((row) => row.id !== deleteTarget.item.id));
+    } else if (deleteTarget.kind === 'role') {
+      setRolesData((prev) => prev.filter((row) => row.id !== deleteTarget.item.id));
     }
 
     setDeleteTarget(null);
   };
 
-  const getInitialData = (item: Personnel | User | null) => {
+  const getInitialData = (item: Personnel | User | Role | null) => {
     if (!modal) return {};
 
     if (modal.kind === 'personnel') {
@@ -192,11 +272,19 @@ export function PersonnelPage() {
       };
     }
 
-    const row = item as User | null;
+    if (modal.kind === 'utilisateur') {
+      const row = item as User | null;
+      return {
+        name: row?.name ?? '',
+        email: row?.email ?? '',
+        role_id: row?.role_id ? String(row.role_id) : '',
+      };
+    }
+
+    const row = item as Role | null;
     return {
-      name: row?.name ?? '',
-      email: row?.email ?? '',
-      role_id: row?.role_id ? String(row.role_id) : '',
+      nom: row?.nom ?? '',
+      nom_affichage: row?.nom_affichage ?? '',
     };
   };
 
@@ -213,6 +301,11 @@ export function PersonnelPage() {
       if (!formData.name) errors.name = 'Le nom est obligatoire.';
       if (!formData.email) errors.email = 'L’email est obligatoire.';
       if (!formData.role_id) errors.role_id = 'Le rôle est obligatoire.';
+    }
+
+    if (modal?.kind === 'role') {
+      if (!formData.nom) errors.nom = 'Le nom est obligatoire.';
+      if (!formData.nom_affichage) errors.nom_affichage = "Le nom d'affichage est obligatoire.";
     }
 
     return errors;
@@ -333,6 +426,35 @@ export function PersonnelPage() {
       );
     }
 
+    if (modal.kind === 'role') {
+      return (
+        <>
+          <div className="form-field">
+            <label htmlFor="role-nom">Nom *</label>
+            <input
+              id="role-nom"
+              name="nom"
+              type="text"
+              className="inline-input"
+              onChange={(e) => onChange('nom', e.target.value)}
+            />
+            {errors.nom && <span className="form-error">{errors.nom}</span>}
+          </div>
+          <div className="form-field">
+            <label htmlFor="role-affichage">Nom d'affichage *</label>
+            <input
+              id="role-affichage"
+              name="nom_affichage"
+              type="text"
+              className="inline-input"
+              onChange={(e) => onChange('nom_affichage', e.target.value)}
+            />
+            {errors.nom_affichage && <span className="form-error">{errors.nom_affichage}</span>}
+          </div>
+        </>
+      );
+    }
+
     return (
       <>
         <div className="form-field">
@@ -390,9 +512,34 @@ export function PersonnelPage() {
         onSearch={setSearch}
         placeholder="Rechercher dans l’onglet..."
         actions={
-          <button type="button" className="btn-primary" onClick={() => openAdd(activeTab === 'personnel' ? 'personnel' : 'utilisateur')}>
-            <Plus size={15} /> Ajouter
-          </button>
+          <>
+            {activeTab === 'roles' && (
+              <button type="button" className="btn-primary" onClick={openAddRole}>
+                <Plus size={15} /> Ajouter un rôle
+              </button>
+            )}
+            {activeTab === 'personnel' && (
+              <button type="button" className="btn-primary" onClick={() => openAdd('personnel')}>
+                <Plus size={15} /> Ajouter
+              </button>
+            )}
+            {activeTab === 'utilisateurs' && (
+              <>
+                <button type="button" className="btn-primary" onClick={() => openAdd('utilisateur')}>
+                  <Plus size={15} /> Ajouter
+                </button>
+                {selectedUserId && (
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => navigate(`/personnels/permissions?user_id=${selectedUserId}`)}
+                  >
+                    <Shield size={15} /> Permission
+                  </button>
+                )}
+              </>
+            )}
+          </>
         }
       />
 
@@ -413,6 +560,23 @@ export function PersonnelPage() {
               <RowActions
                 onEdit={() => openEdit('personnel', row)}
                 onDelete={() => setDeleteTarget({ kind: 'personnel', item: row })}
+              />
+            )}
+          />
+        </SectionCard>
+      )}
+
+      {activeTab === 'roles' && (
+        <SectionCard title="Liste des rôles" subtitle={`${rolesData.length} rôle(s)`}>
+          <DataTable
+            data={filteredRoles}
+            columns={roleColumns}
+            emptyMessage="Aucun rôle enregistré."
+            actionsHeaderLabel="Actions"
+            actions={(row) => (
+              <RowActions
+                onEdit={() => openEditRole(row)}
+                onDelete={() => setDeleteTarget({ kind: 'role', item: row })}
               />
             )}
           />
@@ -440,9 +604,11 @@ export function PersonnelPage() {
         open={Boolean(modal)}
         onClose={() => setModal(null)}
         title={
-          modal?.kind === 'personnel'
-            ? (modal?.item ? 'Modifier le membre' : 'Ajouter un membre')
-            : (modal?.item ? 'Modifier l’utilisateur' : 'Ajouter un utilisateur')
+          modal?.kind === 'role'
+            ? (modal?.item ? 'Modifier le rôle' : 'Ajouter un rôle')
+            : modal?.kind === 'personnel'
+              ? (modal?.item ? 'Modifier le membre' : 'Ajouter un membre')
+              : (modal?.item ? 'Modifier l’utilisateur' : 'Ajouter un utilisateur')
         }
         editItem={modal?.item ?? null}
         onSubmit={handleSave}
@@ -454,13 +620,21 @@ export function PersonnelPage() {
 
       <ConfirmModal
         open={Boolean(deleteTarget)}
-        title={deleteTarget?.kind === 'personnel' ? 'Supprimer le membre' : 'Supprimer l’utilisateur'}
+        title={
+          deleteTarget?.kind === 'role'
+            ? 'Supprimer le rôle'
+            : deleteTarget?.kind === 'personnel'
+              ? 'Supprimer le membre'
+              : 'Supprimer l’utilisateur'
+        }
         message={
           deleteTarget && deleteTarget.kind === 'personnel'
             ? `Voulez-vous vraiment supprimer le membre ${(deleteTarget.item as Personnel).nom} ?`
-            : deleteTarget
-              ? `Voulez-vous vraiment supprimer l’utilisateur ${(deleteTarget.item as User).name} ?`
-              : ''
+            : deleteTarget?.kind === 'role'
+              ? `Voulez-vous vraiment supprimer le rôle ${(deleteTarget.item as Role).nom_affichage} ?`
+              : deleteTarget
+                ? `Voulez-vous vraiment supprimer l’utilisateur ${(deleteTarget.item as User).name} ?`
+                : ''
         }
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}

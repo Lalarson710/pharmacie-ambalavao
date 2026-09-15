@@ -17,7 +17,7 @@ import { ClientsPage } from './features/clients/pages/ClientsPage';
 import { VentesPage } from './features/ventes/pages/VentesPage';
 import { CaissesPage } from './features/caisses/pages/CaissesPage';
 import { PersonnelPage } from './features/personnel/pages/PersonnelPage';
-import { RolesPage } from './features/roles/pages/RolesPage';
+import { PermissionsPage } from './features/personnel/pages/PermissionsPage';
 import { AlertesPage } from './features/alertes/pages/AlertesPage';
 import { StatistiquesPage } from './features/statistiques/pages/StatistiquesPage';
 import { RapportsPage } from './features/rapports/pages/RapportsPage';
@@ -65,7 +65,7 @@ const router = createBrowserRouter(
           <Route path="/ventes" element={<VentesPage />} />
           <Route path="/caisses" element={<CaissesPage />} />
           <Route path="/personnels" element={<PersonnelPage />} />
-          <Route path="/roles" element={<RolesPage />} />
+          <Route path="/personnels/permissions" element={<PermissionsPage />} />
           <Route path="/alertes" element={<AlertesPage />} />
           <Route path="/statistiques" element={<StatistiquesPage />} />
           <Route path="/rapports" element={<RapportsPage />} />

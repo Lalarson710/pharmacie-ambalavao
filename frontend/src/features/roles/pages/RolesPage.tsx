@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Check, User } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
@@ -9,7 +9,7 @@ import { PageToolbar } from '@/components/PageToolbar';
 import { RowActions } from '@/components/RowActions';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
-import { permissions, roles } from '@/data/mockData';
+import { permissions, roles, utilisateurs } from '@/data/mockData';
 import type { Permission, Role } from '@/types';
 
 const rolesTabs = [
@@ -24,41 +24,41 @@ interface RolesModalState {
   item: Role | Permission | null;
 }
 
+interface UserPermissionState {
+  permissionId: number;
+  allowed: boolean;
+}
+
 export function RolesPage() {
   const [activeTab, setActiveTab] = useState('roles');
   const [rolesData, setRolesData] = useState<Role[]>(roles);
-  const [permissionsData, setPermissionsData] = useState<Permission[]>(permissions);
   const [modal, setModal] = useState<RolesModalState | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
   const [search, setSearch] = useState('');
 
+  // Permissions tab state
+  const [selectedUserId, setSelectedUserId] = useState<number>(utilisateurs[0]?.id ?? 1);
+  const [userPermissions, setUserPermissions] = useState<UserPermissionState[]>(() =>
+    permissions.map((p) => ({
+      permissionId: p.id,
+      allowed: _getUserPermission(utilisateurs[0].id, p.id),
+    }))
+  );
+  const [permissionsSaved, setPermissionsSaved] = useState(false);
+
   const filteredRoles = search
-    ? rolesData.filter((row) =>
-        [row.id, row.nom, row.nom_affichage]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(search.toLowerCase()))
+    ? rolesData.filter(
+        (row) =>
+          [row.id, row.nom, row.nom_affichage]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(search.toLowerCase()))
       )
     : rolesData;
-
-  const filteredPermissions = search
-    ? permissionsData.filter((row) =>
-        [row.id, row.code, row.nom, row.description ?? '']
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(search.toLowerCase()))
-      )
-    : permissionsData;
 
   const roleColumns: Column<Role>[] = [
     { key: 'id', label: '#' },
     { key: 'nom', label: 'Nom' },
     { key: 'nom_affichage', label: 'Affichage' },
-  ];
-
-  const permissionColumns: Column<Permission>[] = [
-    { key: 'id', label: '#' },
-    { key: 'code', label: 'Code' },
-    { key: 'nom', label: 'Nom' },
-    { key: 'description', label: 'Description' },
   ];
 
   const openAddRole = () => {
@@ -90,20 +90,6 @@ export function RolesPage() {
       });
     }
 
-    if (modal.kind === 'permission') {
-      const permissionData = {
-        code: String(formData.code),
-        nom: String(formData.nom),
-        description: (formData.description as string) || null,
-      };
-
-      setPermissionsData((prev) =>
-        prev.map((row) =>
-          row.id === modal.item?.id ? { ...row, ...permissionData } : row
-        )
-      );
-    }
-
     setModal(null);
   };
 
@@ -132,17 +118,12 @@ export function RolesPage() {
     };
   };
 
-  const validate = (formData: Record<string, unknown>) => {
+  const validate = (formData: Record<string, unknown>): Record<string, string> => {
     const errors: Record<string, string> = {};
 
     if (modal?.kind === 'role') {
       if (!formData.nom) errors.nom = 'Le nom est obligatoire.';
-      if (!formData.nom_affichage) errors.nom_affichage = 'Le nom d’affichage est obligatoire.';
-    }
-
-    if (modal?.kind === 'permission') {
-      if (!formData.code) errors.code = 'Le code est obligatoire.';
-      if (!formData.nom) errors.nom = 'Le nom est obligatoire.';
+      if (!formData.nom_affichage) errors.nom_affichage = "Le nom d'affichage est obligatoire.";
     }
 
     return errors;
@@ -170,7 +151,7 @@ export function RolesPage() {
             {errors.nom && <span className="form-error">{errors.nom}</span>}
           </div>
           <div className="form-field">
-            <label htmlFor="role-affichage">Nom d’affichage *</label>
+            <label htmlFor="role-affichage">Nom d'affichage *</label>
             <input
               id="role-affichage"
               name="nom_affichage"
@@ -184,55 +165,48 @@ export function RolesPage() {
       );
     }
 
-    return (
-      <>
-        <div className="form-field">
-          <label htmlFor="permission-code">Code *</label>
-          <input
-            id="permission-code"
-            name="code"
-            type="text"
-            className="inline-input"
-            onChange={(e) => onChange('code', e.target.value)}
-          />
-          {errors.code && <span className="form-error">{errors.code}</span>}
-        </div>
-        <div className="form-field">
-          <label htmlFor="permission-nom">Nom *</label>
-          <input
-            id="permission-nom"
-            name="nom"
-            type="text"
-            className="inline-input"
-            onChange={(e) => onChange('nom', e.target.value)}
-          />
-          {errors.nom && <span className="form-error">{errors.nom}</span>}
-        </div>
-        <div className="form-field">
-          <label htmlFor="permission-description">Description</label>
-          <textarea
-            id="permission-description"
-            name="description"
-            className="inline-input"
-            rows={3}
-            onChange={(e) => onChange('description', e.target.value)}
-          />
-        </div>
-      </>
+    return null;
+  };
+
+  const selectedUser = utilisateurs.find((u) => u.id === selectedUserId) ?? utilisateurs[0];
+
+  const handleUserChange = (userId: number) => {
+    setSelectedUserId(userId);
+    setPermissionsSaved(false);
+    const user = utilisateurs.find((u) => u.id === userId);
+    setUserPermissions(
+      permissions.map((p) => ({
+        permissionId: p.id,
+        allowed: user ? _getUserPermission(userId, p.id) : false,
+      }))
     );
+  };
+
+  const togglePermission = (permissionId: number) => {
+    setPermissionsSaved(false);
+    setUserPermissions((prev) =>
+      prev.map((up) =>
+        up.permissionId === permissionId ? { ...up, allowed: !up.allowed } : up
+      )
+    );
+  };
+
+  const saveUserPermissions = () => {
+    setPermissionsSaved(true);
+    alert('Permissions enregistrées avec succès.');
   };
 
   return (
     <div className="page-container">
       <PageHeader
         title="Rôles & Permissions"
-        subtitle={`${rolesData.length} rôle(s) — ${permissionsData.length} permission(s)`}
+        subtitle={`${rolesData.length} rôle(s) — ${permissions.length} permission(s)`}
       />
 
       <PageToolbar
         search={search}
         onSearch={setSearch}
-        placeholder="Rechercher dans l’onglet..."
+        placeholder="Rechercher dans l'onglet..."
         actions={
           activeTab === 'roles' ? (
             <button type="button" className="btn-primary" onClick={openAddRole}>
@@ -266,19 +240,73 @@ export function RolesPage() {
       )}
 
       {activeTab === 'permissions' && (
-        <SectionCard title="Liste des permissions" subtitle={`${permissionsData.length} permission(s)`}>
-          <DataTable
-            data={filteredPermissions}
-            columns={permissionColumns}
-            emptyMessage="Aucune permission enregistrée."
-            actionsHeaderLabel="Actions"
-            actions={(row) => (
-              <RowActions
-                onEdit={() => openEdit('permission', row)}
-                editLabel="Modifier la permission"
-              />
-            )}
-          />
+        <SectionCard
+          title="Permissions utilisateur"
+          subtitle={`Permissions de « ${selectedUser.name} »`}
+        >
+          <div className="mb-4" style={{ maxWidth: '400px' }}>
+            <label htmlFor="permission-user" className="block mb-2 font-semibold text-sm">
+              <User size={14} className="inline mr-1" />
+              Utilisateur
+            </label>
+            <select
+              id="permission-user"
+              name="user_id"
+              className="inline-input"
+              value={selectedUserId}
+              onChange={(e) => handleUserChange(Number(e.target.value))}
+            >
+              {utilisateurs.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name} ({user.role?.nom_affichage ?? '—'})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            {permissions.map((permission) => {
+              const up = userPermissions.find((p) => p.permissionId === permission.id);
+              const isAllowed = up?.allowed ?? false;
+              return (
+                <div key={permission.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white">
+                  <div>
+                    <div className="font-medium text-sm">{permission.nom}</div>
+                    <div className="text-xs text-gray-500 font-mono">{permission.code}</div>
+                    {permission.description && (
+                      <div className="text-xs text-gray-400 mt-1">{permission.description}</div>
+                    )}
+                  </div>
+                  <label className="cursor-pointer relative inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={isAllowed}
+                      onChange={() => togglePermission(permission.id)}
+                      aria-label={`${isAllowed ? 'Autorisé' : 'Bloqué'} : ${permission.nom}`}
+                    />
+                    <div className={`w-14 h-7 rounded-full peer transition-colors ${isAllowed ? 'bg-green-500' : 'bg-red-400'}`}>
+                      <div className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${isAllowed ? 'translate-x-7' : ''}`} />
+                    </div>
+                    <span className={`ml-2 text-xs font-medium ${isAllowed ? 'text-green-600' : 'text-red-500'}`}>
+                      {isAllowed ? 'Autorisé' : 'Bloqué'}
+                    </span>
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4">
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={saveUserPermissions}
+              disabled={permissionsSaved}
+            >
+              <Check size={15} /> {permissionsSaved ? 'Enregistré' : 'Enregistrer les changements'}
+            </button>
+          </div>
         </SectionCard>
       )}
 
@@ -307,4 +335,26 @@ export function RolesPage() {
       />
     </div>
   );
+}
+
+function _getUserPermission(userId: number, permissionId: number): boolean {
+  // Admin (id=3) has all permissions
+  if (userId === 3) return true;
+  // Pharmacist (id=2) has limited permissions
+  if (userId === 2) {
+    const allowedCodes = [
+      'produit.view', 'stock.view', 'achat.view', 'vente.view',
+      'caisse.open', 'caisse.close', 'rapport.view', 'alerte.view',
+      'personnel.view', 'client.view', 'fournisseur.view', 'sauvegarde.view',
+    ];
+    const permission = permissions.find((p) => p.id === permissionId);
+    return permission ? allowedCodes.includes(permission.code) : false;
+  }
+  // Cashier (id=1) has minimal permissions
+  const allowedCodes = [
+    'produit.view', 'stock.view', 'vente.view', 'caisse.open',
+    'caisse.close', 'alerte.view', 'client.view', 'fournisseur.view',
+  ];
+  const permission = permissions.find((p) => p.id === permissionId);
+  return permission ? allowedCodes.includes(permission.code) : false;
 }

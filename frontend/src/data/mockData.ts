@@ -822,6 +822,12 @@ export const produitsPlusVendus: ProduitPlusVendu[] = [
     chiffre_affaires: 42.0,
   },
   {
+    id: 4,
+    nom: 'Vitamine C 1000mg',
+    quantite_vendue: 8,
+    chiffre_affaires: 48.0,
+  },
+  {
     id: 2,
     nom: 'Amoxicilline 500mg',
     quantite_vendue: 5,
@@ -832,12 +838,6 @@ export const produitsPlusVendus: ProduitPlusVendu[] = [
     nom: 'Crème Hydratante Visage',
     quantite_vendue: 3,
     chiffre_affaires: 28.5,
-  },
-  {
-    id: 4,
-    nom: 'Vitamine C 1000mg',
-    quantite_vendue: 8,
-    chiffre_affaires: 48.0,
   },
 ];
 

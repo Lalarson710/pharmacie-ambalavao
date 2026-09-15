@@ -13,6 +13,7 @@ import {
   PiggyBank,
   Receipt,
   ShoppingCart,
+  Shield,
   Users,
   Warehouse,
 } from 'lucide-react';
@@ -34,7 +35,6 @@ const navItems: NavItem[] = [
   { label: 'Ventes', to: '/ventes', icon: <Receipt size={18} /> },
   { label: 'Caisse', to: '/caisses', icon: <PiggyBank size={18} /> },
   { label: 'Personnel', to: '/personnels', icon: <Users size={18} /> },
-  { label: 'Rôles & Permissions', to: '/roles', icon: <Box size={18} /> },
   { label: 'Alertes', to: '/alertes', icon: <ClipboardList size={18} /> },
   { label: 'Statistiques', to: '/statistiques', icon: <BarChart3 size={18} /> },
   { label: 'Rapports', to: '/rapports', icon: <FileText size={18} /> },

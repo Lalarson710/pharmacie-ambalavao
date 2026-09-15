@@ -30,11 +30,12 @@ export function formatStatut(statut: string): string {
   const map: Record<string, string> = {
     brouillon: 'Brouillon',
     confirme: 'Confirmé',
+    confirmee: 'Confirmée',
     annule: 'Annulé',
+    annulee: 'Annulée',
     impayee: 'Impayée',
     partiellement_payee: 'Partiellement payée',
     payee: 'Payée',
-    annulee: 'Annulée',
     ouverte: 'Ouverte',
     fermee: 'Fermée',
   };
