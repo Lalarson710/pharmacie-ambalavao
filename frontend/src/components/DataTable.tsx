@@ -58,7 +58,7 @@ export function DataTable<T extends { id: number | string }>({
                 {allColumns.map((col) => (
                   <td key={col.key} className={col.className}>
                     {col.key === '__actions'
-                      ? actions(row)
+                      ? actions?.(row)
                       : col.render
                         ? col.render(row, index)
                         : (row as Record<string, unknown>)[col.key]?.toString() ?? '—'}

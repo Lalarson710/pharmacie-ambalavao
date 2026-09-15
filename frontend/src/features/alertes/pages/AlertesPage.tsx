@@ -4,8 +4,9 @@ import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
 import { PageTabs } from '@/components/PageTabs';
+import { PageToolbar } from '@/components/PageToolbar';
 import { alertesStockFaible, alertesRupture, alertesPeremption } from '@/data/mockData';
-import { formatDate, formatCurrency } from '@/utils/formatters';
+import { formatDate } from '@/utils/formatters';
 import type { AlerteStockFaible, AlerteRupture, AlertePeremption } from '@/types';
 
 const alertesTabs = [
@@ -16,6 +17,7 @@ const alertesTabs = [
 
 export function AlertesPage() {
   const [activeTab, setActiveTab] = useState('stocks-faibles');
+  const [search, setSearch] = useState('');
 
   const stockFaibleColumns: Column<AlerteStockFaible>[] = [
     { key: 'id', label: '#' },
@@ -60,11 +62,37 @@ export function AlertesPage() {
     { key: 'quantite', label: 'Quantité' },
   ];
 
+  const filteredStocks = search
+    ? alertesStockFaible.filter((r) =>
+        r.nom.toLowerCase().includes(search.toLowerCase())
+      )
+    : alertesStockFaible;
+
+  const filteredRuptures = search
+    ? alertesRupture.filter((r) =>
+        r.nom.toLowerCase().includes(search.toLowerCase())
+      )
+    : alertesRupture;
+
+  const filteredPeremptions = search
+    ? alertesPeremption.filter(
+        (r) =>
+          (r.produit?.nom ?? '').toLowerCase().includes(search.toLowerCase()) ||
+          r.numero_lot.toLowerCase().includes(search.toLowerCase())
+      )
+    : alertesPeremption;
+
   return (
     <div className="page-container">
       <PageHeader
         title="Alertes"
         subtitle="Produits nécessitant une attention"
+      />
+
+      <PageToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Rechercher dans les alertes..."
       />
 
       <PageTabs
@@ -76,7 +104,7 @@ export function AlertesPage() {
       {activeTab === 'stocks-faibles' && (
         <SectionCard title="Stocks faibles" subtitle={`${alertesStockFaible.length} alerte(s)`}>
           <DataTable
-            data={alertesStockFaible}
+            data={filteredStocks}
             columns={stockFaibleColumns}
             emptyMessage="Aucun stock faible."
           />
@@ -86,7 +114,7 @@ export function AlertesPage() {
       {activeTab === 'ruptures' && (
         <SectionCard title="Ruptures de stock" subtitle={`${alertesRupture.length} alerte(s)`}>
           <DataTable
-            data={alertesRupture}
+            data={filteredRuptures}
             columns={ruptureColumns}
             emptyMessage="Aucune rupture de stock."
           />
@@ -96,7 +124,7 @@ export function AlertesPage() {
       {activeTab === 'peremptions' && (
         <SectionCard title="Péremptions proches" subtitle={`${alertesPeremption.length} alerte(s)`}>
           <DataTable
-            data={alertesPeremption}
+            data={filteredPeremptions}
             columns={peremptionColumns}
             emptyMessage="Aucune pérémentation proche."
           />

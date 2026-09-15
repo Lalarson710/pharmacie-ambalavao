@@ -1,17 +1,4 @@
-export interface Role {
-  id: number;
-  nom: string;
-  nom_affichage: string;
-}
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  role_id: number | null;
-  role: Role | null;
-  permissions?: string[];
-}
+import type { User } from '@/types';
 
 export interface LoginCredentials {
   email: string;
@@ -27,3 +14,5 @@ export interface LoginResponse {
 export interface LogoutResponse {
   message: string;
 }
+
+export type { User };

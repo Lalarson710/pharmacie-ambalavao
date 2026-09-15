@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { Printer } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
 import { PageTabs } from '@/components/PageTabs';
+import { PageToolbar } from '@/components/PageToolbar';
 import { statistiquesVentes, produitsPlusVendus, chiffreAffaires, ventes } from '@/data/mockData';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import type { Vente, ProduitPlusVendu } from '@/types';
@@ -17,6 +19,7 @@ const statistiquesTabs = [
 
 export function StatistiquesPage() {
   const [activeTab, setActiveTab] = useState('resume');
+  const [search, setSearch] = useState('');
 
   const venteColumns: Column<Vente>[] = [
     { key: 'id', label: '#' },
@@ -50,11 +53,40 @@ export function StatistiquesPage() {
     },
   ];
 
+  const filteredVentes = search
+    ? ventes.filter(
+        (r) =>
+          r.numero.toLowerCase().includes(search.toLowerCase()) ||
+          (r.client?.nom ?? '').toLowerCase().includes(search.toLowerCase())
+      )
+    : statistiquesVentes.ventes;
+
+  const filteredProduits = search
+    ? produitsPlusVendus.filter((r) =>
+        r.nom.toLowerCase().includes(search.toLowerCase())
+      )
+    : produitsPlusVendus;
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="page-container">
       <PageHeader
         title="Statistiques"
         subtitle="Analyse des ventes et du chiffre d’affaires"
+      />
+
+      <PageToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Rechercher dans les statistiques..."
+        actions={
+          <button type="button" className="btn-primary" onClick={handlePrint}>
+            <Printer size={15} /> Imprimer
+          </button>
+        }
       />
 
       <PageTabs
@@ -100,7 +132,7 @@ export function StatistiquesPage() {
       {activeTab === 'ventes' && (
         <SectionCard title="Ventes" subtitle={`${statistiquesVentes.ventes.length} vente(s)`}>
           <DataTable
-            data={statistiquesVentes.ventes}
+            data={filteredVentes}
             columns={venteColumns}
             emptyMessage="Aucune vente."
           />
@@ -110,7 +142,7 @@ export function StatistiquesPage() {
       {activeTab === 'produits' && (
         <SectionCard title="Produits plus vendus" subtitle={`${produitsPlusVendus.length} produit(s)`}>
           <DataTable
-            data={produitsPlusVendus}
+            data={filteredProduits}
             columns={produitColumns}
             emptyMessage="Aucun produit vendu."
           />

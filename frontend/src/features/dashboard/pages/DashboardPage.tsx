@@ -1,14 +1,11 @@
 import {
   AlertTriangle,
-  BarChart3,
   Box,
   Calendar,
   CreditCard,
   Package,
-  PiggyBank,
   ShoppingCart,
   TrendingUp,
-  Users,
 } from 'lucide-react';
 import { dashboardData, produits, lots, ventes, factures, caisses, alertesStockFaible, alertesRupture, alertesPeremption, produitsPlusVendus, statistiquesVentes, chiffreAffaires } from '@/data/mockData';
 import type { DashboardData } from '@/types';

@@ -1,12 +1,25 @@
+import { useState } from 'react';
+import { Printer } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { PageToolbar } from '@/components/PageToolbar';
 import { rapports } from '@/data/mockData';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import type { Rapport } from '@/types';
 
 export function RapportsPage() {
+  const [search, setSearch] = useState('');
+
+  const filtered = search
+    ? rapports.filter(
+        (r) =>
+          r.type.toLowerCase().includes(search.toLowerCase()) ||
+          (r.description ?? '').toLowerCase().includes(search.toLowerCase())
+      )
+    : rapports;
+
   const columns: Column<Rapport>[] = [
     { key: 'id', label: '#' },
     { key: 'type', label: 'Type' },
@@ -28,6 +41,10 @@ export function RapportsPage() {
     { key: 'description', label: 'Description' },
   ];
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="page-container">
       <PageHeader
@@ -35,9 +52,20 @@ export function RapportsPage() {
         subtitle={`${rapports.length} rapport(s) enregistré(s)`}
       />
 
+      <PageToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Rechercher un rapport..."
+        actions={
+          <button type="button" className="btn-primary" onClick={handlePrint}>
+            <Printer size={15} /> Imprimer
+          </button>
+        }
+      />
+
       <SectionCard title="Liste des rapports">
         <DataTable
-          data={rapports}
+          data={filtered}
           columns={columns}
           emptyMessage="Aucun rapport enregistré."
         />

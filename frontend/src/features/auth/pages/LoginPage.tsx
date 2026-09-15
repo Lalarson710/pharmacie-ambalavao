@@ -1,4 +1,4 @@
-import { HelpCircle, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { useAuth } from '../store/authStore';
 import { LoginForm } from '../components/LoginForm';
 

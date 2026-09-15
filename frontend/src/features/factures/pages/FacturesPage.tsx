@@ -1,12 +1,26 @@
+import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { PageToolbar } from '@/components/PageToolbar';
+import { RowActions } from '@/components/RowActions';
 import { factures, reglements } from '@/data/mockData';
 import { formatCurrency, formatDate, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
 import type { Facture, Reglement } from '@/types';
 
 export function FacturesPage() {
+  const [search, setSearch] = useState('');
+
+  const filtered = search
+    ? factures.filter(
+        (r) =>
+          r.numero.toLowerCase().includes(search.toLowerCase()) ||
+          (r.vente?.client?.nom ?? '').toLowerCase().includes(search.toLowerCase()) ||
+          r.statut.toLowerCase().includes(search.toLowerCase())
+      )
+    : factures;
+
   const columns: Column<Facture>[] = [
     { key: 'id', label: '#' },
     { key: 'numero', label: 'N°' },
@@ -62,6 +76,10 @@ export function FacturesPage() {
     { key: 'reference', label: 'Référence' },
   ];
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="page-container">
       <PageHeader
@@ -69,11 +87,19 @@ export function FacturesPage() {
         subtitle={`${factures.length} facture(s) enregistrée(s)`}
       />
 
+      <PageToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Rechercher une facture..."
+      />
+
       <SectionCard title="Liste des factures">
         <DataTable
-          data={factures}
+          data={filtered}
           columns={columns}
           emptyMessage="Aucune facture enregistrée."
+          actionsHeaderLabel="Actions"
+          actions={() => <RowActions onPrint={handlePrint} />}
         />
       </SectionCard>
 

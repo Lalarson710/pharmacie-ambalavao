@@ -1,10 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import {
-  Edit2,
-  Trash2,
-  X,
-  Check,
-} from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
+import { Modal } from './Modal';
+import { ConfirmModal } from './ConfirmModal';
 
 export interface ActionHandlers<T> {
   onEdit?: (row: T) => void;
@@ -26,109 +23,83 @@ export function EntityActions<T extends { id: number | string }>({
   editInitial,
   confirmDeleteLabel = 'Supprimer cet élément ?',
 }: EntityActionsProps<T>) {
-  const [mode, setMode] = useState<'view' | 'edit' | 'confirmDelete'>('view');
-  const [formData, setFormData] = useState<Record<string, unknown>>(
-    editInitial ? editInitial(row) : {}
-  );
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
 
-  const close = () => {
-    setMode('view');
+  const closeEdit = () => {
+    setEditOpen(false);
     setFormData(editInitial ? editInitial(row) : {});
   };
 
   const startEdit = () => {
     setFormData(editInitial ? editInitial(row) : {});
-    setMode('edit');
+    setEditOpen(true);
   };
 
-  const startDelete = () => setMode('confirmDelete');
-
-  const cancelDelete = () => {
-    setMode('view');
+  const submitEdit = (data: Record<string, unknown>) => {
+    handlers.onEdit?.({ ...row, ...data } as T);
+    setEditOpen(false);
   };
 
+  const startDelete = () => setDeleteOpen(true);
+  const cancelDelete = () => setDeleteOpen(false);
   const confirmDelete = () => {
     handlers.onDelete?.(row);
-    setMode('view');
+    setDeleteOpen(false);
   };
-
-  const submitEdit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handlers.onEdit?.({ ...row, ...formData } as T);
-    setMode('view');
-  };
-
-  const handleFieldChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  if (mode === 'confirmDelete') {
-    return (
-      <div className="action-confirm">
-        <span className="action-confirm-text">{confirmDeleteLabel}</span>
-        <div className="action-confirm-buttons">
-          <button
-            type="button"
-            className="btn-danger btn-sm"
-            onClick={confirmDelete}
-          >
-            <Trash2 size={14} /> Supprimer
-          </button>
-          <button
-            type="button"
-            className="btn-ghost btn-sm"
-            onClick={cancelDelete}
-          >
-            <X size={14} /> Annuler
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (mode === 'edit' && renderEditForm) {
-    return (
-      <div className="action-edit">
-        {renderEditForm(
-          row,
-          close,
-          (data) => handlers.onEdit?.({ ...row, ...data } as T)
-        )}
-        <div className="action-edit-buttons">
-          <button type="button" className="btn-primary btn-sm" onClick={submitEdit}>
-            <Check size={14} /> Enregistrer
-          </button>
-          <button type="button" className="btn-ghost btn-sm" onClick={close}>
-            <X size={14} /> Annuler
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="action-buttons">
-      {handlers.onEdit && (
-        <button
-          type="button"
-          className="icon-button edit"
-          onClick={startEdit}
-          title="Modifier"
-        >
-          <Edit2 size={14} />
-        </button>
+    <>
+      <div className="action-buttons">
+        {handlers.onEdit && (
+          <button
+            type="button"
+            className="icon-button edit"
+            onClick={startEdit}
+            title="Modifier"
+            aria-label="Modifier"
+          >
+            <Edit2 size={14} />
+          </button>
+        )}
+        {handlers.onDelete && (
+          <button
+            type="button"
+            className="icon-button danger"
+            onClick={startDelete}
+            title="Supprimer"
+            aria-label="Supprimer"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
+      </div>
+
+      {editOpen && renderEditForm && (
+        <Modal open={editOpen} onClose={closeEdit} title="Modifier" size="md">
+          <div className="action-modal-body">
+            {renderEditForm(row, closeEdit, submitEdit)}
+            <div className="form-actions action-modal-actions">
+              <button type="button" className="btn-ghost btn-sm" onClick={closeEdit}>
+                Annuler
+              </button>
+              <button type="button" className="btn-primary btn-sm" onClick={() => submitEdit(formData)}>
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
-      {handlers.onDelete && (
-        <button
-          type="button"
-          className="icon-button danger"
-          onClick={startDelete}
-          title="Supprimer"
-        >
-          <Trash2 size={14} />
-        </button>
-      )}
-    </div>
+
+      <ConfirmModal
+        open={deleteOpen}
+        title="Confirmer la suppression"
+        message={confirmDeleteLabel}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
+    </>
   );
 }
 
