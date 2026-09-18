@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/store/authStore';
 import type { User } from '@/types';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 interface NavItem {
   label: string;
@@ -49,11 +50,21 @@ const ROLE_LABELS: Record<number, string> = {
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutConfirm(false);
     await logout();
+  };
+
+  const handleCancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   const hasPermission = (permission: string): boolean => {
@@ -111,7 +122,7 @@ export function Layout() {
         </nav>
 
         <div className="sidebar-footer">
-          <button className="logout-button" onClick={handleLogout} title="Déconnexion">
+          <button className="logout-button" onClick={handleLogoutClick} title="Déconnexion">
             <LogOut size={18} />
             <span>Déconnexion</span>
           </button>
@@ -137,6 +148,16 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+
+      <ConfirmModal
+        open={showLogoutConfirm}
+        title="Déconnexion"
+        message="Êtes-vous sûr de vouloir vous déconnecter ?"
+        confirmLabel="Se déconnecter"
+        cancelLabel="Annuler"
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+      />
     </div>
   );
 }

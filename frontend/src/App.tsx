@@ -26,35 +26,39 @@ import { useAuth } from './features/auth/store/authStore';
 import { RouterProvider } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
+const loadingStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: '100vh',
+  background: '#f6f5eb',
+};
+
+const spinnerStyle = {
+  width: '40px',
+  height: '40px',
+  border: '3px solid #e0e0e0',
+  borderTopColor: '#67af1a',
+  borderRadius: '50%',
+  animation: 'spin 1s linear infinite',
+  margin: '0 auto 16px',
+};
+
+const textStyle = {
+  color: '#5a6e6c',
+  fontSize: '14px',
+};
+
 function RootProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '100vh',
-        background: '#f6f5eb'
-      }}>
+      <div style={loadingStyle}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ 
-            width: '40px', 
-            height: '40px', 
-            border: '3px solid #e0e0e0', 
-            borderTopColor: '#67af1a', 
-            borderRadius: '50%', 
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }} />
-          <p style={{ color: '#5a6e6c', fontSize: '14px' }}>Chargement de l'application...</p>
+          <div style={spinnerStyle} />
+          <p style={textStyle}>Chargement de l'application...</p>
         </div>
-        <style jsx>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     );
   }
