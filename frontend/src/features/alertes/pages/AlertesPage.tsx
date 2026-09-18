@@ -1,86 +1,16 @@
 import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
-import { DataTable } from '@/components/DataTable';
-import type { Column } from '@/components/DataTable';
-import { SectionCard } from '@/components/SectionCard';
 import { PageTabs } from '@/components/PageTabs';
 import { PageToolbar } from '@/components/PageToolbar';
 import { alertesStockFaible, alertesRupture, alertesPeremption } from '@/data/mockData';
-import { formatDate } from '@/utils/formatters';
-import type { AlerteStockFaible, AlerteRupture, AlertePeremption } from '@/types';
-
-const alertesTabs = [
-  { id: 'stocks-faibles', label: 'Stocks faibles' },
-  { id: 'ruptures', label: 'Ruptures de stock' },
-  { id: 'peremptions', label: 'Péremptions proches' },
-];
+import { alertesTabs } from './tabs/tabsConfig';
+import { StocksFaiblesTab } from './tabs/StocksFaiblesTab';
+import { RupturesTab } from './tabs/RupturesTab';
+import { PeremptionsTab } from './tabs/PeremptionsTab';
 
 export function AlertesPage() {
   const [activeTab, setActiveTab] = useState('stocks-faibles');
   const [search, setSearch] = useState('');
-
-  const stockFaibleColumns: Column<AlerteStockFaible>[] = [
-    { key: 'id', label: '#' },
-    { key: 'nom', label: 'Produit' },
-    {
-      key: 'stock_minimum',
-      label: 'Stock min.',
-      render: (row) => row.stock_minimum,
-    },
-    {
-      key: 'quantite',
-      label: 'Qté en stock',
-      render: (row) =>
-        row.lots.reduce((sum, l) => sum + l.quantite, 0),
-    },
-  ];
-
-  const ruptureColumns: Column<AlerteRupture>[] = [
-    { key: 'id', label: '#' },
-    { key: 'nom', label: 'Produit' },
-    {
-      key: 'quantite',
-      label: 'Qté en stock',
-      render: (row) =>
-        row.lots.reduce((sum, l) => sum + l.quantite, 0),
-    },
-  ];
-
-  const peremptionColumns: Column<AlertePeremption>[] = [
-    { key: 'id', label: '#' },
-    {
-      key: 'produit',
-      label: 'Produit',
-      render: (row) => row.produit?.nom ?? '—',
-    },
-    { key: 'numero_lot', label: 'N° de lot' },
-    {
-      key: 'date_peremption',
-      label: 'Date de péremption',
-      render: (row) => formatDate(row.date_peremption),
-    },
-    { key: 'quantite', label: 'Quantité' },
-  ];
-
-  const filteredStocks = search
-    ? alertesStockFaible.filter((r) =>
-        r.nom.toLowerCase().includes(search.toLowerCase())
-      )
-    : alertesStockFaible;
-
-  const filteredRuptures = search
-    ? alertesRupture.filter((r) =>
-        r.nom.toLowerCase().includes(search.toLowerCase())
-      )
-    : alertesRupture;
-
-  const filteredPeremptions = search
-    ? alertesPeremption.filter(
-        (r) =>
-          (r.produit?.nom ?? '').toLowerCase().includes(search.toLowerCase()) ||
-          r.numero_lot.toLowerCase().includes(search.toLowerCase())
-      )
-    : alertesPeremption;
 
   return (
     <div className="page-container">
@@ -102,33 +32,15 @@ export function AlertesPage() {
       />
 
       {activeTab === 'stocks-faibles' && (
-        <SectionCard title="Stocks faibles" subtitle={`${alertesStockFaible.length} alerte(s)`}>
-          <DataTable
-            data={filteredStocks}
-            columns={stockFaibleColumns}
-            emptyMessage="Aucun stock faible."
-          />
-        </SectionCard>
+        <StocksFaiblesTab data={alertesStockFaible} search={search} />
       )}
 
       {activeTab === 'ruptures' && (
-        <SectionCard title="Ruptures de stock" subtitle={`${alertesRupture.length} alerte(s)`}>
-          <DataTable
-            data={filteredRuptures}
-            columns={ruptureColumns}
-            emptyMessage="Aucune rupture de stock."
-          />
-        </SectionCard>
+        <RupturesTab data={alertesRupture} search={search} />
       )}
 
       {activeTab === 'peremptions' && (
-        <SectionCard title="Péremptions proches" subtitle={`${alertesPeremption.length} alerte(s)`}>
-          <DataTable
-            data={filteredPeremptions}
-            columns={peremptionColumns}
-            emptyMessage="Aucune pérémentation proche."
-          />
-        </SectionCard>
+        <PeremptionsTab data={alertesPeremption} search={search} />
       )}
     </div>
   );

@@ -1,13 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import {
-  ChevronDown,
   Eye,
   EyeOff,
   LockKeyhole,
   UserRound,
 } from 'lucide-react';
-
-const roles = ['Pharmacien Titulaire', 'Pharmacien Adjoint', 'Préparateur'];
 
 interface LoginFormProps {
   onSubmit: (credentials: { email: string; password: string }) => Promise<void>;
@@ -16,7 +13,6 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSubmit, error, isLoading }: LoginFormProps) {
-  const [role, setRole] = useState(roles[0]);
   const [email, setEmail] = useState('p.dupont@pharmacie-centrale.fr');
   const [password, setPassword] = useState('pharmagestion2024');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,25 +26,6 @@ export function LoginForm({ onSubmit, error, isLoading }: LoginFormProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <label className="field-label" htmlFor="role">
-        Rôle / Profil <span>(Sélectionnez votre rôle)</span>
-      </label>
-      <div className="field-wrap select-wrap">
-        <select
-          id="role"
-          value={role}
-          onChange={(event) => setRole(event.target.value)}
-          disabled={isLoading}
-        >
-          {roles.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-        <ChevronDown size={16} aria-hidden="true" />
-      </div>
-
       <label className="field-label" htmlFor="email">
         Nom d'utilisateur ou Adresse Email
       </label>

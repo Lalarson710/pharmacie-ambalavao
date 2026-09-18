@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   BarChart3,
-  Box,
   Building,
   ClipboardList,
   FileText,
@@ -13,7 +12,6 @@ import {
   PiggyBank,
   Receipt,
   ShoppingCart,
-  Shield,
   Users,
   Warehouse,
 } from 'lucide-react';
