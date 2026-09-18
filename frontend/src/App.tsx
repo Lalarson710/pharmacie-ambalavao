@@ -24,27 +24,43 @@ import { RapportsPage } from './features/rapports/pages/RapportsPage';
 import { SauvegardesPage } from './features/sauvegardes/pages/SauvegardesPage';
 import { useAuth } from './features/auth/store/authStore';
 import { RouterProvider } from 'react-router-dom';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
-function ProtectedRoute() {
+function RootProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      // Redirection vers la page de login en conservant l'URL demandée
-      window.location.href = '/login';
-    }
-  }, [isAuthenticated, isLoading]);
 
   if (isLoading) {
     return (
-      <div className="page-container">
-        <p>Chargement…</p>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh',
+        background: '#f6f5eb'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            border: '3px solid #e0e0e0', 
+            borderTopColor: '#67af1a', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }} />
+          <p style={{ color: '#5a6e6c', fontSize: '14px' }}>Chargement de l'application...</p>
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
@@ -54,22 +70,59 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route path="/login" element={<LoginPage />} />
-      <Route element={<ProtectedRoute />}>
+      <Route element={<RootProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/fournisseurs" element={<FournisseursPage />} />
-          <Route path="/produits" element={<ProduitsPage />} />
-          <Route path="/clients" element={<ClientsPage />} />
-          <Route path="/achats" element={<AchatsPage />} />
-          <Route path="/stock" element={<StockPage />} />
-          <Route path="/ventes" element={<VentesPage />} />
-          <Route path="/caisses" element={<CaissesPage />} />
-          <Route path="/personnels" element={<PersonnelPage />} />
-          <Route path="/personnels/permissions" element={<PermissionsPage />} />
-          <Route path="/alertes" element={<AlertesPage />} />
-          <Route path="/statistiques" element={<StatistiquesPage />} />
-          <Route path="/rapports" element={<RapportsPage />} />
-          <Route path="/sauvegardes" element={<SauvegardesPage />} />
+          
+          <Route element={<ProtectedRoute permission="fournisseur.view" />}>
+            <Route path="/fournisseurs" element={<FournisseursPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="produit.view" />}>
+            <Route path="/produits" element={<ProduitsPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="client.view" />}>
+            <Route path="/clients" element={<ClientsPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="achat.view" />}>
+            <Route path="/achats" element={<AchatsPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="stock.view" />}>
+            <Route path="/stock" element={<StockPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="vente.view" />}>
+            <Route path="/ventes" element={<VentesPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="caisse.open" />}>
+            <Route path="/caisses" element={<CaissesPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="personnel.view" />}>
+            <Route path="/personnels" element={<PersonnelPage />} />
+            <Route path="/personnels/permissions" element={<PermissionsPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="alerte.view" />}>
+            <Route path="/alertes" element={<AlertesPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="statistique.view" />}>
+            <Route path="/statistiques" element={<StatistiquesPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="rapport.view" />}>
+            <Route path="/rapports" element={<RapportsPage />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute permission="sauvegarde.view" />}>
+            <Route path="/sauvegardes" element={<SauvegardesPage />} />
+          </Route>
+          
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Route>

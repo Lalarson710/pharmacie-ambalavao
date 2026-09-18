@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { LoginCredentials, LoginResponse, User } from '../types';
-import { utilisateurConnecte } from '@/data/mockData';
+import apiClient from '@/api/client';
+import { AxiosError } from 'axios';
 
 interface AuthState {
   token: string | null;
@@ -43,61 +44,72 @@ export const useAuthStore = create<AuthStore>()(
         set({ error: null });
       },
 
-      // ── Version statique : aucun appel API ──────────────────────────────
+      // ── Version API réelle ──────────────────────────────
       login: async (credentials: LoginCredentials) => {
         set({ isLoading: true, error: null });
 
-        // Simule un délai réseau minimal
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        try {
+          const response = await apiClient.post<LoginResponse>('/login', credentials);
+          const { user, token, message } = response.data;
 
-        // Validation statique — les identifiants de test sont ceux du mock
-        const validEmail = utilisateurConnecte.email;
-        const validPassword = 'pharmagestion2024';
-
-        if (
-          credentials.email === validEmail &&
-          credentials.password === validPassword
-        ) {
-          const response: LoginResponse = {
-            message: 'Connexion réussie.',
-            user: utilisateurConnecte,
-            token: 'static-token-pharmacie-ambalavao',
-          };
-
-          localStorage.setItem('auth_token', response.token);
-          localStorage.setItem('auth_user', JSON.stringify(response.user));
+          localStorage.setItem('auth_token', token);
+          localStorage.setItem('auth_user', JSON.stringify(user));
 
           set({
-            token: response.token,
-            user: response.user,
+            token,
+            user,
             isAuthenticated: true,
             isLoading: false,
           });
 
-          return response;
-        }
+          // Récupérer l'utilisateur complet avec rôle ET permissions via /user
+          try {
+            const meResponse = await apiClient.get<User>('/user');
+            const fullUser = meResponse.data;
+            localStorage.setItem('auth_user', JSON.stringify(fullUser));
+            set({ user: fullUser });
+          } catch (err) {
+            console.warn('Failed to fetch full user from /user:', err);
+            // On garde l'utilisateur du login
+          }
 
-        const message = 'Nom d\'utilisateur ou mot de passe incorrect.';
-        set({ error: message, isLoading: false, isAuthenticated: false });
-        throw new Error(message);
+          return response.data;
+        } catch (error: unknown) {
+          let message = 'Nom d\'utilisateur ou mot de passe incorrect.';
+          
+          if (error instanceof AxiosError && error.response?.data?.message) {
+            message = error.response.data.message;
+          } else if (error instanceof Error) {
+            message = error.message;
+          }
+          
+          set({ error: message, isLoading: false, isAuthenticated: false });
+          throw new Error(message);
+        }
       },
 
       logout: async () => {
         set({ isLoading: true });
 
-        // Simule un délai
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        try {
+          const token = get().token;
+          if (token) {
+            await apiClient.post('/logout');
+          }
+        } catch {
+          // Ignore logout API errors
+        } finally {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('auth_user');
 
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
-
-        set({
-          token: null,
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-        });
+          set({
+            token: null,
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+          });
+        }
       },
 
       fetchMe: async () => {
@@ -107,12 +119,19 @@ export const useAuthStore = create<AuthStore>()(
         }
         set({ isLoading: true });
 
-        // Version statique : utilise les données en localStorage ou le mock
-        const storedUser = localStorage.getItem('auth_user');
-        if (storedUser) {
-          set({ user: JSON.parse(storedUser) as User, isLoading: false });
-        } else {
-          set({ user: utilisateurConnecte, isLoading: false });
+        try {
+          const meResponse = await apiClient.get<User>('/user');
+          localStorage.setItem('auth_user', JSON.stringify(meResponse.data));
+          set({ user: meResponse.data, isLoading: false });
+        } catch {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('auth_user');
+          set({
+            token: null,
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
         }
       },
     }),

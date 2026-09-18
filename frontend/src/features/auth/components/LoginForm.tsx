@@ -13,8 +13,8 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSubmit, error, isLoading }: LoginFormProps) {
-  const [email, setEmail] = useState('p.dupont@pharmacie-centrale.fr');
-  const [password, setPassword] = useState('pharmagestion2024');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -37,6 +37,7 @@ export function LoginForm({ onSubmit, error, isLoading }: LoginFormProps) {
           onChange={(event) => setEmail(event.target.value)}
           required
           disabled={isLoading}
+          placeholder="Entrez votre email"
         />
         <UserRound size={16} aria-hidden="true" />
       </div>
@@ -53,6 +54,7 @@ export function LoginForm({ onSubmit, error, isLoading }: LoginFormProps) {
           onChange={(event) => setPassword(event.target.value)}
           required
           disabled={isLoading}
+          placeholder="Entrez votre mot de passe"
         />
         <button
           className="icon-button"

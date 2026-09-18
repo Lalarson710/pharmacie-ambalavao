@@ -1,13 +1,38 @@
+import { useEffect } from 'react';
 import { ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/authStore';
 import { LoginForm } from '../components/LoginForm';
+import { LoadingModal } from '@/components/LoadingModal';
 
 export function LoginPage() {
-  const { login, error, isLoading } = useAuth();
+  const { login, error, isLoading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Rediriger si déjà connecté (dans useEffect pour éviter le warning React)
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (credentials: { email: string; password: string }) => {
-    await login(credentials);
+    try {
+      await login(credentials);
+    } catch {
+      // L'erreur est déjà gérée dans le store (set error)
+      // On ne fait rien ici, le message s'affichera via la prop error
+    }
   };
+
+  // Afficher un état de chargement pendant la redirection
+  if (isAuthenticated) {
+    return (
+      <main className="login-page">
+        <LoadingModal open={true} message="Redirection..." />
+      </main>
+    );
+  }
 
   return (
     <main className="login-page">
@@ -62,7 +87,7 @@ export function LoginPage() {
       </section>
 
       <footer className="page-footer">
-        <span>© 2026 Pharmacie d’Ambalavao</span>
+        <span>© 2026 Pharmacie d'Ambalavao</span>
         <a href="#mentions-legales">Mentions légales</a>
         <a href="#aide">Aide</a>
         <span>Version 1.0.0</span>
@@ -70,6 +95,8 @@ export function LoginPage() {
             <ShieldCheck size={13} /> Connexion sécurisée
         </span>
     </footer>
+
+      <LoadingModal open={isLoading} message="Connexion en cours..." />
     </main>
   );
 }

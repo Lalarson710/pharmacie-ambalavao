@@ -37,6 +37,7 @@ class PermissionSeeder extends Seeder
             ['code' => 'client.view', 'nom' => 'Consulter les clients'],
             ['code' => 'client.create', 'nom' => 'Créer un client'],
             ['code' => 'client.update', 'nom' => 'Modifier un client'],
+            ['code' => 'client.delete', 'nom' => 'Supprimer un client'],
 
             ['code' => 'fournisseur.view', 'nom' => 'Consulter les fournisseurs'],
             ['code' => 'fournisseur.create', 'nom' => 'Créer un fournisseur'],
@@ -57,11 +58,6 @@ class PermissionSeeder extends Seeder
             ['code' => 'user.delete', 'nom' => 'Supprimer un utilisateur'],
 
             ['code' => 'permission.manage', 'nom' => 'Gérer les permissions'],
-            
-            ['code' => 'client.view', 'nom' => 'Consulter les clients'],
-            ['code' => 'client.create', 'nom' => 'Créer un client'],
-            ['code' => 'client.update', 'nom' => 'Modifier un client'],
-            ['code' => 'client.delete', 'nom' => 'Supprimer un client'],
 
             ['code' => 'alerte.view', 'nom' => 'Consulter les alertes'],
             

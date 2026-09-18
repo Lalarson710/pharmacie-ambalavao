@@ -132,11 +132,6 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
-            \App\Application\Personnel\Ports\RolePermissionRepositoryInterface::class,
-            \App\Infrastructure\Personnel\RolePermissionRepository::class
-        );
-
-        $this->app->bind(
             \App\Application\Personnel\Ports\PermissionRepositoryInterface::class,
             \App\Infrastructure\Personnel\PermissionRepository::class
         );

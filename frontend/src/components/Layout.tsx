@@ -16,28 +16,36 @@ import {
   Warehouse,
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/store/authStore';
+import type { User } from '@/types';
 
 interface NavItem {
   label: string;
   to: string;
   icon: ReactNode;
+  permission?: string;
 }
 
 const navItems: NavItem[] = [
-  { label: 'Tableau de bord', to: '/dashboard', icon: <LayoutDashboard size={18} /> },
-  { label: 'Fournisseurs', to: '/fournisseurs', icon: <Building size={18} /> },
-  { label: 'Produits', to: '/produits', icon: <Package size={18} /> },
-  { label: 'Clients', to: '/clients', icon: <Users size={18} /> },
-  { label: 'Achats', to: '/achats', icon: <ShoppingCart size={18} /> },
-  { label: 'Stock', to: '/stock', icon: <Warehouse size={18} /> },
-  { label: 'Ventes', to: '/ventes', icon: <Receipt size={18} /> },
-  { label: 'Caisse', to: '/caisses', icon: <PiggyBank size={18} /> },
-  { label: 'Personnel', to: '/personnels', icon: <Users size={18} /> },
-  { label: 'Alertes', to: '/alertes', icon: <ClipboardList size={18} /> },
-  { label: 'Statistiques', to: '/statistiques', icon: <BarChart3 size={18} /> },
-  { label: 'Rapports', to: '/rapports', icon: <FileText size={18} /> },
-  { label: 'Sauvegardes', to: '/sauvegardes', icon: <Package size={18} /> },
+  { label: 'Tableau de bord', to: '/dashboard', icon: <LayoutDashboard size={18} />, permission: 'dashboard.view' },
+  { label: 'Fournisseurs', to: '/fournisseurs', icon: <Building size={18} />, permission: 'fournisseur.view' },
+  { label: 'Produits', to: '/produits', icon: <Package size={18} />, permission: 'produit.view' },
+  { label: 'Clients', to: '/clients', icon: <Users size={18} />, permission: 'client.view' },
+  { label: 'Achats', to: '/achats', icon: <ShoppingCart size={18} />, permission: 'achat.view' },
+  { label: 'Stock', to: '/stock', icon: <Warehouse size={18} />, permission: 'stock.view' },
+  { label: 'Ventes', to: '/ventes', icon: <Receipt size={18} />, permission: 'vente.view' },
+  { label: 'Caisse', to: '/caisses', icon: <PiggyBank size={18} />, permission: 'caisse.open' },
+  { label: 'Personnel', to: '/personnels', icon: <Users size={18} />, permission: 'personnel.view' },
+  { label: 'Alertes', to: '/alertes', icon: <ClipboardList size={18} />, permission: 'alerte.view' },
+  { label: 'Statistiques', to: '/statistiques', icon: <BarChart3 size={18} />, permission: 'statistique.view' },
+  { label: 'Rapports', to: '/rapports', icon: <FileText size={18} />, permission: 'rapport.view' },
+  { label: 'Sauvegardes', to: '/sauvegardes', icon: <Package size={18} />, permission: 'sauvegarde.view' },
 ];
+
+const ROLE_LABELS: Record<number, string> = {
+  1: 'Pharmacien Titulaire',
+  2: 'Pharmacien Adjoint',
+  3: 'Préparateur',
+};
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -48,9 +56,31 @@ export function Layout() {
     await logout();
   };
 
+  const hasPermission = (permission: string): boolean => {
+    if (!user?.permissions) return false;
+    return user.permissions.some((p) => p.code === permission);
+  };
+
+  const visibleNavItems = navItems.filter((item) => {
+    if (!item.permission) return true;
+    return hasPermission(item.permission);
+  });
+
+  const getRoleDisplay = () => {
+    if (user?.role?.nom_affichage) {
+      return user.role.nom_affichage;
+    }
+    if (user?.role_id && ROLE_LABELS[user.role_id]) {
+      return ROLE_LABELS[user.role_id];
+    }
+    if (user?.role_id) {
+      return `Rôle #${user.role_id}`;
+    }
+    return 'Rôle non défini';
+  };
+
   return (
     <div className="app-layout">
-      {/* Sidebar */}
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <button
@@ -65,7 +95,7 @@ export function Layout() {
 
         <nav className="sidebar-nav">
           <ul>
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
@@ -88,15 +118,10 @@ export function Layout() {
         </div>
       </aside>
 
-      {/* Main content */}
       <div className={`main-content ${collapsed ? 'sidebar-collapsed' : ''}`}>
         <header className="top-header">
           <div className="brand-lockup-header">
-            <img
-              src="/logo pharmacie.png"
-              alt="Logo Pharmacie"
-              className="header-logo"
-            />
+            <img src="/logo pharmacie.png" alt="Logo Pharmacie" className="header-logo" />
             <div>
               <span className="header-brand">PHARMA<span>GESTION</span> PRO</span>
               <span className="header-subtitle">Ambalavao</span>
@@ -104,9 +129,7 @@ export function Layout() {
           </div>
           <div className="user-info">
             <span className="user-name">{user?.name ?? 'Utilisateur'}</span>
-            <span className="user-role">
-              {user?.role?.nom_affichage ?? 'Rôle inconnu'}
-            </span>
+            <span className="user-role">{getRoleDisplay()}</span>
           </div>
         </header>
 

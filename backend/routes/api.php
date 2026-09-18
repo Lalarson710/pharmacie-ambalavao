@@ -37,8 +37,10 @@ use App\Http\Controllers\Facture\ImpressionFactureController;
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 
 Route::get('/user', function (Request $request) {
-    return $request->user();
+    $user = $request->user()->load(['role', 'permissions']);
+    return $user;
 })->middleware('auth:sanctum');
+
 
 Route::post('/logout', [LogoutController::class, 'logout'])
     ->middleware('auth:sanctum');
