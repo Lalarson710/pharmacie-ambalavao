@@ -1036,13 +1036,18 @@ a { color: inherit; }
 }
 
 .confirm-modal {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 18px;
 }
 
 .confirm-modal > svg {
   color: #b45309;
+  width: 24px;
+  height: 24px;
+  justify-self: center;
 }
 
 .confirm-modal p {
@@ -1053,10 +1058,13 @@ a { color: inherit; }
 }
 
 .confirm-modal-actions {
+  grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
 }
 
 .modal-body .form-grid {
