@@ -5,21 +5,23 @@ import { RowActions } from '@/components/RowActions';
 import type { User } from '@/types';
 
 interface UtilisateursTabProps {
-  usersData: User[];
+  usersData: User[] | undefined;
   search: string;
   selectedUserId: number | null;
   setSelectedUserId: (userId: number | null) => void;
   onOpenEdit: (item: User) => void;
   onDelete: (item: User) => void;
+  loading?: boolean;
 }
 
 export function UtilisateursTab({
-  usersData,
+  usersData = [],
   search,
   selectedUserId,
   setSelectedUserId,
   onOpenEdit,
   onDelete,
+  loading = false,
 }: UtilisateursTabProps) {
   const filteredUsers = search
     ? usersData.filter((row) =>
@@ -53,6 +55,18 @@ export function UtilisateursTab({
       render: (row) => row.role?.nom_affichage ?? '—',
     },
   ];
+
+  // Message pendant le chargement
+  if (loading) {
+    return (
+      <SectionCard title="Utilisateurs" subtitle="Chargement...">
+        <div className="table-loading">
+          <div className="loading-spinner" />
+          <p>Chargement des utilisateurs...</p>
+        </div>
+      </SectionCard>
+    );
+  }
 
   return (
     <SectionCard title="Utilisateurs" subtitle={`${usersData.length} utilisateur(s)`}>

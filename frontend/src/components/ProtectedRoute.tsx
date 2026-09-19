@@ -18,7 +18,7 @@ export function ProtectedRoute({ permission }: ProtectedRouteProps) {
   }
 
   if (permission && user?.permissions) {
-    const hasPermission = user.permissions.some((p) => p.code === permission);
+    const hasPermission = user.permissions.some((p) => p.code === permission && p.pivot?.autorise === true);
     if (!hasPermission) {
       return <Navigate to="/dashboard" replace />;
     }

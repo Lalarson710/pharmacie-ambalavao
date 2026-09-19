@@ -10,9 +10,10 @@ interface PersonnelTabProps {
   search: string;
   onOpenEdit: (item: Personnel) => void;
   onDelete: (item: Personnel) => void;
+  loading?: boolean;          // ← AJOUT
 }
 
-export function PersonnelTab({ personnelData, search, onOpenEdit, onDelete }: PersonnelTabProps) {
+export function PersonnelTab({ personnelData, search, onOpenEdit, onDelete, loading = false }: PersonnelTabProps) {
   const filteredPersonnel = search
     ? personnelData.filter((row) =>
         [
@@ -53,6 +54,18 @@ export function PersonnelTab({ personnelData, search, onOpenEdit, onDelete }: Pe
       ),
     },
   ];
+
+  // ← AJOUT : état chargement
+  if (loading) {
+    return (
+      <SectionCard title="Liste du personnel" subtitle="Chargement...">
+        <div className="table-loading">
+          <div className="loading-spinner" />
+          <p>Chargement du personnel...</p>
+        </div>
+      </SectionCard>
+    );
+  }
 
   return (
     <SectionCard title="Liste du personnel" subtitle={`${personnelData.length} membre(s)`}>

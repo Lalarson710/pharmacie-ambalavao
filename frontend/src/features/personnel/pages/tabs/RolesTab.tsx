@@ -5,13 +5,14 @@ import { RowActions } from '@/components/RowActions';
 import type { Role } from '@/types';
 
 interface RolesTabProps {
-  rolesData: Role[];
+  rolesData: Role[] | undefined;
   search: string;
   onOpenEdit: (item: Role) => void;
   onDelete: (item: Role) => void;
+  loading?: boolean;
 }
 
-export function RolesTab({ rolesData, search, onOpenEdit, onDelete }: RolesTabProps) {
+export function RolesTab({ rolesData = [], search, onOpenEdit, onDelete, loading = false }: RolesTabProps) {
   const filteredRoles = search
     ? rolesData.filter((row) =>
         [row.id, row.nom, row.nom_affichage]
@@ -25,6 +26,18 @@ export function RolesTab({ rolesData, search, onOpenEdit, onDelete }: RolesTabPr
     { key: 'nom', label: 'Nom' },
     { key: 'nom_affichage', label: 'Affichage' },
   ];
+
+  // Message pendant le chargement
+  if (loading) {
+    return (
+      <SectionCard title="Liste des rôles" subtitle="Chargement...">
+        <div className="table-loading">
+          <div className="loading-spinner" />
+          <p>Chargement des rôles...</p>
+        </div>
+      </SectionCard>
+    );
+  }
 
   return (
     <SectionCard title="Liste des rôles" subtitle={`${rolesData.length} rôle(s)`}>

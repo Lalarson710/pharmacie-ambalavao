@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { ToastProvider } from './Toast';
 import {
   BarChart3,
   Building,
@@ -16,7 +17,6 @@ import {
   Warehouse,
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/store/authStore';
-import type { User } from '@/types';
 import { ConfirmModal } from '@/components/ConfirmModal';
 
 interface NavItem {
@@ -69,7 +69,7 @@ export function Layout() {
 
   const hasPermission = (permission: string): boolean => {
     if (!user?.permissions) return false;
-    return user.permissions.some((p) => p.code === permission);
+    return user.permissions.some((p) => p.code === permission && p.pivot?.autorise === true);
   };
 
   const visibleNavItems = navItems.filter((item) => {
@@ -145,7 +145,9 @@ export function Layout() {
         </header>
 
         <main className="content-area">
-          <Outlet />
+          <ToastProvider>
+            <Outlet />
+          </ToastProvider>
         </main>
       </div>
 

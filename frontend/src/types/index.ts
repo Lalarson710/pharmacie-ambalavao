@@ -22,6 +22,11 @@ export interface Permission {
   description: string | null;
   created_at?: string;
   updated_at?: string;
+  pivot?: {
+    user_id: number;
+    permission_id: number;
+    autorise: boolean;
+  };
 }
 
 export interface User {
