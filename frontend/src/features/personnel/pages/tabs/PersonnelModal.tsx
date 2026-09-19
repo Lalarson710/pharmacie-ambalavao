@@ -101,7 +101,6 @@ export function PersonnelModal({
 
 
             if (modal.kind === 'utilisateur') {
-              const role = rolesData.find((row) => row.id === Number(formData.role_id)) ?? null;
               const password = formData.password as string | undefined;
 
               const userData = {
