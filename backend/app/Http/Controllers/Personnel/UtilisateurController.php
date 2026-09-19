@@ -92,6 +92,15 @@ class UtilisateurController
                     $donnees
                 );
 
+            // FEATURE 2 : Si mot de passe changé par l'utilisateur lui-même → déconnexion
+            if (isset($donnees['password']) && $utilisateur->id === auth()->id()) {
+                $utilisateur->tokens()->delete();
+
+                return response()->json([
+                    'message' => 'Mot de passe mis à jour. Déconnexion nécessaire.',
+                ], 401);
+            }
+
             return response()->json($utilisateur);
 
         } catch (RuntimeException $e) {

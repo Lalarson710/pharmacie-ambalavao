@@ -16,13 +16,7 @@ use Illuminate\Http\Request;
 class RoleController
 {
     public function __construct(
-        private ListerRolesUseCase $listerRolesUseCase,
-        private ListerPermissionsRoleUseCase $listerPermissionsRoleUseCase,
-        private DefinirPermissionRoleUseCase $definirPermissionRoleUseCase,
-        private SupprimerPermissionRoleUseCase $supprimerPermissionRoleUseCase,
-        private CreerRoleUseCase $creerRoleUseCase,
-        private ModifierRoleUseCase $modifierRoleUseCase,
-        private SupprimerRoleUseCase $supprimerRoleUseCase
+        private ListerRolesUseCase $listerRolesUseCase
     ) {
     }
 
@@ -33,28 +27,29 @@ class RoleController
         );
     }
 
-    public function permissions(int $roleId): JsonResponse
+    public function permissions(int $roleId, ListerPermissionsRoleUseCase $listerPermissionsRoleUseCase): JsonResponse
     {
         return response()->json(
-            $this->listerPermissionsRoleUseCase->executer($roleId)
+            $listerPermissionsRoleUseCase->executer($roleId)
         );
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, CreerRoleUseCase $creerRoleUseCase): JsonResponse
     {
         $donnees = $request->validate([
             'nom' => ['required', 'string', 'max:50', 'unique:roles,nom'],
             'nom_affichage' => ['required', 'string', 'max:100'],
         ]);
 
-        $role = $this->creerRoleUseCase->executer($donnees);
+        $role = $creerRoleUseCase->executer($donnees);
 
         return response()->json($role, 201);
     }
 
     public function update(
         int $roleId,
-        Request $request
+        Request $request,
+        ModifierRoleUseCase $modifierRoleUseCase
     ): JsonResponse {
         $role = Role::find($roleId);
 
@@ -78,7 +73,7 @@ class RoleController
             ],
         ]);
 
-        $role = $this->modifierRoleUseCase->executer(
+        $role = $modifierRoleUseCase->executer(
             $role,
             $donnees
         );
@@ -86,7 +81,7 @@ class RoleController
         return response()->json($role);
     }
 
-    public function destroy(int $roleId): JsonResponse
+    public function destroy(int $roleId, SupprimerRoleUseCase $supprimerRoleUseCase): JsonResponse
     {
         $role = Role::find($roleId);
 
@@ -97,7 +92,7 @@ class RoleController
         }
 
         try {
-            $this->supprimerRoleUseCase->executer($role);
+            $supprimerRoleUseCase->executer($role);
 
             return response()->json([
                 'message' => 'Rôle supprimé avec succès.'
@@ -111,7 +106,8 @@ class RoleController
 
     public function definirPermission(
         int $roleId,
-        Request $request
+        Request $request,
+        DefinirPermissionRoleUseCase $definirPermissionRoleUseCase
     ): JsonResponse {
         $donnees = $request->validate([
             'permission_id' => [
@@ -121,7 +117,7 @@ class RoleController
             ],
         ]);
 
-        $this->definirPermissionRoleUseCase->executer(
+        $definirPermissionRoleUseCase->executer(
             $roleId,
             $donnees['permission_id']
         );
@@ -133,9 +129,10 @@ class RoleController
 
     public function supprimerPermission(
         int $roleId,
-        int $permissionId
+        int $permissionId,
+        SupprimerPermissionRoleUseCase $supprimerPermissionRoleUseCase
     ): JsonResponse {
-        $supprimee = $this->supprimerPermissionRoleUseCase
+        $supprimee = $supprimerPermissionRoleUseCase
             ->executer(
                 $roleId,
                 $permissionId
@@ -143,7 +140,7 @@ class RoleController
 
         if (!$supprimee) {
             return response()->json([
-                'message' => 'Cette permission n’est pas attribuée à ce rôle.'
+                'message' => 'Cette permission n\'est pas attribuée à ce rôle.'
             ], 404);
         }
 
