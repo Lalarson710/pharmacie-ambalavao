@@ -11,14 +11,22 @@ class SupprimerLotUseCase
     ) {
     }
 
-    public function executer(int $id): bool
+    public function executer(int $id): ?string
     {
         $lot = $this->lotRepository->trouverParId($id);
 
         if (!$lot) {
-            return false;
+            return null;
         }
 
-        return $this->lotRepository->supprimer($lot);
+        if ($lot->ventesLignes()->exists()) {
+            return 'Ce lot ne peut pas être supprimé car il est lié à une ou plusieurs ventes.';
+        }
+
+        if ($lot->mouvementsStock()->exists() || $lot->lignesInventaire()->exists()) {
+            return 'Ce lot ne peut pas être supprimé car il est lié au stock.';
+        }
+
+        return $this->lotRepository->supprimer($lot) ? 'ok' : null;
     }
 }

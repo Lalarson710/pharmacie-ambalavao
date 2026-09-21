@@ -76,16 +76,23 @@ class CategorieController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $supprimee = $this->supprimerCategorieUseCase->executer($id);
+        $resultat = $this->supprimerCategorieUseCase->executer($id);
 
-        if (!$supprimee) {
+        if ($resultat === null) {
             return response()->json([
                 'message' => 'Catégorie introuvable.'
             ], 404);
         }
 
+        if ($resultat === 'ok') {
+            return response()->json([
+                'message' => 'Catégorie supprimée avec succès.'
+            ]);
+        }
+
         return response()->json([
-            'message' => 'Catégorie supprimée avec succès.'
-        ]);
+            'message' => $resultat
+        ], 409);
     }
+
 }

@@ -62,7 +62,7 @@ class LotController extends Controller
             'produit_id' => ['sometimes', 'required', 'integer', 'exists:produits,id'],
             'numero_lot' => ['sometimes', 'required', 'string', 'max:100'],
             'date_peremption' => ['sometimes', 'required', 'date'],
-            
+            'quantite' => ['sometimes', 'required', 'integer', 'min:0'],
         ]);
 
         $lot = $this->modifierLotUseCase->executer($id, $donnees);
@@ -78,16 +78,23 @@ class LotController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $supprime = $this->supprimerLotUseCase->executer($id);
+        $resultat = $this->supprimerLotUseCase->executer($id);
 
-        if (!$supprime) {
+        if ($resultat === null) {
             return response()->json([
                 'message' => 'Lot introuvable.'
             ], 404);
         }
 
+        if ($resultat === 'ok') {
+            return response()->json([
+                'message' => 'Lot supprimé avec succès.'
+            ]);
+        }
+
         return response()->json([
-            'message' => 'Lot supprimé avec succès.'
-        ]);
+            'message' => $resultat
+        ], 409);
     }
+
 }

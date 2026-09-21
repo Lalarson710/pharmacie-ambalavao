@@ -88,16 +88,23 @@ class ProduitController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $supprime = $this->supprimerProduitUseCase->executer($id);
+        $resultat = $this->supprimerProduitUseCase->executer($id);
 
-        if (!$supprime) {
+        if ($resultat === null) {
             return response()->json([
                 'message' => 'Produit introuvable.'
             ], 404);
         }
 
+        if ($resultat === 'ok') {
+            return response()->json([
+                'message' => 'Produit supprimé avec succès.'
+            ]);
+        }
+
         return response()->json([
-            'message' => 'Produit supprimé avec succès.'
-        ]);
+            'message' => $resultat
+        ], 409);
     }
+
 }

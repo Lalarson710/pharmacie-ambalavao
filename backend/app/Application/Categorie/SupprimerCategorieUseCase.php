@@ -11,14 +11,18 @@ class SupprimerCategorieUseCase
     ) {
     }
 
-    public function executer(int $id): bool
+    public function executer(int $id): ?string
     {
         $categorie = $this->categorieRepository->trouverParId($id);
 
         if (!$categorie) {
-            return false;
+            return null;
         }
 
-        return $this->categorieRepository->supprimer($categorie);
+        if ($categorie->produits()->exists()) {
+            return 'Cette catégorie ne peut pas être supprimée car elle est utilisée par un ou plusieurs produits.';
+        }
+
+        return $this->categorieRepository->supprimer($categorie) ? 'ok' : null;
     }
 }

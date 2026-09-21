@@ -52,6 +52,7 @@ Route::put('/categories/{id}', [CategorieController::class, 'update']);
 Route::delete('/categories/{id}', [CategorieController::class, 'destroy']);
 
 Route::get('/unites', [UniteController::class, 'index']);
+Route::apiResource('unites', UniteController::class);
 
 Route::get('/produits', [ProduitController::class, 'index'])
     ->middleware([

@@ -11,14 +11,22 @@ class SupprimerProduitUseCase
     ) {
     }
 
-    public function executer(int $id): bool
+    public function executer(int $id): ?string
     {
         $produit = $this->produitRepository->trouverParId($id);
 
         if (!$produit) {
-            return false;
+            return null;
         }
 
-        return $this->produitRepository->supprimer($produit);
+        if ($produit->lots()->exists()) {
+            return 'Ce produit ne peut pas être supprimé car il possède un ou plusieurs lots.';
+        }
+
+        if ($produit->ventesLignes()->exists()) {
+            return 'Ce produit ne peut pas être supprimé car il est lié à une ou plusieurs ventes.';
+        }
+
+        return $this->produitRepository->supprimer($produit) ? 'ok' : null;
     }
 }
