@@ -39,13 +39,7 @@ export function LotsTab({ data, search, loading, onOpenEdit, onDelete }: LotsTab
           data={filteredLots}
           columns={columns}
           emptyMessage="Aucun lot enregistré."
-          actionsHeaderLabel="Actions"
-          actions={(row) => (
-            <RowActions
-              onEdit={() => onOpenEdit(row)}
-              onDelete={() => onDelete(row)}
-            />
-          )}
+          actions={undefined}
         />
       )}
     </SectionCard>

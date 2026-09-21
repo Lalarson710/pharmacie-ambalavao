@@ -197,9 +197,11 @@ export function ProduitsPage() {
         onSearch={setSearch}
         placeholder="Rechercher dans l'onglet..."
         actions={
-          <button type="button" className="btn-primary" onClick={openAdd}>
-            <Plus size={15} /> {currentLabel}
-          </button>
+          activeTab !== 'lots' ? (
+            <button type="button" className="btn-primary" onClick={openAdd}>
+              <Plus size={15} /> {currentLabel}
+            </button>
+          ) : null
         }
       />
 

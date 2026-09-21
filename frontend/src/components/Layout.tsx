@@ -29,7 +29,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Tableau de bord', to: '/dashboard', icon: <LayoutDashboard size={18} />, permission: 'dashboard.view' },
   { label: 'Fournisseurs', to: '/fournisseurs', icon: <Building size={18} />, permission: 'fournisseur.view' },
-  { label: 'Produits', to: '/produits', icon: <Package size={18} />, permission: 'produit.view' },
+  { label: 'Produits & Lots', to: '/produits', icon: <Package size={18} />, permission: 'produit.view' },
   { label: 'Clients', to: '/clients', icon: <Users size={18} />, permission: 'client.view' },
   { label: 'Achats', to: '/achats', icon: <ShoppingCart size={18} />, permission: 'achat.view' },
   { label: 'Stock', to: '/stock', icon: <Warehouse size={18} />, permission: 'stock.view' },
