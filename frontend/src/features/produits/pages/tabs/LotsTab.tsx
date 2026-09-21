@@ -8,11 +8,12 @@ import type { Lot } from '@/types';
 interface LotsTabProps {
   data: Lot[];
   search: string;
+  loading?: boolean;
   onOpenEdit: (item: Lot) => void;
   onDelete: (item: Lot) => void;
 }
 
-export function LotsTab({ data, search, onOpenEdit, onDelete }: LotsTabProps) {
+export function LotsTab({ data, search, loading, onOpenEdit, onDelete }: LotsTabProps) {
   const filteredLots = search
     ? data.filter((row) =>
         [row.numero_lot, row.produit?.nom]
@@ -31,18 +32,22 @@ export function LotsTab({ data, search, onOpenEdit, onDelete }: LotsTabProps) {
 
   return (
     <SectionCard title="Lots">
-      <DataTable
-        data={filteredLots}
-        columns={columns}
-        emptyMessage="Aucun lot enregistré."
-        actionsHeaderLabel="Actions"
-        actions={(row) => (
-          <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
-          />
-        )}
-      />
+      {loading ? (
+        <div className="empty-state">Chargement des lots...</div>
+      ) : (
+        <DataTable
+          data={filteredLots}
+          columns={columns}
+          emptyMessage="Aucun lot enregistré."
+          actionsHeaderLabel="Actions"
+          actions={(row) => (
+            <RowActions
+              onEdit={() => onOpenEdit(row)}
+              onDelete={() => onDelete(row)}
+            />
+          )}
+        />
+      )}
     </SectionCard>
   );
 }

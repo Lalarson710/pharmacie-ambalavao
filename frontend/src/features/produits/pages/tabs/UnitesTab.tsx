@@ -7,11 +7,12 @@ import type { Unite } from '@/types';
 interface UnitesTabProps {
   data: Unite[];
   search: string;
+  loading?: boolean;
   onOpenEdit: (item: Unite) => void;
   onDelete: (item: Unite) => void;
 }
 
-export function UnitesTab({ data, search, onOpenEdit, onDelete }: UnitesTabProps) {
+export function UnitesTab({ data, search, loading, onOpenEdit, onDelete }: UnitesTabProps) {
   const filteredUnits = search
     ? data.filter((row) =>
         [row.nom, row.abreviation]
@@ -29,18 +30,22 @@ export function UnitesTab({ data, search, onOpenEdit, onDelete }: UnitesTabProps
 
   return (
     <SectionCard title="Unités" subtitle={`${data.length} unité(s)`}>
-      <DataTable
-        data={filteredUnits}
-        columns={columns}
-        emptyMessage="Aucune unité."
-        actionsHeaderLabel="Actions"
-        actions={(row) => (
-          <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
-          />
-        )}
-      />
+      {loading ? (
+        <div className="empty-state">Chargement des unités...</div>
+      ) : (
+        <DataTable
+          data={filteredUnits}
+          columns={columns}
+          emptyMessage="Aucune unité."
+          actionsHeaderLabel="Actions"
+          actions={(row) => (
+            <RowActions
+              onEdit={() => onOpenEdit(row)}
+              onDelete={() => onDelete(row)}
+            />
+          )}
+        />
+      )}
     </SectionCard>
   );
 }

@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { PageTabs } from '@/components/PageTabs';
 import { PageToolbar } from '@/components/PageToolbar';
 import { ConfirmModal } from '@/components/ConfirmModal';
-import { categories, lots, produits, unites } from '@/data/mockData';
+import { useToast } from '@/components/Toast';
 import type { Categorie, Lot, Produit, Unite } from '@/types';
 import {
   CatalogueModal,
@@ -15,6 +15,10 @@ import { LotsTab } from './tabs/LotsTab';
 import { ProduitsTab } from './tabs/ProduitsTab';
 import { produitsTabs } from './tabs/tabsConfig';
 import { UnitesTab } from './tabs/UnitesTab';
+import { produitsApi } from '../api/produits';
+import { categoriesApi } from '../api/categories';
+import { unitesApi } from '../api/unites';
+import { lotsApi } from '../api/lots';
 
 type CatalogueDeleteTarget = {
   kind: CatalogueModalState['kind'];
@@ -24,26 +28,93 @@ type CatalogueDeleteTarget = {
 const tabKind: Record<string, CatalogueModalState['kind']> = {
   produits: 'produit',
   lots: 'lot',
-  categories: 'categorie',
+  categories: 'categories',
   unites: 'unite',
 };
 
 const addLabels: Record<CatalogueModalState['kind'], string> = {
   produit: 'Ajouter un produit',
   lot: 'Ajouter un lot',
-  categorie: 'Ajouter une catégorie',
+  categories: 'Ajouter une catégorie',
   unite: 'Ajouter une unité',
 };
 
 export function ProduitsPage() {
-  const [activeTab, setActiveTab] = useState('produits');
-  const [products, setProducts] = useState<Produit[]>(produits);
-  const [categoriesData, setCategoriesData] = useState<Categorie[]>(categories);
-  const [unitsData, setUnitsData] = useState<Unite[]>(unites);
-  const [lotsData, setLotsData] = useState<Lot[]>(lots);
+  const { showToast } = useToast();
+  const [activeTab, setActiveTab] = useState('unites');
+  const [products, setProducts] = useState<Produit[]>([]);
+  const [categoriesData, setCategoriesData] = useState<Categorie[]>([]);
+  const [unitsData, setUnitsData] = useState<Unite[]>([]);
+  const [lotsData, setLotsData] = useState<Lot[]>([]);
+  const [loading, setLoading] = useState({
+    produits: true,
+    categories: true,
+    unites: true,
+    lots: true,
+  });
   const [modal, setModal] = useState<CatalogueModalState | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CatalogueDeleteTarget | null>(null);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await produitsApi.getAll();
+        setProducts(data);
+      } catch (error) {
+        console.error(' chargement produits:', error);
+        showToast('Impossible de charger les produits.', 'error');
+      } finally {
+        setLoading((prev) => ({ ...prev, produits: false }));
+      }
+    };
+    load();
+  }, [showToast]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await categoriesApi.getAll();
+        setCategoriesData(data);
+      } catch (error) {
+        console.error(' chargement catégories:', error);
+        showToast('Impossible de charger les catégories.', 'error');
+      } finally {
+        setLoading((prev) => ({ ...prev, categories: false }));
+      }
+    };
+    load();
+  }, [showToast]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await unitesApi.getAll();
+        setUnitsData(data);
+      } catch (error) {
+        console.error(' chargement unités:', error);
+        showToast('Impossible de charger les unités.', 'error');
+      } finally {
+        setLoading((prev) => ({ ...prev, unites: false }));
+      }
+    };
+    load();
+  }, [showToast]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await lotsApi.getAll();
+        setLotsData(data);
+      } catch (error) {
+        console.error(' chargement lots:', error);
+        showToast('Impossible de charger les lots.', 'error');
+      } finally {
+        setLoading((prev) => ({ ...prev, lots: false }));
+      }
+    };
+    load();
+  }, [showToast]);
 
   const openAdd = () => {
     const kind = tabKind[activeTab] ?? 'produit';
@@ -60,25 +131,55 @@ export function ProduitsPage() {
   const confirmDelete = () => {
     if (!deleteTarget) return;
 
-    if (deleteTarget.kind === 'produit') {
-      setProducts((prev) =>
-        prev.filter((row) => row.id !== deleteTarget.item.id)
-      );
-    } else if (deleteTarget.kind === 'categorie') {
-      setCategoriesData((prev) =>
-        prev.filter((row) => row.id !== deleteTarget.item.id)
-      );
-    } else if (deleteTarget.kind === 'unite') {
-      setUnitsData((prev) =>
-        prev.filter((row) => row.id !== deleteTarget.item.id)
-      );
+    const { kind, item } = deleteTarget;
+
+    if (kind === 'produit') {
+      setProducts((prev) => prev.filter((row) => row.id !== item.id));
+    } else if (kind === 'categories') {
+      setCategoriesData((prev) => prev.filter((row) => row.id !== item.id));
+    } else if (kind === 'unite') {
+      setUnitsData((prev) => prev.filter((row) => row.id !== item.id));
     } else {
-      setLotsData((prev) =>
-        prev.filter((row) => row.id !== deleteTarget.item.id)
-      );
+      setLotsData((prev) => prev.filter((row) => row.id !== item.id));
     }
 
     setDeleteTarget(null);
+
+    (async () => {
+      try {
+        if (kind === 'produit') {
+          await produitsApi.delete(item.id);
+        } else if (kind === 'categories') {
+          await categoriesApi.delete(item.id);
+        } else if (kind === 'unite') {
+          await unitesApi.delete(item.id);
+        } else {
+          await lotsApi.delete(item.id);
+        }
+        const label = kind === 'produit' ? 'Produit' : kind === 'categories' ? 'Catégorie' : kind === 'unite' ? 'Unité' : 'Lot';
+        showToast(`${label} supprimé avec succès`, 'success');
+      } catch (error: unknown) {
+        console.error(' suppression:', error);
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        const specificMessage = axiosError.response?.data?.message;
+
+        if (specificMessage) {
+          showToast(specificMessage, 'error');
+        } else {
+          showToast('Impossible de supprimer cet élément.', 'error');
+        }
+
+        if (kind === 'produit') {
+          setProducts((prev) => [...prev, item as Produit]);
+        } else if (kind === 'categories') {
+          setCategoriesData((prev) => [...prev, item as Categorie]);
+        } else if (kind === 'unite') {
+          setUnitsData((prev) => [...prev, item as Unite]);
+        } else {
+          setLotsData((prev) => [...prev, item as Lot]);
+        }
+      }
+    })();
   };
 
   const currentKind = tabKind[activeTab] ?? 'produit';
@@ -112,6 +213,7 @@ export function ProduitsPage() {
         <ProduitsTab
           data={products}
           search={search}
+          loading={loading.produits}
           onOpenEdit={(item) => openEdit('produit', item)}
           onDelete={(item) => setDeleteTarget({ kind: 'produit', item })}
         />
@@ -121,6 +223,7 @@ export function ProduitsPage() {
         <LotsTab
           data={lotsData}
           search={search}
+          loading={loading.lots}
           onOpenEdit={(item) => openEdit('lot', item)}
           onDelete={(item) => setDeleteTarget({ kind: 'lot', item })}
         />
@@ -130,8 +233,9 @@ export function ProduitsPage() {
         <CategoriesTab
           data={categoriesData}
           search={search}
-          onOpenEdit={(item) => openEdit('categorie', item)}
-          onDelete={(item) => setDeleteTarget({ kind: 'categorie', item })}
+          loading={loading.categories}
+          onOpenEdit={(item) => openEdit('categories', item)}
+          onDelete={(item) => setDeleteTarget({ kind: 'categories', item })}
         />
       )}
 
@@ -139,6 +243,7 @@ export function ProduitsPage() {
         <UnitesTab
           data={unitsData}
           search={search}
+          loading={loading.unites}
           onOpenEdit={(item) => openEdit('unite', item)}
           onDelete={(item) => setDeleteTarget({ kind: 'unite', item })}
         />

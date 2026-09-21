@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
@@ -8,15 +8,34 @@ import { PageToolbar } from '@/components/PageToolbar';
 import { RowActions } from '@/components/RowActions';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
-import { fournisseurs } from '@/data/mockData';
+import { useToast } from '@/components/Toast';
 import type { Fournisseur } from '@/types';
+import { fournisseursApi } from '../api/fournisseurs';
 
 export function FournisseursPage() {
-  const [data, setData] = useState<Fournisseur[]>(fournisseurs);
+  const { showToast } = useToast();
+  const [data, setData] = useState<Fournisseur[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<Fournisseur | null>(null);
   const [deleteItem, setDeleteItem] = useState<Fournisseur | null>(null);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const loadFournisseurs = async () => {
+      try {
+        const fetched = await fournisseursApi.getAll();
+        console.log('%c[LOG] Fournisseurs chargés:', 'color: blue', fetched);
+        setData(fetched);
+      } catch (error) {
+        console.error('Erreur chargement:', error);
+        showToast('Impossible de charger les fournisseurs.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFournisseurs();
+  }, [showToast]);
 
   const filtered = search
     ? data.filter(
@@ -45,60 +64,85 @@ export function FournisseursPage() {
     },
   ];
 
-  const handleSubmit = (formData: Record<string, unknown>) => {
-    if (editItem) {
-      setData((prev) =>
-        prev.map((r) =>
-          r.id === editItem.id
-            ? {
-                ...r,
-                nom: String(formData.nom),
-                telephone: (formData.telephone as string) || null,
-                email: (formData.email as string) || null,
-                adresse: (formData.adresse as string) || null,
-                actif: formData.actif === 'true',
-              }
-            : r
-        )
-      );
-    } else {
-      const newFournisseur: Fournisseur = {
-        id: data.length > 0 ? Math.max(...data.map((r) => r.id)) + 1 : 1,
+  const handleSubmit = async (formData: Record<string, unknown>) => {
+    console.log('%c[LOG] handleSubmit appelé:', 'color: green', { editItem, formData });
+    try {
+      const payload = {
         nom: String(formData.nom),
         telephone: (formData.telephone as string) || null,
         email: (formData.email as string) || null,
         adresse: (formData.adresse as string) || null,
         actif: formData.actif === 'true',
       };
-      setData((prev) => [...prev, newFournisseur]);
+
+      if (editItem) {
+        const saved = await fournisseursApi.update(editItem.id, payload);
+        setData((prev) => prev.map((r) => (r.id === editItem.id ? saved : r)));
+        showToast('Fournisseur modifié avec succès', 'success');
+      } else {
+        const saved = await fournisseursApi.create(payload);
+        setData((prev) => [...prev, saved]);
+        showToast('Fournisseur créé avec succès', 'success');
+      }
+      setModalOpen(false);
+      setEditItem(null);
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
+      const msg =
+        axiosError.response?.data?.message ||
+        (axiosError.response?.data?.errors
+          ? Object.values(axiosError.response.data.errors).flat().join(', ')
+          : '') ||
+        'Erreur lors de la sauvegarde';
+      showToast(msg, 'error');
     }
-    setModalOpen(false);
   };
 
   const confirmDelete = () => {
-    if (deleteItem) {
-      setData((prev) => prev.filter((r) => r.id !== deleteItem.id));
-      setDeleteItem(null);
-    }
+    if (!deleteItem) return;
+    setData((prev) => prev.filter((r) => r.id !== deleteItem.id));
+    setDeleteItem(null);
+    (async () => {
+      try {
+        await fournisseursApi.delete(deleteItem.id);
+        showToast(`Fournisseur « ${deleteItem.nom} » supprimé`, 'success');
+      } catch (error: unknown) {
+        console.error('Erreur suppression:', error);
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        const specificMessage = axiosError.response?.data?.message;
+        if (specificMessage) {
+          showToast(specificMessage, 'error');
+        } else {
+          showToast('Impossible de supprimer ce fournisseur.', 'error');
+        }
+        setData((prev) => [...prev, deleteItem]);
+      }
+    })();
   };
 
   const handleEditClick = (row: Fournisseur) => {
+    console.log('%c[LOG] handleEditClick — clique modify:', 'color: purple', row);
     setEditItem(row);
     setModalOpen(true);
   };
 
   const handleAddClick = () => {
+    console.log('%c[LOG] handleAddClick — clique Ajouter', 'color: purple');
     setEditItem(null);
     setModalOpen(true);
   };
 
-  const getInitialData = (item: Fournisseur | null) => ({
-    nom: item?.nom ?? '',
-    telephone: item?.telephone ?? '',
-    email: item?.email ?? '',
-    adresse: item?.adresse ?? '',
-    actif: item ? String(item.actif) : 'true',
-  });
+  const getInitialData = (item: Fournisseur | null) => {
+    const result = {
+      nom: item?.nom ?? '',
+      telephone: item?.telephone ?? '',
+      email: item?.email ?? '',
+      adresse: item?.adresse ?? '',
+      actif: item ? String(item.actif) : 'true',
+    };
+    console.log('%c[LOG] getInitialData:', 'color: orange', { item, result });
+    return result;
+  };
 
   const validate = (fd: Record<string, unknown>): Record<string, string> => {
     const errs: Record<string, string> = {};
@@ -110,63 +154,71 @@ export function FournisseursPage() {
     _formData: Record<string, unknown>,
     onChange: (name: string, value: string) => void,
     errors: Record<string, string>
-  ) => (
-    <>
-      <div className="form-field">
-        <label htmlFor="fournisseur-nom">Nom *</label>
-        <input
-          id="fournisseur-nom"
-          name="nom"
-          type="text"
-          className="inline-input"
-          onChange={(e) => onChange('nom', e.target.value)}
-        />
-        {errors.nom && <span className="form-error">{errors.nom}</span>}
-      </div>
-      <div className="form-field">
-        <label htmlFor="fournisseur-telephone">Téléphone</label>
-        <input
-          id="fournisseur-telephone"
-          name="telephone"
-          type="text"
-          className="inline-input"
-          onChange={(e) => onChange('telephone', e.target.value)}
-        />
-      </div>
-      <div className="form-field">
-        <label htmlFor="fournisseur-email">Email</label>
-        <input
-          id="fournisseur-email"
-          name="email"
-          type="email"
-          className="inline-input"
-          onChange={(e) => onChange('email', e.target.value)}
-        />
-      </div>
-      <div className="form-field">
-        <label htmlFor="fournisseur-adresse">Adresse</label>
-        <input
-          id="fournisseur-adresse"
-          name="adresse"
-          type="text"
-          className="inline-input"
-          onChange={(e) => onChange('adresse', e.target.value)}
-        />
-      </div>
-      <div className="form-field">
-        <label htmlFor="fournisseur-actif">Actif</label>
-        <select
-          id="fournisseur-actif"
-          name="actif"
-          className="inline-input"
-          onChange={(e) => onChange('actif', e.target.value)}
-        >
-          <option value="true">Oui</option>
-          <option value="false">Non</option>
-        </select>
-      </div>
-    </>
-  );
+  ) => {
+    console.log('%c[LOG] renderForm — formData:', 'color: teal', _formData);
+    return (
+      <>
+        <div className="form-field">
+          <label htmlFor="fournisseur-nom">Nom *</label>
+          <input
+            id="fournisseur-nom"
+            name="nom"
+            type="text"
+            className="inline-input"
+            value={String(_formData.nom ?? '')}
+            onChange={(e) => onChange('nom', e.target.value)}
+          />
+          {errors.nom && <span className="form-error">{errors.nom}</span>}
+        </div>
+        <div className="form-field">
+          <label htmlFor="fournisseur-telephone">Téléphone</label>
+          <input
+            id="fournisseur-telephone"
+            name="telephone"
+            type="text"
+            className="inline-input"
+            value={String(_formData.telephone ?? '')}
+            onChange={(e) => onChange('telephone', e.target.value)}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="fournisseur-email">Email</label>
+          <input
+            id="fournisseur-email"
+            name="email"
+            type="email"
+            className="inline-input"
+            value={String(_formData.email ?? '')}
+            onChange={(e) => onChange('email', e.target.value)}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="fournisseur-adresse">Adresse</label>
+          <input
+            id="fournisseur-adresse"
+            name="adresse"
+            type="text"
+            className="inline-input"
+            value={String(_formData.adresse ?? '')}
+            onChange={(e) => onChange('adresse', e.target.value)}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="fournisseur-actif">Actif</label>
+          <select
+            id="fournisseur-actif"
+            name="actif"
+            className="inline-input"
+            value={String(_formData.actif ?? 'true')}
+            onChange={(e) => onChange('actif', e.target.value)}
+          >
+            <option value="true">Oui</option>
+            <option value="false">Non</option>
+          </select>
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="page-container">
@@ -187,23 +239,30 @@ export function FournisseursPage() {
       />
 
       <SectionCard title="Liste des fournisseurs">
-        <DataTable
-          data={filtered}
-          columns={columns}
-          emptyMessage="Aucun fournisseur enregistré."
-          actionsHeaderLabel="Actions"
-          actions={(row) => (
-            <RowActions
-              onEdit={() => handleEditClick(row)}
-              onDelete={() => setDeleteItem(row)}
-            />
-          )}
-        />
+        {loading ? (
+          <div className="empty-state">Chargement des fournisseurs...</div>
+        ) : (
+          <DataTable
+            data={filtered}
+            columns={columns}
+            emptyMessage="Aucun fournisseur enregistré."
+            actionsHeaderLabel="Actions"
+            actions={(row) => (
+              <RowActions
+                onEdit={() => handleEditClick(row)}
+                onDelete={() => setDeleteItem(row)}
+              />
+            )}
+          />
+        )}
       </SectionCard>
 
       <EntityFormModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setEditItem(null);
+        }}
         title={editItem ? 'Modifier le fournisseur' : 'Ajouter un fournisseur'}
         editItem={editItem}
         onSubmit={handleSubmit}

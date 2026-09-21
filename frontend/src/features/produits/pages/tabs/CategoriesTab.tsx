@@ -7,11 +7,12 @@ import type { Categorie } from '@/types';
 interface CategoriesTabProps {
   data: Categorie[];
   search: string;
+  loading?: boolean;
   onOpenEdit: (item: Categorie) => void;
   onDelete: (item: Categorie) => void;
 }
 
-export function CategoriesTab({ data, search, onOpenEdit, onDelete }: CategoriesTabProps) {
+export function CategoriesTab({ data, search, loading, onOpenEdit, onDelete }: CategoriesTabProps) {
   const filteredCategories = search
     ? data.filter((row) =>
         [row.nom, row.description]
@@ -29,18 +30,22 @@ export function CategoriesTab({ data, search, onOpenEdit, onDelete }: Categories
 
   return (
     <SectionCard title="Catégories" subtitle={`${data.length} catégorie(s)`}>
-      <DataTable
-        data={filteredCategories}
-        columns={columns}
-        emptyMessage="Aucune catégorie."
-        actionsHeaderLabel="Actions"
-        actions={(row) => (
-          <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
-          />
-        )}
-      />
+      {loading ? (
+        <div className="empty-state">Chargement des catégories...</div>
+      ) : (
+        <DataTable
+          data={filteredCategories}
+          columns={columns}
+          emptyMessage="Aucune catégorie."
+          actionsHeaderLabel="Actions"
+          actions={(row) => (
+            <RowActions
+              onEdit={() => onOpenEdit(row)}
+              onDelete={() => onDelete(row)}
+            />
+          )}
+        />
+      )}
     </SectionCard>
   );
 }

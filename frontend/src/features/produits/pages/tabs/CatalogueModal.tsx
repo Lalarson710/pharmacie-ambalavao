@@ -1,12 +1,17 @@
 import { type Dispatch, type SetStateAction } from 'react';
 import { EntityFormModal } from '@/components/EntityFormModal';
+import { useToast } from '@/components/Toast';
 import type { Produit, Categorie, Unite, Lot } from '@/types';
 import { ProduitForm } from '../../components/ProduitForm';
 import { CategorieForm } from '../../components/CategorieForm';
 import { UniteForm } from '../../components/UniteForm';
 import { LotForm } from '../../components/LotForm';
+import { produitsApi } from '../../api/produits';
+import { categoriesApi } from '../../api/categories';
+import { unitesApi } from '../../api/unites';
+import { lotsApi } from '../../api/lots';
 
-export type CatalogueModalKind = 'produit' | 'categorie' | 'unite' | 'lot';
+export type CatalogueModalKind = 'produit' | 'categories' | 'unite' | 'lot';
 export type CatalogueModalItem = Produit | Categorie | Unite | Lot;
 
 export interface CatalogueModalState {
@@ -30,7 +35,7 @@ interface CatalogueModalProps {
 const addLabels: Record<CatalogueModalKind, string> = {
   produit: 'Ajouter un produit',
   lot: 'Ajouter un lot',
-  categorie: 'Ajouter une catégorie',
+  categories: 'Ajouter une catégorie',
   unite: 'Ajouter une unité',
 };
 
@@ -43,105 +48,116 @@ export function CatalogueModal({
   setCategoriesData,
   unitsData,
   setUnitsData,
-  lotsData,
   setLotsData,
 }: CatalogueModalProps) {
-  const handleSave = (formData: Record<string, unknown>) => {
+  const { showToast } = useToast();
+
+  const handleSave = async (formData: Record<string, unknown>) => {
     if (!modal) return;
 
-    if (modal.kind === 'produit') {
-      const productData = {
-        nom: String(formData.nom),
-        code_barres: (formData.code_barres as string) || null,
-        description: (formData.description as string) || null,
-        prix_achat: String(formData.prix_achat),
-        prix_vente: String(formData.prix_vente),
-        stock_minimum: Number(formData.stock_minimum),
-        actif: formData.actif === 'true',
-      };
-      if (modal.item) {
-        setProducts((prev) =>
-          prev.map((row) =>
-            row.id === modal.item?.id ? { ...row, ...productData } : row
-          )
-        );
-      } else {
-        const newProduct: Produit = {
-          id: products.length > 0 ? Math.max(...products.map((row) => row.id)) + 1 : 1,
-          categorie_id: Number(formData.categorie_id) || categoriesData[0]?.id || 1,
-          unite_id: Number(formData.unite_id) || unitsData[0]?.id || 1,
-          ...productData,
+    try {
+      if (modal.kind === 'produit') {
+        const payload = {
+          categorie_id: Number(formData.categories_id),
+          unite_id: Number(formData.unite_id),
+          nom: String(formData.nom),
+          code_barres: (formData.code_barres as string) || null,
+          description: (formData.description as string) || null,
+          prix_achat: Number(formData.prix_achat),
+          prix_vente: Number(formData.prix_vente),
+          stock_minimum: Number(formData.stock_minimum),
+          actif: formData.actif === 'true',
         };
-        setProducts((prev) => [...prev, newProduct]);
-      }
-    }
 
-    if (modal.kind === 'categorie') {
-      const categoryData = {
-        nom: String(formData.nom),
-        description: (formData.description as string) || null,
-        actif: formData.actif === 'true',
-      };
-      if (modal.item) {
-        setCategoriesData((prev) =>
-          prev.map((row) =>
-            row.id === modal.item?.id ? { ...row, ...categoryData } : row
-          )
-        );
-      } else {
-        const newCategory: Categorie = {
-          id: categoriesData.length > 0 ? Math.max(...categoriesData.map((row) => row.id)) + 1 : 1,
-          ...categoryData,
+        let saved: Produit;
+        if (modal.item) {
+          saved = await produitsApi.update(modal.item.id, payload);
+          setProducts((prev) =>
+            prev.map((row) => (row.id === modal.item!.id ? saved : row))
+          );
+          showToast('Produit modifié avec succès', 'success');
+        } else {
+          saved = await produitsApi.create(payload);
+          setProducts((prev) => [...prev, saved]);
+          showToast('Produit créé avec succès', 'success');
+        }
+      }
+
+      if (modal.kind === 'categories') {
+        const payload = {
+          nom: String(formData.nom),
+          description: (formData.description as string) || null,
+          actif: formData.actif === 'true',
         };
-        setCategoriesData((prev) => [...prev, newCategory]);
-      }
-    }
 
-    if (modal.kind === 'unite') {
-      const unitData = {
-        nom: String(formData.nom),
-        abreviation: (formData.abreviation as string) || null,
-        actif: formData.actif === 'true',
-      };
-      if (modal.item) {
-        setUnitsData((prev) =>
-          prev.map((row) =>
-            row.id === modal.item?.id ? { ...row, ...unitData } : row
-          )
-        );
-      } else {
-        const newUnit: Unite = {
-          id: unitsData.length > 0 ? Math.max(...unitsData.map((row) => row.id)) + 1 : 1,
-          ...unitData,
+        let saved: Categorie;
+        if (modal.item) {
+          saved = await categoriesApi.update(modal.item.id, payload);
+          setCategoriesData((prev) =>
+            prev.map((row) => (row.id === modal.item!.id ? saved : row))
+          );
+          showToast('Catégorie modifiée avec succès', 'success');
+        } else {
+          saved = await categoriesApi.create(payload);
+          setCategoriesData((prev) => [...prev, saved]);
+          showToast('Catégorie créée avec succès', 'success');
+        }
+      }
+
+      if (modal.kind === 'unite') {
+        const payload = {
+          nom: String(formData.nom),
+          abreviation: (formData.abreviation as string) || null,
+          actif: formData.actif === 'true',
         };
-        setUnitsData((prev) => [...prev, newUnit]);
-      }
-    }
 
-    if (modal.kind === 'lot') {
-      const lotData = {
-        produit_id: Number(formData.produit_id),
-        numero_lot: String(formData.numero_lot),
-        date_peremption: String(formData.date_peremption),
-        quantite: Number(formData.quantite),
-        produit: products.find((row) => row.id === Number(formData.produit_id)),
-      };
-      if (modal.item) {
-        setLotsData((prev) =>
-          prev.map((row) =>
-            row.id === modal.item?.id ? { ...row, ...lotData } : row
-          )
-        );
-      } else {
-        const newLot: Lot = {
-          id: lotsData.length > 0 ? Math.max(...lotsData.map((row) => row.id)) + 1 : 1,
-          ...lotData,
+        let saved: Unite;
+        if (modal.item) {
+          saved = await unitesApi.update(modal.item.id, payload);
+          setUnitsData((prev) =>
+            prev.map((row) => (row.id === modal.item!.id ? saved : row))
+          );
+          showToast('Unité modifiée avec succès', 'success');
+        } else {
+          saved = await unitesApi.create(payload);
+          setUnitsData((prev) => [...prev, saved]);
+          showToast('Unité créée avec succès', 'success');
+        }
+      }
+
+      if (modal.kind === 'lot') {
+        const payload = {
+          produit_id: Number(formData.produit_id),
+          numero_lot: String(formData.numero_lot),
+          date_peremption: String(formData.date_peremption),
+          quantite: Number(formData.quantite),
         };
-        setLotsData((prev) => [...prev, newLot]);
-      }
-    }
 
-    setModal(null);
+        let saved: Lot;
+        if (modal.item) {
+          saved = await lotsApi.update(modal.item.id, payload);
+          setLotsData((prev) =>
+            prev.map((row) => (row.id === modal.item!.id ? saved : row))
+          );
+          showToast('Lot modifié avec succès', 'success');
+        } else {
+          saved = await lotsApi.create(payload);
+          setLotsData((prev) => [...prev, saved]);
+          showToast('Lot créé avec succès', 'success');
+        }
+      }
+
+      setModal(null);
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
+      const msg =
+        axiosError.response?.data?.message ||
+        (axiosError.response?.data?.errors
+          ? Object.values(axiosError.response.data.errors).flat().join(', ')
+          : '') ||
+        'Erreur lors de la sauvegarde';
+      showToast(msg, 'error');
+    }
   };
 
   const getInitialData = (item: CatalogueModalItem | null) => {
@@ -150,8 +166,8 @@ export function CatalogueModal({
       const row = item as Produit | null;
       return {
         nom: row?.nom ?? '',
-        categorie_id: row ? String(row.categorie_id) : String(categoriesData[0]?.id ?? ''),
-        unite_id: row ? String(row.unite_id) : String(unitsData[0]?.id ?? ''),
+        categories_id: row ? String(row.categorie_id) : '',
+        unite_id: row ? String(row.unite_id) : '',
         code_barres: row?.code_barres ?? '',
         description: row?.description ?? '',
         prix_achat: row?.prix_achat ?? '',
@@ -160,7 +176,7 @@ export function CatalogueModal({
         actif: row ? String(row.actif) : 'true',
       };
     }
-    if (modal.kind === 'categorie') {
+    if (modal.kind === 'categories') {
       const row = item as Categorie | null;
       return { nom: row?.nom ?? '', description: row?.description ?? '', actif: row ? String(row.actif) : 'true' };
     }
@@ -172,7 +188,7 @@ export function CatalogueModal({
     return {
       produit_id: row ? String(row.produit_id) : '',
       numero_lot: row?.numero_lot ?? '',
-      date_peremption: row?.date_peremption ?? '',
+      date_peremption: row?.date_peremption ? String(row.date_peremption).slice(0, 10) : '',
       quantite: row ? String(row.quantite) : '',
     };
   };
@@ -186,7 +202,7 @@ export function CatalogueModal({
       if (!formData.prix_vente || Number(formData.prix_vente) <= 0) errors.prix_vente = 'Prix de vente invalide.';
       if (!formData.stock_minimum || Number(formData.stock_minimum) < 0) errors.stock_minimum = 'Stock minimum invalide.';
     }
-    if (modal.kind === 'categorie' && !formData.nom) errors.nom = 'Le nom est obligatoire.';
+    if (modal.kind === 'categories' && !formData.nom) errors.nom = 'Le nom est obligatoire.';
     if (modal.kind === 'unite' && !formData.nom) errors.nom = 'Le nom est obligatoire.';
     if (modal.kind === 'lot') {
       if (!formData.produit_id) errors.produit_id = 'Le produit est obligatoire.';
@@ -210,14 +226,14 @@ export function CatalogueModal({
           formData={_formData}
           onChange={onChange}
           errors={errors}
-          categoriesData={categoriesData}
-          unitsData={unitsData}
+          categoriesData={categoriesData as { id: number; nom: string; actif?: boolean }[]}
+          unitsData={unitsData as { id: number; nom: string; actif?: boolean }[]}
           item={modal.item as Produit | null}
         />
       );
     }
 
-    if (modal.kind === 'categorie') {
+    if (modal.kind === 'categories') {
       return (
         <CategorieForm
           formData={_formData}
@@ -244,7 +260,7 @@ export function CatalogueModal({
         formData={_formData}
         onChange={onChange}
         errors={errors}
-        products={products}
+        products={products as { id: number; nom: string; actif?: boolean }[]}
         item={modal.item as Lot | null}
       />
     );
