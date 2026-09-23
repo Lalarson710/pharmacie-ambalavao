@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
@@ -8,15 +8,33 @@ import { PageToolbar } from '@/components/PageToolbar';
 import { RowActions } from '@/components/RowActions';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
-import { clients } from '@/data/mockData';
+import { useToast } from '@/components/Toast';
 import type { Client } from '@/types';
+import { clientsApi } from '../api/clients';
 
 export function ClientsPage() {
-  const [data, setData] = useState<Client[]>(clients);
+  const { showToast } = useToast();
+  const [data, setData] = useState<Client[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<Client | null>(null);
   const [deleteItem, setDeleteItem] = useState<Client | null>(null);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const result = await clientsApi.getAll();
+        setData(result);
+      } catch (error) {
+        console.error('chargement clients:', error);
+        showToast('Impossible de charger les clients.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [showToast]);
 
   const filtered = search
     ? data.filter(
@@ -45,41 +63,64 @@ export function ClientsPage() {
     },
   ];
 
-  const handleSubmit = (formData: Record<string, unknown>) => {
-    if (editItem) {
-      setData((prev) =>
-        prev.map((r) =>
-          r.id === editItem.id
-            ? {
-                ...r,
-                nom: String(formData.nom),
-                telephone: (formData.telephone as string) || null,
-                email: (formData.email as string) || null,
-                adresse: (formData.adresse as string) || null,
-                actif: formData.actif === 'true',
-              }
-            : r
-        )
-      );
-    } else {
-      const newClient: Client = {
-        id: data.length > 0 ? Math.max(...data.map((r) => r.id)) + 1 : 1,
+  const handleSubmit = async (formData: Record<string, unknown>) => {
+    try {
+      const payload = {
         nom: String(formData.nom),
         telephone: (formData.telephone as string) || null,
         email: (formData.email as string) || null,
         adresse: (formData.adresse as string) || null,
         actif: formData.actif === 'true',
       };
-      setData((prev) => [...prev, newClient]);
+
+      if (editItem) {
+        const saved = await clientsApi.update(editItem.id, payload);
+        setData((prev) =>
+          prev.map((r) => (r.id === editItem.id ? saved : r))
+        );
+        showToast('Client modifié avec succès', 'success');
+      } else {
+        const saved = await clientsApi.create(payload);
+        setData((prev) => [...prev, saved]);
+        showToast('Client créé avec succès', 'success');
+      }
+      setModalOpen(false);
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
+      const msg =
+        axiosError.response?.data?.message ||
+        (axiosError.response?.data?.errors
+          ? Object.values(axiosError.response.data.errors).flat().join(', ')
+          : '') ||
+        'Erreur lors de la sauvegarde';
+      showToast(msg, 'error');
     }
-    setModalOpen(false);
   };
 
   const confirmDelete = () => {
-    if (deleteItem) {
-      setData((prev) => prev.filter((r) => r.id !== deleteItem.id));
-      setDeleteItem(null);
-    }
+    if (!deleteItem) return;
+
+    const previous = deleteItem;
+    setData((prev) => prev.filter((r) => r.id !== previous.id));
+    setDeleteItem(null);
+
+    (async () => {
+      try {
+        await clientsApi.delete(previous.id);
+        showToast('Client supprimé avec succès', 'success');
+      } catch (error: unknown) {
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        const specificMessage = axiosError.response?.data?.message;
+
+        if (specificMessage) {
+          showToast(specificMessage, 'error');
+        } else {
+          showToast('Impossible de supprimer ce client.', 'error');
+        }
+
+        setData((prev) => [...prev, previous]);
+      }
+    })();
   };
 
   const handleEditClick = (row: Client) => {
@@ -119,6 +160,7 @@ export function ClientsPage() {
           name="nom"
           type="text"
           className="inline-input"
+          value={String(_formData.nom ?? '')}
           onChange={(e) => onChange('nom', e.target.value)}
         />
         {errors.nom && <span className="form-error">{errors.nom}</span>}
@@ -130,6 +172,7 @@ export function ClientsPage() {
           name="telephone"
           type="text"
           className="inline-input"
+          value={String(_formData.telephone ?? '')}
           onChange={(e) => onChange('telephone', e.target.value)}
         />
       </div>
@@ -140,6 +183,7 @@ export function ClientsPage() {
           name="email"
           type="email"
           className="inline-input"
+          value={String(_formData.email ?? '')}
           onChange={(e) => onChange('email', e.target.value)}
         />
       </div>
@@ -150,6 +194,7 @@ export function ClientsPage() {
           name="adresse"
           type="text"
           className="inline-input"
+          value={String(_formData.adresse ?? '')}
           onChange={(e) => onChange('adresse', e.target.value)}
         />
       </div>
@@ -159,6 +204,7 @@ export function ClientsPage() {
           id="client-actif"
           name="actif"
           className="inline-input"
+          value={String(_formData.actif ?? 'true')}
           onChange={(e) => onChange('actif', e.target.value)}
         >
           <option value="true">Oui</option>
@@ -187,18 +233,22 @@ export function ClientsPage() {
       />
 
       <SectionCard title="Liste des clients">
-        <DataTable
-          data={filtered}
-          columns={columns}
-          emptyMessage="Aucun client enregistré."
-          actionsHeaderLabel="Actions"
-          actions={(row) => (
-            <RowActions
-              onEdit={() => handleEditClick(row)}
-              onDelete={() => setDeleteItem(row)}
-            />
-          )}
-        />
+        {loading ? (
+          <div className="empty-state">Chargement des clients...</div>
+        ) : (
+          <DataTable
+            data={filtered}
+            columns={columns}
+            emptyMessage="Aucun client enregistré."
+            actionsHeaderLabel="Actions"
+            actions={(row) => (
+              <RowActions
+                onEdit={() => handleEditClick(row)}
+                onDelete={() => setDeleteItem(row)}
+              />
+            )}
+          />
+        )}
       </SectionCard>
 
       <EntityFormModal
