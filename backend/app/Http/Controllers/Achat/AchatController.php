@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Application\Achat\ConfirmerAchatUseCase;
 use App\Application\Achat\AnnulerAchatUseCase;
+use App\Application\Achat\Ports\AchatStatutRepositoryInterface;
 
 class AchatController extends Controller
 {
@@ -22,7 +23,8 @@ class AchatController extends Controller
         private ModifierAchatUseCase $modifierAchatUseCase,
         private SupprimerAchatUseCase $supprimerAchatUseCase,
         private ConfirmerAchatUseCase $confirmerAchatUseCase,
-        private AnnulerAchatUseCase $annulerAchatUseCase
+        private AnnulerAchatUseCase $annulerAchatUseCase,
+        private AchatStatutRepositoryInterface $achatStatutRepository,
     ) {
     }
 
@@ -71,6 +73,14 @@ class AchatController extends Controller
 
         $achat = $this->creerAchatUseCase
             ->executer($donnees);
+
+        $this->achatStatutRepository->creer([
+            'achat_id' => $achat->id,
+            'statut_precedent' => null,
+            'nouveau_statut' => $achat->statut ?? 'brouillon',
+            'commentaire' => 'Achat créé',
+            'utilisateur_id' => $request->user()->id,
+        ]);
 
         return response()->json($achat, 201);
     }
@@ -129,7 +139,7 @@ class AchatController extends Controller
         }
     }
 
-    public function confirmer(int $id): JsonResponse
+    public function confirmer(int $id, Request $request): JsonResponse
     {
         $achat = $this->trouverAchatUseCase->executer($id);
 
@@ -142,6 +152,14 @@ class AchatController extends Controller
         try {
             $achat = $this->confirmerAchatUseCase->executer($achat);
 
+            $this->achatStatutRepository->creer([
+                'achat_id' => $achat->id,
+                'statut_precedent' => 'brouillon',
+                'nouveau_statut' => 'confirme',
+                'commentaire' => 'Achat confirmé',
+                'utilisateur_id' => $request->user()->id,
+            ]);
+
             return response()->json([
                 'message' => 'Achat confirmé avec succès.',
                 'achat' => $achat
@@ -153,7 +171,7 @@ class AchatController extends Controller
         }
     }
 
-    public function annuler(int $id): JsonResponse
+    public function annuler(int $id, Request $request): JsonResponse
     {
         $achat = $this->trouverAchatUseCase->executer($id);
 
@@ -166,6 +184,14 @@ class AchatController extends Controller
         try {
             $achat = $this->annulerAchatUseCase->executer($achat);
 
+            $this->achatStatutRepository->creer([
+                'achat_id' => $achat->id,
+                'statut_precedent' => $achat->statut === 'annule' ? 'brouillon' : 'confirme',
+                'nouveau_statut' => 'annule',
+                'commentaire' => 'Achat annulé',
+                'utilisateur_id' => $request->user()->id,
+            ]);
+
             return response()->json([
                 'message' => 'Achat annulé avec succès.',
                 'achat' => $achat
@@ -177,4 +203,4 @@ class AchatController extends Controller
         }
     }   
 
-}   
+}

@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Application\Achat\Ports\AchatStatutRepositoryInterface;
+use App\Infrastructure\Repositories\EloquentAchatStatutRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -165,6 +167,8 @@ class AppServiceProvider extends ServiceProvider
             \App\Application\Facture\Ports\ImpressionFactureRepositoryInterface::class,
             \App\Infrastructure\Facture\ImpressionFactureRepository::class
         );
+
+        $this->app->bind(AchatStatutRepositoryInterface::class, EloquentAchatStatutRepository::class);
     }
 
     /**

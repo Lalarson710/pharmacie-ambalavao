@@ -104,6 +104,47 @@ class AchatLigneController extends Controller
         return response()->json($ligne, 201);
     }
 
+    public function update(
+        Request $request,
+        int $id
+    ): JsonResponse {
+        $ligne = $this->trouverLigneAchatUseCase->executer($id);
+
+        if (!$ligne) {
+            return response()->json([
+                'message' => 'Ligne d’achat introuvable.'
+            ], 404);
+        }
+
+        $achat = $this->trouverAchatUseCase->executer($ligne->achat_id);
+
+        if ($achat && $achat->statut !== 'brouillon') {
+            return response()->json([
+                'message' => 'Impossible de modifier une ligne d’un achat qui n’est plus en brouillon.'
+            ], 409);
+        }
+
+        $donnes = $request->validate([
+            'produit_id' => ['sometimes', 'required', 'integer', 'exists:produits,id'],
+            'quantite' => ['sometimes', 'required', 'integer', 'min:1'],
+            'prix_unitaire' => ['sometimes', 'required', 'numeric', 'min:0'],
+            'numero_lot' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'date_peremption' => ['sometimes', 'nullable', 'date'],
+        ]);
+
+        // Recalculer le montant si quantité ou prix unitaire ont changé
+        if (isset($donnes['quantite']) || isset($donnes['prix_unitaire'])) {
+            $quantite = $donnes['quantite'] ?? $ligne->quantite;
+            $prix = $donnes['prix_unitaire'] ?? $ligne->prix_unitaire;
+            $donnes['montant'] = $quantite * $prix;
+        }
+
+        $ligne->fill($donnes);
+        $ligne->save();
+
+        return response()->json($ligne);
+    }
+
     public function destroy(int $id): JsonResponse
     {
         $ligne = $this->trouverLigneAchatUseCase->executer($id);

@@ -14,6 +14,7 @@ use App\Http\Controllers\Inventaire\InventaireController;
 use App\Http\Controllers\Achat\FournisseurController;
 use App\Http\Controllers\Achat\AchatController;
 use App\Http\Controllers\Achat\AchatLigneController;
+use App\Http\Controllers\Achat\AchatStatutController;
 use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Vente\VenteController;
 use App\Http\Controllers\Vente\VenteLigneController;
@@ -152,8 +153,14 @@ Route::post('/achats/{achatId}/lignes', [AchatLigneController::class, 'store'])
     ->middleware(['auth:sanctum', 'permission:achat.create']);
 Route::get('/achat-lignes/{id}', [AchatLigneController::class, 'show'])
     ->middleware(['auth:sanctum', 'permission:achat.view']);
+Route::put('/achat-lignes/{id}', [AchatLigneController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:achat.update']);
 Route::delete('/achat-lignes/{id}', [AchatLigneController::class, 'destroy'])
     ->middleware(['auth:sanctum', 'permission:achat.delete']);
+Route::get('/achats/{achatId}/statuts', [AchatStatutController::class, 'index'])
+    ->middleware(['auth:sanctum', 'permission:achat.view']);
+Route::post('/achats/{achatId}/statuts', [AchatStatutController::class, 'store'])
+    ->middleware(['auth:sanctum', 'permission:achat.update']);
 
 Route::get('/clients', [ClientController::class, 'index'])
     ->middleware(['auth:sanctum', 'permission:client.view']);
