@@ -395,3 +395,14 @@ export interface LoginResponse {
 export interface LogoutResponse {
   message: string;
 }
+
+export interface AchatStatut {
+  id: number;
+  achat_id: number;
+  statut_precedent: string | null;
+  nouveau_statut: string;
+  commentaire: string | null;
+  utilisateur_id: number | null;
+  created_at: string;
+}
+

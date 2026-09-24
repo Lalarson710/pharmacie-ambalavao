@@ -2,17 +2,26 @@ import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
 import { RowActions } from '@/components/RowActions';
-import { formatCurrency, formatDate } from '@/utils/formatters';
-import type { AchatLigne } from '@/types';
+import { formatCurrency, formatDate, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
+import type { Achat, AchatLigne } from '@/types';
 
 interface LignesAchatTabProps {
   data: AchatLigne[];
+  achats: Achat[];
   search: string;
+  loading?: boolean;
   onOpenEdit: (item: AchatLigne) => void;
   onDelete: (item: AchatLigne) => void;
 }
 
-export function LignesAchatTab({ data, search, onOpenEdit, onDelete }: LignesAchatTabProps) {
+export function LignesAchatTab({
+  data,
+  achats,
+  search,
+  loading,
+  onOpenEdit,
+  onDelete,
+}: LignesAchatTabProps) {
   const filteredLignes = search
     ? data.filter((row) =>
         [row.produit?.nom, row.numero_lot, row.date_peremption ?? '', String(row.quantite)]
@@ -23,6 +32,14 @@ export function LignesAchatTab({ data, search, onOpenEdit, onDelete }: LignesAch
 
   const columns: Column<AchatLigne>[] = [
     { key: 'id', label: '#' },
+    {
+      key: 'achat',
+      label: 'Achat',
+      render: (row) => {
+        const achatAssocie = achats.find((a) => a.id === row.achat_id);
+        return achatAssocie?.numero ?? '—';
+      },
+    },
     {
       key: 'produit',
       label: 'Produit',
@@ -45,22 +62,56 @@ export function LignesAchatTab({ data, search, onOpenEdit, onDelete }: LignesAch
       label: 'Montant',
       render: (row) => formatCurrency(row.montant),
     },
+    {
+      key: 'statut',
+      label: 'Statut',
+      render: (row) => {
+        const achatAssocie = achats.find((a) => a.id === row.achat_id);
+        if (!achatAssocie) return '—';
+        return (
+          <span className={`badge ${getStatutBadgeClass(achatAssocie.statut)}`}>
+            {formatStatut(achatAssocie.statut)}
+          </span>
+        );
+      },
+    },
   ];
 
-  return (
-    <SectionCard title="Lignes d’achat" subtitle={`${data.length} ligne(s)`}>
-      <DataTable
-        data={filteredLignes}
-        columns={columns}
-        emptyMessage="Aucune ligne d’achat."
-        actionsHeaderLabel="Actions"
-        actions={(row) => (
-          <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
-          />
-        )}
+  const renderActions = (row: AchatLigne) => {
+    const achatAssocie = achats.find((a) => a.id === row.achat_id);
+    const peutModifier = achatAssocie?.statut === 'brouillon';
+
+    if (!peutModifier) {
+      return (
+        <RowActions>
+          <span className="text-muted" style={{ fontSize: '0.75rem', padding: '0 8px' }}>
+            Achat non modifiable
+          </span>
+        </RowActions>
+      );
+    }
+
+    return (
+      <RowActions
+        onEdit={() => onOpenEdit(row)}
+        onDelete={() => onDelete(row)}
       />
+    );
+  };
+
+  return (
+    <SectionCard title="Lignes d'achat" subtitle={`${data.length} ligne(s)`}>
+      {loading ? (
+        <div className="empty-state">Chargement des lignes...</div>
+      ) : (
+        <DataTable
+          data={filteredLignes}
+          columns={columns}
+          emptyMessage="Aucune ligne d'achat."
+          actionsHeaderLabel="Actions"
+          actions={renderActions}
+        />
+      )}
     </SectionCard>
   );
 }
