@@ -1,5 +1,4 @@
-import { DataTable } from '@/components/DataTable';
-import type { Column } from '@/components/DataTable';
+import { DataTable, type Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
 import { formatDate } from '@/utils/formatters';
 import type { Lot } from '@/types';
@@ -7,14 +6,19 @@ import type { Lot } from '@/types';
 interface LotsTabProps {
   data: Lot[];
   search: string;
+  loading?: boolean;
 }
 
-export function LotsTab({ data, search }: LotsTabProps) {
+export function LotsTab({
+  data,
+  search,
+  loading = false,
+}: LotsTabProps) {
   const filteredLots = search
     ? data.filter((row) =>
-        [row.produit?.nom, row.numero_lot]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(search.toLowerCase()))
+        [row.produit?.nom ?? '', row.numero_lot].some((value) =>
+          value.toLowerCase().includes(search.toLowerCase()),
+        ),
       )
     : data;
 
@@ -37,9 +41,13 @@ export function LotsTab({ data, search }: LotsTabProps) {
   return (
     <SectionCard title="Lots">
       <DataTable
-        data={filteredLots}
+        data={loading ? [] : filteredLots}
         columns={columns}
-        emptyMessage="Aucun lot enregistré."
+        emptyMessage={
+          loading
+            ? 'Chargement des lots...'
+            : 'Aucun lot enregistré.'
+        }
       />
     </SectionCard>
   );

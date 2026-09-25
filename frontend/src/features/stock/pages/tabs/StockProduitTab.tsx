@@ -1,27 +1,43 @@
-import { DataTable } from '@/components/DataTable';
-import type { Column } from '@/components/DataTable';
+import { DataTable, type Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
 import { formatCurrency } from '@/utils/formatters';
 import type { Produit } from '@/types';
 
+type StockProduit = Produit & {
+  quantite_totale: number;
+};
+
 interface StockProduitTabProps {
-  data: (Produit & { quantite_totale: number })[];
+  data: StockProduit[];
   search: string;
+  loading?: boolean;
 }
 
-export function StockProduitTab({ data, search }: StockProduitTabProps) {
+export function StockProduitTab({
+  data,
+  search,
+  loading = false,
+}: StockProduitTabProps) {
   const filteredStock = search
     ? data.filter((row) =>
-        [row.nom, row.categorie?.nom, row.unite?.abreviation]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(search.toLowerCase()))
+        [
+          row.nom,
+          row.categorie?.nom ?? '',
+          row.unite?.abreviation ?? '',
+        ].some((value) =>
+          value.toLowerCase().includes(search.toLowerCase()),
+        ),
       )
     : data;
 
-  const columns: Column<Produit & { quantite_totale: number }>[] = [
+  const columns: Column<StockProduit>[] = [
     { key: 'id', label: '#' },
     { key: 'nom', label: 'Produit' },
-    { key: 'categories', label: 'Catégorie', render: (row) => row.categorie?.nom ?? '—' },
+    {
+      key: 'categorie',
+      label: 'Catégorie',
+      render: (row) => row.categorie?.nom ?? '—',
+    },
     {
       key: 'unite',
       label: 'Unité',
@@ -40,16 +56,23 @@ export function StockProduitTab({ data, search }: StockProduitTabProps) {
     {
       key: 'valeur_stock',
       label: 'Valeur stock',
-      render: (row) => formatCurrency(Number(row.prix_achat) * row.quantite_totale),
+      render: (row) =>
+        formatCurrency(
+          Number(row.prix_achat) * row.quantite_totale,
+        ),
     },
   ];
 
   return (
     <SectionCard title="Stock par produit">
       <DataTable
-        data={filteredStock}
+        data={loading ? [] : filteredStock}
         columns={columns}
-        emptyMessage="Aucun produit en stock."
+        emptyMessage={
+          loading
+            ? 'Chargement du stock par produit...'
+            : 'Aucun produit en stock.'
+        }
       />
     </SectionCard>
   );
