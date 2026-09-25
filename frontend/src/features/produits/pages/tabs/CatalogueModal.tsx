@@ -1,4 +1,5 @@
-import { type Dispatch, type SetStateAction } from 'react';
+import { type Dispatch, type SetStateAction, type ReactNode } from 'react';
+import { Boxes, Package, Ruler, Tags } from 'lucide-react';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { useToast } from '@/components/Toast';
 import type { Produit, Categorie, Unite, Lot } from '@/types';
@@ -37,6 +38,20 @@ const addLabels: Record<CatalogueModalKind, string> = {
   lot: 'Ajouter un lot',
   categories: 'Ajouter une catégorie',
   unite: 'Ajouter une unité',
+};
+
+const kindIcons: Record<CatalogueModalKind, ReactNode> = {
+  produit: <Package size={18} />,
+  categories: <Tags size={18} />,
+  unite: <Ruler size={18} />,
+  lot: <Boxes size={18} />,
+};
+
+const kindSubtitles: Record<CatalogueModalKind, string> = {
+  produit: 'Définissez l\u2019identité, la tarification et le seuil d\u2019alerte du produit.',
+  categories: 'Classez vos produits par familles therapeuticques.',
+  unite: 'Unité de conditionnement utilisee dans le catalogue.',
+  lot: 'Numero de lot et date de peremption pour la tracabilite.',
 };
 
 export function CatalogueModal({
@@ -271,6 +286,8 @@ export function CatalogueModal({
       open={!!modal}
       onClose={() => setModal(null)}
       title={modal ? `${modal.item ? 'Modifier' : 'Ajouter'} ${addLabels[modal.kind].replace('Ajouter ', '')}` : ''}
+      icon={modal ? kindIcons[modal.kind] : undefined}
+      subtitle={modal ? kindSubtitles[modal.kind] : undefined}
       editItem={modal?.item ?? null}
       onSubmit={handleSave}
       renderForm={renderForm}

@@ -1,4 +1,5 @@
-import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, type ReactNode, useEffect, useState } from 'react';
+import { Building2, ClipboardList, ReceiptText, ShoppingCart } from 'lucide-react';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { useToast } from '@/components/Toast';
 import { produitsApi } from '../../../produits/api/produits';
@@ -207,8 +208,10 @@ export function AchatsModal({
     if (modal.kind === 'achat') {
       return (
         <>
-          <div className="form-field">
-            <label htmlFor="achat-fournisseur">Fournisseur *</label>
+          <div className="form-field form-field-full">
+            <label htmlFor="achat-fournisseur">
+              Fournisseur <span className="required-mark">*</span>
+            </label>
             <select
               id="achat-fournisseur"
               name="fournisseur_id"
@@ -228,7 +231,9 @@ export function AchatsModal({
             {errors.fournisseur_id && <span className="form-error">{errors.fournisseur_id}</span>}
           </div>
           <div className="form-field">
-            <label htmlFor="achat-numero">Numéro *</label>
+            <label htmlFor="achat-numero">
+              Numéro <span className="required-mark">*</span>
+            </label>
             <input
               id="achat-numero"
               name="numero"
@@ -240,7 +245,9 @@ export function AchatsModal({
             {errors.numero && <span className="form-error">{errors.numero}</span>}
           </div>
           <div className="form-field">
-            <label htmlFor="achat-date">Date *</label>
+            <label htmlFor="achat-date">
+              Date <span className="required-mark">*</span>
+            </label>
             <input
               id="achat-date"
               name="date_achat"
@@ -252,7 +259,9 @@ export function AchatsModal({
             {errors.date_achat && <span className="form-error">{errors.date_achat}</span>}
           </div>
           <div className="form-field">
-            <label htmlFor="achat-montant">Montant total *</label>
+            <label htmlFor="achat-montant">
+              Montant total (MGA) <span className="required-mark">*</span>
+            </label>
             <input
               id="achat-montant"
               name="montant_total"
@@ -265,12 +274,13 @@ export function AchatsModal({
             />
             {errors.montant_total && <span className="form-error">{errors.montant_total}</span>}
           </div>
-          <div className="form-field">
+          <div className="form-field form-field-full">
             <label htmlFor="achat-observation">Observation</label>
-            <input
+            <textarea
               id="achat-observation"
               name="observation"
-              type="text"
+              rows={3}
+              placeholder="Remarque interne sur cet achat…"
               className="inline-input"
               value={String(_formData.observation ?? '')}
               onChange={(e) => onChange('observation', e.target.value)}
@@ -283,8 +293,10 @@ export function AchatsModal({
     if (modal.kind === 'ligne') {
       return (
         <>
-          <div className="form-field">
-            <label htmlFor="ligne-achat">Achat *</label>
+          <div className="form-field form-field-full">
+            <label htmlFor="ligne-achat">
+              Achat <span className="required-mark">*</span>
+            </label>
             <select
               id="ligne-achat"
               name="achat_id"
@@ -301,8 +313,10 @@ export function AchatsModal({
             </select>
             {errors.achat_id && <span className="form-error">{errors.achat_id}</span>}
           </div>
-          <div className="form-field">
-            <label htmlFor="ligne-produit">Produit *</label>
+          <div className="form-field form-field-full">
+            <label htmlFor="ligne-produit">
+              Produit <span className="required-mark">*</span>
+            </label>
             <select
               id="ligne-produit"
               name="produit_id"
@@ -320,7 +334,9 @@ export function AchatsModal({
             {errors.produit_id && <span className="form-error">{errors.produit_id}</span>}
           </div>
           <div className="form-field">
-            <label htmlFor="ligne-quantite">Quantité *</label>
+            <label htmlFor="ligne-quantite">
+              Quantité <span className="required-mark">*</span>
+            </label>
             <input
               id="ligne-quantite"
               name="quantite"
@@ -334,7 +350,9 @@ export function AchatsModal({
             {errors.quantite && <span className="form-error">{errors.quantite}</span>}
           </div>
           <div className="form-field">
-            <label htmlFor="ligne-prix">Prix unitaire *</label>
+            <label htmlFor="ligne-prix">
+              Prix unitaire (MGA) <span className="required-mark">*</span>
+            </label>
             <input
               id="ligne-prix"
               name="prix_unitaire"
@@ -353,10 +371,12 @@ export function AchatsModal({
               id="ligne-lot"
               name="numero_lot"
               type="text"
+              placeholder="Ex. LOT-2026-014"
               className="inline-input"
               value={String(_formData.numero_lot ?? '')}
               onChange={(e) => onChange('numero_lot', e.target.value)}
             />
+            <span className="form-hint">Requis pour la traçabilité du stock.</span>
           </div>
           <div className="form-field">
             <label htmlFor="ligne-peremption">Date de péremption</label>
@@ -375,8 +395,10 @@ export function AchatsModal({
 
     return (
       <>
-        <div className="form-field">
-          <label htmlFor="fournisseur-nom">Nom *</label>
+        <div className="form-field form-field-full">
+          <label htmlFor="fournisseur-nom">
+            Nom <span className="required-mark">*</span>
+          </label>
           <input
             id="fournisseur-nom"
             name="nom"
@@ -409,7 +431,7 @@ export function AchatsModal({
             onChange={(e) => onChange('email', e.target.value)}
           />
         </div>
-        <div className="form-field">
+        <div className="form-field form-field-full">
           <label htmlFor="fournisseur-adresse">Adresse</label>
           <input
             id="fournisseur-adresse"
@@ -424,6 +446,18 @@ export function AchatsModal({
     );
   };
 
+  const kindIcons: Record<AchatModalKind, ReactNode> = {
+    achat: <ShoppingCart size={18} />,
+    ligne: <ClipboardList size={18} />,
+    fournisseur: <Building2 size={18} />,
+  };
+
+  const kindSubtitles: Record<AchatModalKind, string> = {
+    achat: 'Saisissez la commande pass\u00e9 aupr\u00e8s d\'un fournisseur.',
+    ligne: 'Ajoutez un article avec sa quantit\u00e9 et son num\u00e9ro de lot.',
+    fournisseur: 'Coordonn\u00e9es du fournisseur associ\u00e9 aux achats.',
+  };
+
   return (
     <EntityFormModal
       open={Boolean(modal)}
@@ -435,6 +469,8 @@ export function AchatsModal({
             }`
           : ''
       }
+      icon={modal ? kindIcons[modal.kind] : <ReceiptText size={18} />}
+      subtitle={modal ? kindSubtitles[modal.kind] : undefined}
       editItem={modal?.item ?? null}
       onSubmit={handleSave}
       renderForm={renderForm}

@@ -1,18 +1,13 @@
 import type { Caisse } from '@/types';
 
 interface MouvementFormProps {
-  formData: Record<string, unknown>;
+  formData?: Record<string, unknown>;
   onChange: (name: string, value: string) => void;
   errors: Record<string, string>;
   caisseData: Caisse[];
 }
 
-export function MouvementForm({
-  formData,
-  onChange,
-  errors,
-  caisseData,
-}: MouvementFormProps) {
+export function MouvementForm({ onChange, errors, caisseData }: MouvementFormProps) {
   return (
     <>
       <div className="form-field">

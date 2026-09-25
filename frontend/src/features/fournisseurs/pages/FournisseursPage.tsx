@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Building2, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
@@ -155,11 +155,12 @@ export function FournisseursPage() {
     onChange: (name: string, value: string) => void,
     errors: Record<string, string>
   ) => {
-    console.log('%c[LOG] renderForm — formData:', 'color: teal', _formData);
     return (
       <>
-        <div className="form-field">
-          <label htmlFor="fournisseur-nom">Nom *</label>
+        <div className="form-field form-field-full">
+          <label htmlFor="fournisseur-nom">
+            Nom <span className="required-mark">*</span>
+          </label>
           <input
             id="fournisseur-nom"
             name="nom"
@@ -192,7 +193,7 @@ export function FournisseursPage() {
             onChange={(e) => onChange('email', e.target.value)}
           />
         </div>
-        <div className="form-field">
+        <div className="form-field form-field-full">
           <label htmlFor="fournisseur-adresse">Adresse</label>
           <input
             id="fournisseur-adresse"
@@ -204,7 +205,7 @@ export function FournisseursPage() {
           />
         </div>
         <div className="form-field">
-          <label htmlFor="fournisseur-actif">Actif</label>
+          <label htmlFor="fournisseur-actif">Statut</label>
           <select
             id="fournisseur-actif"
             name="actif"
@@ -260,6 +261,12 @@ export function FournisseursPage() {
           setEditItem(null);
         }}
         title={editItem ? 'Modifier le fournisseur' : 'Ajouter un fournisseur'}
+        icon={<Building2 size={18} />}
+        subtitle={
+          editItem
+            ? 'Actualisez les coordonnées de ce fournisseur.'
+            : 'Enregistrez un nouveau fournisseur pour vos achats.'
+        }
         editItem={editItem}
         onSubmit={handleSubmit}
         renderForm={renderForm}

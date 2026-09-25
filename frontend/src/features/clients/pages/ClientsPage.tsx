@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, UserRound } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
@@ -153,8 +153,10 @@ export function ClientsPage() {
     errors: Record<string, string>
   ) => (
     <>
-      <div className="form-field">
-        <label htmlFor="client-nom">Nom *</label>
+      <div className="form-field form-field-full">
+        <label htmlFor="client-nom">
+          Nom <span className="required-mark">*</span>
+        </label>
         <input
           id="client-nom"
           name="nom"
@@ -187,7 +189,7 @@ export function ClientsPage() {
           onChange={(e) => onChange('email', e.target.value)}
         />
       </div>
-      <div className="form-field">
+      <div className="form-field form-field-full">
         <label htmlFor="client-adresse">Adresse</label>
         <input
           id="client-adresse"
@@ -199,7 +201,7 @@ export function ClientsPage() {
         />
       </div>
       <div className="form-field">
-        <label htmlFor="client-actif">Actif</label>
+        <label htmlFor="client-actif">Statut</label>
         <select
           id="client-actif"
           name="actif"
@@ -251,6 +253,12 @@ export function ClientsPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editItem ? 'Modifier le client' : 'Ajouter un client'}
+        icon={<UserRound size={18} />}
+        subtitle={
+          editItem
+            ? 'Actualisez les informations de contact de ce client.'
+            : 'Enregistrez un nouveau client pour vos ventes.'
+        }
         editItem={editItem}
         onSubmit={handleSubmit}
         renderForm={renderForm}

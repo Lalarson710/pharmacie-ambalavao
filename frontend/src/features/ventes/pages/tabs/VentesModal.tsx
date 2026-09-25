@@ -1,7 +1,7 @@
 import { type Dispatch, type SetStateAction } from 'react';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { clients, factures } from '@/data/mockData';
-import type { Facture, Reglement, Vente } from '@/types';
+import type { Reglement, Vente } from '@/types';
 
 export type VenteModalKind = 'vente' | 'reglement';
 

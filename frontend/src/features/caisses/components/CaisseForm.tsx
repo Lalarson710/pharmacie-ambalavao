@@ -2,18 +2,13 @@ import { utilisateurs } from '@/data/mockData';
 import type { Caisse } from '@/types';
 
 interface CaisseFormProps {
-  formData: Record<string, unknown>;
+  formData?: Record<string, unknown>;
   onChange: (name: string, value: string) => void;
   errors: Record<string, string>;
-  item: Caisse | null;
+  item?: Caisse | null;
 }
 
-export function CaisseForm({
-  formData,
-  onChange,
-  errors,
-  item,
-}: CaisseFormProps) {
+export function CaisseForm({ onChange, errors }: CaisseFormProps) {
   return (
     <>
       <div className="form-field">

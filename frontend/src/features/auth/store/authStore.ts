@@ -50,7 +50,7 @@ export const useAuthStore = create<AuthStore>()(
 
         try {
           const response = await apiClient.post<LoginResponse>('/login', credentials);
-          const { user, token, message } = response.data;
+          const { user, token } = response.data;
 
           localStorage.setItem('auth_token', token);
           localStorage.setItem('auth_user', JSON.stringify(user));

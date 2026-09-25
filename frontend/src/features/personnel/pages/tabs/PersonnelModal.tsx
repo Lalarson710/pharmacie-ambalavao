@@ -1,4 +1,5 @@
-import { type Dispatch, type SetStateAction } from 'react';
+import { type Dispatch, type ReactNode, type SetStateAction } from 'react';
+import { ShieldCheck, UserCog, Users } from 'lucide-react';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import type { Personnel, Role, User } from '@/types';
 import { PersonnelForm } from '../../components/PersonnelForm';
@@ -283,10 +284,24 @@ export function PersonnelModal({
     );
   };
 
+  const kindIcons: Record<PersonnelModalKind, ReactNode> = {
+    personnel: <Users size={18} />,
+    utilisateur: <UserCog size={18} />,
+    role: <ShieldCheck size={18} />,
+  };
+
+  const kindSubtitles: Record<PersonnelModalKind, string> = {
+    personnel: 'Informations du membre du personnel et son poste.',
+    utilisateur: 'Compte de connexion et rôle associé.',
+    role: 'Rôle déterminant les permissions du personnel.',
+  };
+
   return (
     <EntityFormModal
       open={Boolean(modal)}
       onClose={() => setModal(null)}
+      icon={modal ? kindIcons[modal.kind] : undefined}
+      subtitle={modal ? kindSubtitles[modal.kind] : undefined}
       title={
         modal?.kind === 'role'
           ? modal?.item

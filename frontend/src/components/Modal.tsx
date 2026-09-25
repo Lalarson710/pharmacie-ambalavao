@@ -24,9 +24,9 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
   if (!open) return null;
 
   const sizeClass = {
-    sm: 'max-w-sm',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
+    sm: 'modal-size-sm',
+    md: 'modal-size-md',
+    lg: 'modal-size-lg',
   };
 
   return (
