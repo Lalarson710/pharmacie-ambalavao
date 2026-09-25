@@ -10,7 +10,7 @@ interface PersonnelTabProps {
   search: string;
   onOpenEdit: (item: Personnel) => void;
   onDelete: (item: Personnel) => void;
-  loading?: boolean;          // ← AJOUT
+  loading?: boolean;
 }
 
 export function PersonnelTab({ personnelData, search, onOpenEdit, onDelete, loading = false }: PersonnelTabProps) {
@@ -55,24 +55,15 @@ export function PersonnelTab({ personnelData, search, onOpenEdit, onDelete, load
     },
   ];
 
-  // ← AJOUT : état chargement
-  if (loading) {
-    return (
-      <SectionCard title="Liste du personnel" subtitle="Chargement...">
-        <div className="table-loading">
-          <div className="loading-spinner" />
-          <p>Chargement du personnel...</p>
-        </div>
-      </SectionCard>
-    );
-  }
-
   return (
-    <SectionCard title="Liste du personnel" subtitle={`${personnelData.length} membre(s)`}>
+    <SectionCard
+      title="Liste du personnel"
+      subtitle={loading ? 'Chargement...' : `${personnelData.length} membre(s)`}
+    >
       <DataTable
-        data={filteredPersonnel}
+        data={loading ? [] : filteredPersonnel}
         columns={personnelColumns}
-        emptyMessage="Aucun membre du personnel."
+        emptyMessage={loading ? 'Chargement du personnel...' : 'Aucun membre du personnel.'}
         actionsHeaderLabel="Actions"
         actions={(row) => (
           <RowActions

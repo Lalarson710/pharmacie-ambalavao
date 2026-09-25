@@ -2,10 +2,10 @@ interface RoleFormProps {
   formData: Record<string, unknown>;
   onChange: (name: string, value: string) => void;
   errors: Record<string, string>;
-  item: { nom?: string; nom_affichage?: string } | null;
+  item?: { nom?: string; nom_affichage?: string } | null;
 }
 
-export function RoleForm({ formData, onChange, errors, item }: RoleFormProps) {
+export function RoleForm({ formData, onChange, errors }: RoleFormProps) {
   return (
     <div>
       <div className="form-field">

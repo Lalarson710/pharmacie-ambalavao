@@ -261,25 +261,6 @@ export function PermissionsPage() {
   const allowedCount = userPermissions.filter((up) => up.allowed).length;
   const totalCount = allPermissions.length;
 
-  // ── Loading ──
-  if (loading) {
-    return (
-      <div className="page-container">
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '50vh',
-          }}
-        >
-          <div className="loading-spinner" />
-          <p>Chargement des permissions...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="page-container">
 
@@ -288,7 +269,11 @@ export function PermissionsPage() {
       ===================================================== */}
       <PageHeader
         title="Permissions"
-        subtitle={`${allowedCount} sur ${totalCount} permissions`}
+        subtitle={
+          loading
+            ? 'Chargement des permissions...'
+            : `${allowedCount} sur ${totalCount} permissions`
+        }
       />
 
       <PageToolbar
@@ -342,8 +327,15 @@ export function PermissionsPage() {
       ===================================================== */}
       <SectionCard
         title="Permissions utilisateur"
-        subtitle={`${allowedCount} sur ${totalCount} permissions autorisées`}
+        subtitle={
+          loading
+            ? 'Chargement...'
+            : `${allowedCount} sur ${totalCount} permissions autorisées`
+        }
       >
+        {loading ? (
+          <div className="empty-cell">Chargement des permissions...</div>
+        ) : (
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
           <div
             style={{
@@ -381,16 +373,17 @@ export function PermissionsPage() {
             })}
           </div>
         </div>
+        )}
 
         {/* =================================================
             BOUTONS
-        ================================================= */}
+            ================================================= */}
         <div className="flex items-center justify-center gap-3" style={{ marginTop: '32px' }}>
           <button
             type="button"
             className="btn-primary min-w-[220px] justify-center"
             onClick={saveUserPermissions}
-            disabled={saving || !hasChanges}
+            disabled={loading || saving || !hasChanges}
           >
             <span className="flex items-center gap-1">
               {saving ? (
@@ -422,7 +415,7 @@ export function PermissionsPage() {
             type="button"
             className="btn-ghost"
             onClick={() => setConfirmReset(true)}
-            disabled={saving || !hasChanges}
+            disabled={loading || saving || !hasChanges}
           >
             Réinitialiser
           </button>

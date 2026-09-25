@@ -4,11 +4,11 @@ interface PersonnelFormProps {
   formData: Record<string, unknown>;
   onChange: (name: string, value: string) => void;
   errors: Record<string, string>;
-  item: { user_id?: number | null; nom?: string; prenom?: string; telephone?: string | null; email?: string | null; adresse?: string | null; fonction?: string; date_embauche?: string | null; actif?: boolean } | null;
+  item?: { user_id?: number | null; nom?: string; prenom?: string; telephone?: string | null; email?: string | null; adresse?: string | null; fonction?: string; date_embauche?: string | null; actif?: boolean } | null;
   users: User[];
 }
 
-export function PersonnelForm({ formData, onChange, errors, item, users }: PersonnelFormProps) {
+export function PersonnelForm({ formData, onChange, errors, users }: PersonnelFormProps) {
   const val = (name: string) => formData[name] === undefined ? '' : String(formData[name]);
 
   return (

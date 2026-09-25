@@ -103,10 +103,13 @@ export function PersonnelModal({
             if (modal.kind === 'utilisateur') {
               const password = formData.password as string | undefined;
 
+              // role_id est valide (obligatoire) par validate() juste avant
+              const roleId = Number(formData.role_id);
+
               const userData = {
                 name: String(formData.name),
                 email: String(formData.email),
-                role_id: formData.role_id ? Number(formData.role_id) : null,
+                role_id: roleId,
                 ...(password !== undefined && password !== '' ? { password } : {}),
               };
 
@@ -135,7 +138,7 @@ export function PersonnelModal({
                 const createData = {
                   name: String(formData.name),
                   email: String(formData.email),
-                  role_id: formData.role_id ? Number(formData.role_id) : null,
+                  role_id: roleId,
                   password: String(formData.password), // toujours envoyé pour création
                 };
                 savedUser = await utilisateursApi.create(createData);

@@ -4,12 +4,12 @@ interface UtilisateurFormProps {
   formData: Record<string, unknown>;
   onChange: (name: string, value: string) => void;
   errors: Record<string, string>;
-  item: { name?: string; email?: string; role_id?: number | null } | null;
+  item?: { name?: string; email?: string; role_id?: number | null } | null;
   isCreation: boolean;
   roles: Role[];
 }
 
-export function UtilisateurForm({ formData, onChange, errors, item, isCreation, roles }: UtilisateurFormProps) {
+export function UtilisateurForm({ formData, onChange, errors, isCreation, roles }: UtilisateurFormProps) {
   const val = (name: string) => formData[name] === undefined ? '' : String(formData[name]);
 
   return (

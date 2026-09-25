@@ -27,24 +27,15 @@ export function RolesTab({ rolesData = [], search, onOpenEdit, onDelete, loading
     { key: 'nom_affichage', label: 'Affichage' },
   ];
 
-  // Message pendant le chargement
-  if (loading) {
-    return (
-      <SectionCard title="Liste des rôles" subtitle="Chargement...">
-        <div className="table-loading">
-          <div className="loading-spinner" />
-          <p>Chargement des rôles...</p>
-        </div>
-      </SectionCard>
-    );
-  }
-
   return (
-    <SectionCard title="Liste des rôles" subtitle={`${rolesData.length} rôle(s)`}>
+    <SectionCard
+      title="Liste des rôles"
+      subtitle={loading ? 'Chargement...' : `${rolesData.length} rôle(s)`}
+    >
       <DataTable
-        data={filteredRoles}
+        data={loading ? [] : filteredRoles}
         columns={roleColumns}
-        emptyMessage="Aucun rôle enregistré."
+        emptyMessage={loading ? 'Chargement des rôles...' : 'Aucun rôle enregistré.'}
         actionsHeaderLabel="Actions"
         actions={(row) => (
           <RowActions

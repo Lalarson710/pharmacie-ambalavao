@@ -56,24 +56,15 @@ export function UtilisateursTab({
     },
   ];
 
-  // Message pendant le chargement
-  if (loading) {
-    return (
-      <SectionCard title="Utilisateurs" subtitle="Chargement...">
-        <div className="table-loading">
-          <div className="loading-spinner" />
-          <p>Chargement des utilisateurs...</p>
-        </div>
-      </SectionCard>
-    );
-  }
-
   return (
-    <SectionCard title="Utilisateurs" subtitle={`${usersData.length} utilisateur(s)`}>
+    <SectionCard
+      title="Utilisateurs"
+      subtitle={loading ? 'Chargement...' : `${usersData.length} utilisateur(s)`}
+    >
       <DataTable
-        data={filteredUsers}
+        data={loading ? [] : filteredUsers}
         columns={utilisateurColumns}
-        emptyMessage="Aucun utilisateur."
+        emptyMessage={loading ? 'Chargement des utilisateurs...' : 'Aucun utilisateur.'}
         actionsHeaderLabel="Actions"
         actions={(row) => (
           <RowActions
