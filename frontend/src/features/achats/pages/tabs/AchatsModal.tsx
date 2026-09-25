@@ -18,7 +18,6 @@ interface AchatsModalProps {
   setModal: Dispatch<SetStateAction<AchatModalState | null>>;
   data: Achat[];
   setData: Dispatch<SetStateAction<Achat[]>>;
-  lignesData: AchatLigne[];
   setLignesData: Dispatch<SetStateAction<AchatLigne[]>>;
   fournisseursData: Fournisseur[];
   setFournisseursData: Dispatch<SetStateAction<Fournisseur[]>>;
@@ -29,7 +28,6 @@ export function AchatsModal({
   setModal,
   data,
   setData,
-  lignesData,
   setLignesData,
   fournisseursData,
   setFournisseursData,

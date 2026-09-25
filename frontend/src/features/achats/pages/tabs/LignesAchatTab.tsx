@@ -101,17 +101,13 @@ export function LignesAchatTab({
 
   return (
     <SectionCard title="Lignes d'achat" subtitle={`${data.length} ligne(s)`}>
-      {loading ? (
-        <div className="empty-state">Chargement des lignes...</div>
-      ) : (
-        <DataTable
-          data={filteredLignes}
-          columns={columns}
-          emptyMessage="Aucune ligne d'achat."
-          actionsHeaderLabel="Actions"
-          actions={renderActions}
-        />
-      )}
+      <DataTable
+        data={loading ? [] : filteredLignes}
+        columns={columns}
+        emptyMessage={loading ? 'Chargement des lignes...' : 'Aucune ligne d’achat.'}
+        actionsHeaderLabel="Actions"
+        actions={renderActions}
+      />
     </SectionCard>
   );
 }

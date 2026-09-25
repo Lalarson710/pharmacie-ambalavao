@@ -2,7 +2,7 @@ import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
 import { RowActions } from '@/components/RowActions';
-import { CheckCircle, Eye, Printer, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle, Eye, Printer, XCircle } from 'lucide-react';
 import { formatCurrency, formatDate, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
 import type { Achat } from '@/types';
 
@@ -157,17 +157,13 @@ export function AchatsTab({
 
   return (
     <SectionCard title="Liste des achats">
-      {loading ? (
-        <div className="empty-state">Chargement des achats...</div>
-      ) : (
-        <DataTable
-          data={filteredAchats}
-          columns={columns}
-          emptyMessage="Aucun achat enregistré."
-          actionsHeaderLabel="Actions"
-          actions={renderActions}
-        />
-      )}
+      <DataTable
+        data={loading ? [] : filteredAchats}
+        columns={columns}
+        emptyMessage={loading ? 'Chargement des achats...' : 'Aucun achat enregistré.'}
+        actionsHeaderLabel="Actions"
+        actions={renderActions}
+      />
     </SectionCard>
   );
 }

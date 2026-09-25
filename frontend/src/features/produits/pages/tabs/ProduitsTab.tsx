@@ -37,22 +37,18 @@ export function ProduitsTab({ data, search, loading, onOpenEdit, onDelete }: Pro
 
   return (
     <SectionCard title="Liste des produits">
-      {loading ? (
-        <div className="empty-state">Chargement des produits...</div>
-      ) : (
-        <DataTable
-          data={filteredProducts}
-          columns={columns}
-          emptyMessage="Aucun produit enregistré."
-          actionsHeaderLabel="Actions"
-          actions={(row) => (
-            <RowActions
-              onEdit={() => onOpenEdit(row)}
-              onDelete={() => onDelete(row)}
-            />
-          )}
-        />
-      )}
+      <DataTable
+        data={loading ? [] : filteredProducts}
+        columns={columns}
+        emptyMessage={loading ? 'Chargement des produits...' : 'Aucun produit enregistré.'}
+        actionsHeaderLabel="Actions"
+        actions={(row) => (
+          <RowActions
+            onEdit={() => onOpenEdit(row)}
+            onDelete={() => onDelete(row)}
+          />
+        )}
+      />
     </SectionCard>
   );
 }

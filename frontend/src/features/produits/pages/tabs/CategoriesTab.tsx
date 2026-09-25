@@ -30,22 +30,18 @@ export function CategoriesTab({ data, search, loading, onOpenEdit, onDelete }: C
 
   return (
     <SectionCard title="Catégories" subtitle={`${data.length} catégorie(s)`}>
-      {loading ? (
-        <div className="empty-state">Chargement des catégories...</div>
-      ) : (
-        <DataTable
-          data={filteredCategories}
-          columns={columns}
-          emptyMessage="Aucune catégorie."
-          actionsHeaderLabel="Actions"
-          actions={(row) => (
-            <RowActions
-              onEdit={() => onOpenEdit(row)}
-              onDelete={() => onDelete(row)}
-            />
-          )}
-        />
-      )}
+      <DataTable
+        data={loading ? [] : filteredCategories}
+        columns={columns}
+        emptyMessage={loading ? 'Chargement des catégories...' : 'Aucune catégorie.'}
+        actionsHeaderLabel="Actions"
+        actions={(row) => (
+          <RowActions
+            onEdit={() => onOpenEdit(row)}
+            onDelete={() => onDelete(row)}
+          />
+        )}
+      />
     </SectionCard>
   );
 }

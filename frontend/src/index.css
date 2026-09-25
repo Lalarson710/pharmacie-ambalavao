@@ -1479,6 +1479,403 @@ a { color: inherit; }
   background: #f3f4f6;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   ACHAT DETAIL MODAL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.achat-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.achat-detail-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid #dce8d8;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f2faec, #ffffff 72%);
+}
+
+.achat-detail-hero-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  color: var(--theme-dark);
+  background: #dff3ce;
+}
+
+.achat-detail-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.achat-detail-kicker {
+  color: var(--theme-dark);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .09em;
+}
+
+.achat-detail-hero-copy strong {
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.achat-detail-hero-copy > span:last-child {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.achat-detail-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.achat-detail-hero-actions .btn-export-pdf {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.achat-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.achat-detail-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 7px rgba(28, 55, 35, .05);
+}
+
+.achat-detail-summary-icon {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  color: #2f6f25;
+  background: #e7f5e2;
+}
+
+.achat-detail-summary-icon.blue {
+  color: #1e5d8c;
+  background: #e2f0fa;
+}
+
+.achat-detail-summary-icon.purple {
+  color: #6741a5;
+  background: #eee6fb;
+}
+
+.achat-detail-summary-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.achat-detail-summary-card span:not(.achat-detail-summary-icon) {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.achat-detail-summary-card strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.achat-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.achat-detail-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.achat-detail-section-heading > div:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+
+.achat-detail-section-icon {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  color: #2f6f25;
+  background: #e7f5e2;
+}
+
+.achat-detail-section-icon.orange {
+  color: #a05a12;
+  background: #fff0d8;
+}
+
+.achat-detail-section-icon.history {
+  color: #6b4aa5;
+  background: #eee6fb;
+}
+
+.achat-detail-section-heading h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.achat-detail-section-heading p {
+  margin: 2px 0 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.achat-detail-count {
+  padding: 4px 8px;
+  border-radius: 20px;
+  color: var(--theme-dark);
+  background: var(--theme-light);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.achat-detail-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  padding: 13px;
+  border: 1px solid #e4ebe1;
+  border-radius: 10px;
+  background: #fbfcfb;
+}
+
+.achat-detail-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.achat-detail-info-wide {
+  grid-column: 1 / -1;
+}
+
+.achat-detail-info-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.achat-detail-info-item > strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.achat-detail-observation {
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.achat-detail-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e4ebe1;
+  border-radius: 10px;
+}
+
+.achat-detail-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.achat-detail-table th {
+  padding: 9px 10px;
+  color: #fff;
+  background: var(--theme);
+  font-size: 10px;
+  font-weight: 800;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.achat-detail-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e8eee6;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.achat-detail-table tbody tr:nth-child(even) {
+  background: #fbfdf9;
+}
+
+.achat-detail-table tbody tr:hover {
+  background: var(--theme-light);
+}
+
+.achat-detail-table tfoot td {
+  border-top: 2px solid #cfe0c8;
+  border-bottom: 0;
+  color: var(--text-primary);
+  background: #f2f8ef;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.achat-detail-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.achat-detail-quantity {
+  color: #1f6d2c;
+  font-weight: 800;
+}
+
+.achat-detail-amount {
+  color: var(--theme-dark);
+  font-weight: 800;
+}
+
+.achat-detail-product,
+.achat-detail-lot {
+  font-weight: 700;
+}
+
+.achat-detail-lot {
+  color: #5c6e61;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+}
+
+.achat-detail-empty {
+  padding: 22px !important;
+  color: var(--text-secondary) !important;
+  font-style: italic;
+  text-align: center;
+}
+
+.achat-detail-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 12px 14px;
+  border: 1px solid #e4ebe1;
+  border-radius: 10px;
+  background: #fbfcfb;
+}
+
+.achat-detail-timeline-item {
+  position: relative;
+  display: flex;
+  gap: 11px;
+  min-height: 48px;
+}
+
+.achat-detail-timeline-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  margin-top: 3px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--theme);
+  box-shadow: 0 0 0 2px #b9dba9;
+  z-index: 1;
+}
+
+.achat-detail-timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 13px;
+}
+
+.achat-detail-timeline-content strong {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.achat-detail-timeline-content span {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.achat-detail-timeline-content small {
+  color: #627269;
+  font-size: 11px;
+}
+
+.achat-detail-timeline-line {
+  position: absolute;
+  top: 12px;
+  bottom: 0;
+  left: 4px;
+  width: 1px;
+  background: #cfe0c8;
+}
+
+@media (max-width: 640px) {
+  .achat-detail-hero {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .achat-detail-hero-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .achat-detail-summary,
+  .achat-detail-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .achat-detail-info-wide {
+    grid-column: auto;
+  }
+}
+
 /* =========================
    IMPRESSION D'UN ACHAT
    ========================= */

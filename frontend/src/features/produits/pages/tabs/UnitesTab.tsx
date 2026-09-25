@@ -30,22 +30,18 @@ export function UnitesTab({ data, search, loading, onOpenEdit, onDelete }: Unite
 
   return (
     <SectionCard title="Unités" subtitle={`${data.length} unité(s)`}>
-      {loading ? (
-        <div className="empty-state">Chargement des unités...</div>
-      ) : (
-        <DataTable
-          data={filteredUnits}
-          columns={columns}
-          emptyMessage="Aucune unité."
-          actionsHeaderLabel="Actions"
-          actions={(row) => (
-            <RowActions
-              onEdit={() => onOpenEdit(row)}
-              onDelete={() => onDelete(row)}
-            />
-          )}
-        />
-      )}
+      <DataTable
+        data={loading ? [] : filteredUnits}
+        columns={columns}
+        emptyMessage={loading ? 'Chargement des unités...' : 'Aucune unité.'}
+        actionsHeaderLabel="Actions"
+        actions={(row) => (
+          <RowActions
+            onEdit={() => onOpenEdit(row)}
+            onDelete={() => onDelete(row)}
+          />
+        )}
+      />
     </SectionCard>
   );
 }

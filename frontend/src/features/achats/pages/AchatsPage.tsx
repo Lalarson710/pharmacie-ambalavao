@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Printer } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { PageTabs } from '@/components/PageTabs';
 import { PageToolbar } from '@/components/PageToolbar';
@@ -90,12 +90,6 @@ export function AchatsPage() {
     load();
   }, [showToast]);
 
-  const handlePrint = async (achat: Achat) => {
-    await handlePreview(achat);
-    setPrintAfterOpen(true);
-  };
-
-
   const openAdd = (kind: AchatModalKind) => {
     setModal({ kind, item: null });
   };
@@ -106,11 +100,17 @@ export function AchatsPage() {
       const history = await achatsApi.getStatutHistory(achat.id);
       setStatutHistory(history);
     } catch (error: unknown) {
-        console.error(' chargement historique:', error);
-        const axiosError = error as { response?: { data?: { message?: string } } };
-        const msg = axiosError.response?.data?.message || 'Impossible de charger l\'historique.';
-        showToast(msg, 'error');
-      }
+      console.error(' chargement historique:', error);
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      const msg = axiosError.response?.data?.message || 'Impossible de charger l\'historique.';
+      showToast(msg, 'error');
+    }
+  };
+
+  // Ouvre le meme modal de details que l'apercu, puis declenche l'impression
+  const handlePrint = async (achat: Achat) => {
+    await handlePreview(achat);
+    setPrintAfterOpen(true);
   };
 
   const closePreview = () => {
@@ -303,7 +303,6 @@ export function AchatsPage() {
         setModal={setModal}
         data={data}
         setData={setData}
-        lignesData={lignesData}
         setLignesData={setLignesData}
         fournisseursData={fournisseursData}
         setFournisseursData={setFournisseursData}

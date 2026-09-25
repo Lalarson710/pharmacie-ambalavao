@@ -1,24 +1,17 @@
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
-import { RowActions } from '@/components/RowActions';
 import type { Fournisseur } from '@/types';
 
 interface FournisseursTabProps {
   data: Fournisseur[];
   search: string;
   loading?: boolean;
-  onOpenEdit: (item: Fournisseur) => void;
-  onDelete: (item: Fournisseur) => void;
+  onOpenEdit?: (item: Fournisseur) => void;
+  onDelete?: (item: Fournisseur) => void;
 }
 
-export function FournisseursTab({
-  data,
-  search,
-  loading,
-  onOpenEdit,
-  onDelete,
-}: FournisseursTabProps) {
+export function FournisseursTab({ data, search, loading }: FournisseursTabProps) {
   const filteredFournisseurs = search
     ? data.filter((row) =>
         [row.nom, row.telephone ?? '', row.email ?? '', row.adresse ?? '']
@@ -35,17 +28,13 @@ export function FournisseursTab({
     { key: 'adresse', label: 'Adresse' },
   ];
 
-    return (
+  return (
     <SectionCard title="Fournisseurs associés" subtitle={`${data.length} fournisseur(s)`}>
-      {loading ? (
-        <div className="empty-state">Chargement des fournisseurs...</div>
-      ) : (
-        <DataTable
-          data={filteredFournisseurs}
-          columns={columns}
-          emptyMessage="Aucun fournisseur."
-        />
-      )}
+      <DataTable
+        data={loading ? [] : filteredFournisseurs}
+        columns={columns}
+        emptyMessage={loading ? 'Chargement des fournisseurs...' : 'Aucun fournisseur.'}
+      />
     </SectionCard>
   );
 }

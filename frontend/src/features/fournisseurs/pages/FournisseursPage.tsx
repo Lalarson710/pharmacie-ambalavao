@@ -239,22 +239,18 @@ export function FournisseursPage() {
       />
 
       <SectionCard title="Liste des fournisseurs">
-        {loading ? (
-          <div className="empty-state">Chargement des fournisseurs...</div>
-        ) : (
-          <DataTable
-            data={filtered}
-            columns={columns}
-            emptyMessage="Aucun fournisseur enregistré."
-            actionsHeaderLabel="Actions"
-            actions={(row) => (
-              <RowActions
-                onEdit={() => handleEditClick(row)}
-                onDelete={() => setDeleteItem(row)}
-              />
-            )}
-          />
-        )}
+        <DataTable
+          data={loading ? [] : filtered}
+          columns={columns}
+          emptyMessage={loading ? 'Chargement des fournisseurs...' : 'Aucun fournisseur enregistré.'}
+          actionsHeaderLabel="Actions"
+          actions={(row) => (
+            <RowActions
+              onEdit={() => handleEditClick(row)}
+              onDelete={() => setDeleteItem(row)}
+            />
+          )}
+        />
       </SectionCard>
 
       <EntityFormModal

@@ -233,22 +233,18 @@ export function ClientsPage() {
       />
 
       <SectionCard title="Liste des clients">
-        {loading ? (
-          <div className="empty-state">Chargement des clients...</div>
-        ) : (
-          <DataTable
-            data={filtered}
-            columns={columns}
-            emptyMessage="Aucun client enregistré."
-            actionsHeaderLabel="Actions"
-            actions={(row) => (
-              <RowActions
-                onEdit={() => handleEditClick(row)}
-                onDelete={() => setDeleteItem(row)}
-              />
-            )}
-          />
-        )}
+        <DataTable
+          data={loading ? [] : filtered}
+          columns={columns}
+          emptyMessage={loading ? 'Chargement des clients...' : 'Aucun client enregistré.'}
+          actionsHeaderLabel="Actions"
+          actions={(row) => (
+            <RowActions
+              onEdit={() => handleEditClick(row)}
+              onDelete={() => setDeleteItem(row)}
+            />
+          )}
+        />
       </SectionCard>
 
       <EntityFormModal
