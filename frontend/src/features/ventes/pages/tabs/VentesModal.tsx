@@ -57,11 +57,17 @@ export function VentesModal({
     setFacturesList(facturesData);
   }, [facturesData]);
 
+  // Le produit selectionne pilote la liste des lots proposes. En modification,
+  // on l'initialise a partir de la ligne existante pour ne proposer que ses lots.
   useEffect(() => {
     if (modal?.kind !== 'ligne') {
       setProduitSelectionne('');
+      return;
     }
-  }, [modal?.kind]);
+
+    const ligne = modal.item as VenteLigne | null;
+    setProduitSelectionne(ligne ? String(ligne.produit_id) : '');
+  }, [modal?.kind, modal?.item]);
 
   /** Lots disponibles pour le produit sélectionné. */
   const lotsDuProduit = useMemo(() => {
@@ -114,10 +120,21 @@ export function VentesModal({
           quantite: Number(formData.quantite),
         };
 
-        const saved = await ventesLignesApi.create(payload);
-        setLignesData((prev) => [...prev, saved]);
+        if (modal.item) {
+          const ligne = modal.item as VenteLigne;
+          const saved = await ventesLignesApi.update(ligne.id, payload);
+          setLignesData((prev) =>
+            prev.map((row) => (row.id === ligne.id ? saved : row))
+          );
+          showToast('Ligne de vente modifiée avec succès', 'success');
+        } else {
+          const saved = await ventesLignesApi.create(payload);
+          setLignesData((prev) => [...prev, saved]);
+          showToast('Ligne de vente créée avec succès', 'success');
+        }
 
-        // Le backend recalcule le montant total de la vente apres ajout de ligne.
+        // Le backend recalcule le montant total de la vente apres chaque
+        // ajout / modification / suppression de ligne.
         try {
           const venteActualisee = await ventesApi.getById(payload.vente_id);
           setData((prev) =>
@@ -126,8 +143,6 @@ export function VentesModal({
         } catch {
           /* le total sera rafraichi au prochain chargement */
         }
-
-        showToast('Ligne de vente créée avec succès', 'success');
       }
 
       if (modal.kind === 'reglement') {
