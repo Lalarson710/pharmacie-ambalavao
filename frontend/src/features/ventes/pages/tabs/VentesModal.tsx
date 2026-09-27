@@ -1,13 +1,22 @@
-import { type Dispatch, type SetStateAction } from 'react';
+import {
+  type Dispatch,
+  type SetStateAction,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { ClipboardList, ReceiptText, ShoppingCart, Wallet } from 'lucide-react';
 import { EntityFormModal } from '@/components/EntityFormModal';
-import { clients, factures } from '@/data/mockData';
-import type { Reglement, Vente } from '@/types';
+import { useToast } from '@/components/Toast';
+import type { Client, Facture, Lot, Produit, Reglement, Vente, VenteLigne } from '@/types';
+import { ventesApi, ventesLignesApi, reglementsApi } from '../../api/ventes';
 
-export type VenteModalKind = 'vente' | 'reglement';
+export type VenteModalKind = 'vente' | 'ligne' | 'reglement';
 
 export interface VenteModalState {
   kind: VenteModalKind;
-  item: Vente | Reglement | null;
+  item: Vente | VenteLigne | Reglement | null;
 }
 
 interface VentesModalProps {
@@ -15,7 +24,11 @@ interface VentesModalProps {
   setModal: Dispatch<SetStateAction<VenteModalState | null>>;
   data: Vente[];
   setData: Dispatch<SetStateAction<Vente[]>>;
-  reglementsData: Reglement[];
+  setLignesData: Dispatch<SetStateAction<VenteLigne[]>>;
+  clientsData: Client[];
+  produitsData: Produit[];
+  lotsData: Lot[];
+  facturesData: Facture[];
   setReglementsData: Dispatch<SetStateAction<Reglement[]>>;
 }
 
@@ -24,108 +37,190 @@ export function VentesModal({
   setModal,
   data,
   setData,
-  reglementsData,
+  setLignesData,
+  clientsData,
+  produitsData,
+  lotsData,
+  facturesData,
   setReglementsData,
 }: VentesModalProps) {
-  const handleSave = (formData: Record<string, unknown>) => {
-    if (!modal) return;
+  const { showToast } = useToast();
+  const [clientsList, setClientsList] = useState<Client[]>(clientsData);
+  const [facturesList, setFacturesList] = useState<Facture[]>(facturesData);
+  const [produitSelectionne, setProduitSelectionne] = useState<string>('');
 
-    if (modal.kind === 'vente') {
-      const client = clients.find((row) => row.id === Number(formData.client_id));
-      const venteData = {
-        client_id: Number(formData.client_id) || null,
-        numero: String(formData.numero),
-        date_vente: String(formData.date_vente),
-        montant_total: String(formData.montant_total),
-        statut: formData.statut as Vente['statut'],
-        observation: (formData.observation as string) || null,
-        client,
-      };
+  useEffect(() => {
+    setClientsList(clientsData);
+  }, [clientsData]);
 
-      if (modal.item) {
-        setData((prev) =>
-          prev.map((row) => (row.id === modal.item?.id ? { ...row, ...venteData } : row))
-        );
-      } else {
-        const newVente: Vente = {
-          id: data.length > 0 ? Math.max(...data.map((row) => row.id)) + 1 : 1,
-          ...venteData,
-        };
-        setData((prev) => [...prev, newVente]);
-      }
+  useEffect(() => {
+    setFacturesList(facturesData);
+  }, [facturesData]);
+
+  useEffect(() => {
+    if (modal?.kind !== 'ligne') {
+      setProduitSelectionne('');
     }
+  }, [modal?.kind]);
 
-    if (modal.kind === 'reglement') {
-      const facture = factures.find((row) => row.id === Number(formData.facture_id));
-      const reglementData = {
-        facture_id: Number(formData.facture_id),
-        montant: String(formData.montant),
-        mode: String(formData.mode),
-        date_reglement: String(formData.date_reglement),
-        reference: (formData.reference as string) || null,
-        facture,
-      };
+  /** Lots disponibles pour le produit sélectionné. */
+  const lotsDuProduit = useMemo(() => {
+    if (!produitSelectionne) return lotsData;
+    return lotsData.filter((lot) => String(lot.produit_id) === produitSelectionne);
+  }, [lotsData, produitSelectionne]);
 
-      if (modal.item) {
-        setReglementsData((prev) =>
-          prev.map((row) => (row.id === modal.item?.id ? { ...row, ...reglementData } : row))
-        );
-      } else {
-        const newReglement: Reglement = {
-          id: reglementsData.length > 0 ? Math.max(...reglementsData.map((row) => row.id)) + 1 : 1,
-          ...reglementData,
-        };
-        setReglementsData((prev) => [...prev, newReglement]);
-      }
-    }
-
-    setModal(null);
+  const extraireMessage = (error: unknown, defaut: string) => {
+    const axiosError = error as {
+      response?: { data?: { message?: string; errors?: Record<string, string[]> } };
+    };
+    return (
+      axiosError.response?.data?.message ||
+      (axiosError.response?.data?.errors
+        ? Object.values(axiosError.response.data.errors).flat().join(', ')
+        : '') ||
+      defaut
+    );
   };
 
-  const getInitialData = (item: Vente | Reglement | null) => {
+  const handleSave = async (formData: Record<string, unknown>) => {
+    if (!modal) return;
+
+    try {
+      if (modal.kind === 'vente') {
+        const payload = {
+          client_id: formData.client_id ? Number(formData.client_id) : null,
+          date_vente: String(formData.date_vente),
+          montant_total: Number(formData.montant_total ?? 0),
+          observation: (formData.observation as string) || null,
+        };
+
+        let saved: Vente;
+        if (modal.item) {
+          saved = await ventesApi.update(modal.item.id, payload);
+          setData((prev) => prev.map((row) => (row.id === modal.item!.id ? saved : row)));
+          showToast('Vente modifiée avec succès', 'success');
+        } else {
+          saved = await ventesApi.create(payload);
+          setData((prev) => [...prev, saved]);
+          showToast('Vente créée avec succès', 'success');
+        }
+      }
+
+      if (modal.kind === 'ligne') {
+        const payload = {
+          vente_id: Number(formData.vente_id),
+          produit_id: Number(formData.produit_id),
+          lot_id: Number(formData.lot_id),
+          quantite: Number(formData.quantite),
+        };
+
+        const saved = await ventesLignesApi.create(payload);
+        setLignesData((prev) => [...prev, saved]);
+
+        // Le backend recalcule le montant total de la vente apres ajout de ligne.
+        try {
+          const venteActualisee = await ventesApi.getById(payload.vente_id);
+          setData((prev) =>
+            prev.map((row) => (row.id === payload.vente_id ? venteActualisee : row))
+          );
+        } catch {
+          /* le total sera rafraichi au prochain chargement */
+        }
+
+        showToast('Ligne de vente créée avec succès', 'success');
+      }
+
+      if (modal.kind === 'reglement') {
+        const payload = {
+          facture_id: Number(formData.facture_id),
+          montant: Number(formData.montant),
+          mode: String(formData.mode),
+          date_reglement: String(formData.date_reglement),
+          reference: (formData.reference as string) || null,
+        };
+
+        const saved = await reglementsApi.create(payload);
+        setReglementsData((prev) => [...prev, saved]);
+        showToast('Règlement enregistré avec succès', 'success');
+      }
+
+      setModal(null);
+    } catch (error: unknown) {
+      showToast(extraireMessage(error, 'Erreur lors de la sauvegarde'), 'error');
+    }
+  };
+
+  const getInitialData = (item: Vente | VenteLigne | Reglement | null) => {
     if (!modal) return {};
 
     if (modal.kind === 'vente') {
       const row = item as Vente | null;
       return {
         client_id: row?.client_id ? String(row.client_id) : '',
-        numero: row?.numero ?? '',
-        date_vente: row?.date_vente ?? new Date().toISOString().slice(0, 10),
-        montant_total: row?.montant_total ?? '',
-        statut: row?.statut ?? 'brouillon',
+        date_vente: row?.date_vente
+          ? row.date_vente.slice(0, 10)
+          : new Date().toISOString().slice(0, 10),
+        montant_total: row?.montant_total ?? '0',
         observation: row?.observation ?? '',
+      };
+    }
+
+    if (modal.kind === 'ligne') {
+      const row = item as VenteLigne | null;
+      return {
+        vente_id: row ? String(row.vente_id) : '',
+        produit_id: row ? String(row.produit_id) : '',
+        lot_id: row ? String(row.lot_id) : '',
+        quantite: row ? String(row.quantite) : '',
       };
     }
 
     const row = item as Reglement | null;
     return {
-      facture_id: row ? String(row.facture_id) : String(factures[0]?.id ?? ''),
+      facture_id: row ? String(row.facture_id) : '',
       montant: row?.montant ?? '',
-      mode: row?.mode ?? 'espèces',
-      date_reglement: row?.date_reglement ? row.date_reglement.slice(0, 16) : new Date().toISOString().slice(0, 16),
+      mode: row?.mode ?? 'especes',
+      date_reglement: row?.date_reglement
+        ? row.date_reglement.slice(0, 16)
+        : new Date().toISOString().slice(0, 16),
       reference: row?.reference ?? '',
     };
   };
 
   const validate = (formData: Record<string, unknown>) => {
     const errors: Record<string, string> = {};
+
     if (modal?.kind === 'vente') {
-      if (!formData.numero) errors.numero = 'Le numéro est obligatoire.';
       if (!formData.date_vente) errors.date_vente = 'La date est obligatoire.';
-      if (!formData.montant_total || Number(formData.montant_total) < 0) {
+      if (formData.montant_total === '' || Number(formData.montant_total) < 0) {
         errors.montant_total = 'Le montant est invalide.';
       }
     }
+
+    if (modal?.kind === 'ligne') {
+      if (!formData.vente_id) errors.vente_id = 'La vente est obligatoire.';
+      if (!formData.produit_id) errors.produit_id = 'Le produit est obligatoire.';
+      if (!formData.lot_id) errors.lot_id = 'Le lot est obligatoire.';
+      if (!formData.quantite || Number(formData.quantite) <= 0) {
+        errors.quantite = 'La quantité est invalide.';
+      }
+    }
+
     if (modal?.kind === 'reglement') {
       if (!formData.facture_id) errors.facture_id = 'La facture est obligatoire.';
-      if (!formData.montant || Number(formData.montant) <= 0) errors.montant = 'Le montant est invalide.';
-      if (!formData.date_reglement) errors.date_reglement = 'La date est obligatoire.';
+      if (!formData.montant || Number(formData.montant) <= 0) {
+        errors.montant = 'Le montant est invalide.';
+      }
+      if (!formData.date_reglement) {
+        errors.date_reglement = 'La date est obligatoire.';
+      }
     }
+
     return errors;
   };
 
   const renderForm = (
-    _formData: Record<string, unknown>,
+    formData: Record<string, unknown>,
     onChange: (name: string, value: string) => void,
     errors: Record<string, string>
   ) => {
@@ -134,46 +229,44 @@ export function VentesModal({
     if (modal.kind === 'vente') {
       return (
         <>
-          <div className="form-field">
+          <div className="form-field form-field-full">
             <label htmlFor="vente-client">Client</label>
             <select
               id="vente-client"
               name="client_id"
               className="inline-input"
+              value={String(formData.client_id ?? '')}
               onChange={(e) => onChange('client_id', e.target.value)}
             >
               <option value="">Client de passage</option>
-              {clients.map((row) => (
-                <option key={row.id} value={row.id}>
+              {clientsList.map((row) => (
+                <option key={row.id} value={String(row.id)}>
                   {row.nom}
                 </option>
               ))}
             </select>
+            <span className="form-hint">
+              Laissez « Client de passage » pour une vente comptoir.
+            </span>
           </div>
           <div className="form-field">
-            <label htmlFor="vente-numero">Numéro *</label>
-            <input
-              id="vente-numero"
-              name="numero"
-              type="text"
-              className="inline-input"
-              onChange={(e) => onChange('numero', e.target.value)}
-            />
-            {errors.numero && <span className="form-error">{errors.numero}</span>}
-          </div>
-          <div className="form-field">
-            <label htmlFor="vente-date">Date *</label>
+            <label htmlFor="vente-date">
+              Date <span className="required-mark">*</span>
+            </label>
             <input
               id="vente-date"
               name="date_vente"
               type="date"
               className="inline-input"
+              value={String(formData.date_vente ?? '')}
               onChange={(e) => onChange('date_vente', e.target.value)}
             />
             {errors.date_vente && <span className="form-error">{errors.date_vente}</span>}
           </div>
           <div className="form-field">
-            <label htmlFor="vente-montant">Montant total *</label>
+            <label htmlFor="vente-montant">
+              Montant total (MGA) <span className="required-mark">*</span>
+            </label>
             <input
               id="vente-montant"
               name="montant_total"
@@ -181,30 +274,25 @@ export function VentesModal({
               min="0"
               step="0.01"
               className="inline-input"
+              value={String(formData.montant_total ?? '0')}
               onChange={(e) => onChange('montant_total', e.target.value)}
             />
-            {errors.montant_total && <span className="form-error">{errors.montant_total}</span>}
+            {errors.montant_total && (
+              <span className="form-error">{errors.montant_total}</span>
+            )}
+            <span className="form-hint">
+              Le total est recalculé automatiquement à partir des lignes de vente.
+            </span>
           </div>
-          <div className="form-field">
-            <label htmlFor="vente-statut">Statut *</label>
-            <select
-              id="vente-statut"
-              name="statut"
-              className="inline-input"
-              onChange={(e) => onChange('statut', e.target.value)}
-            >
-              <option value="brouillon">Brouillon</option>
-              <option value="confirmee">Confirmée</option>
-              <option value="annulee">Annulée</option>
-            </select>
-          </div>
-          <div className="form-field">
+          <div className="form-field form-field-full">
             <label htmlFor="vente-observation">Observation</label>
-            <input
+            <textarea
               id="vente-observation"
               name="observation"
-              type="text"
+              rows={3}
+              placeholder="Remarque interne sur cette vente…"
               className="inline-input"
+              value={String(formData.observation ?? '')}
               onChange={(e) => onChange('observation', e.target.value)}
             />
           </div>
@@ -212,27 +300,125 @@ export function VentesModal({
       );
     }
 
+    if (modal.kind === 'ligne') {
+      return (
+        <>
+          <div className="form-field form-field-full">
+            <label htmlFor="ligne-vente">
+              Vente <span className="required-mark">*</span>
+            </label>
+            <select
+              id="ligne-vente"
+              name="vente_id"
+              className="inline-input"
+              value={String(formData.vente_id ?? '')}
+              onChange={(e) => onChange('vente_id', e.target.value)}
+            >
+              <option value="">— Choisir une vente —</option>
+              {data
+                .filter((row) => row.statut === 'brouillon')
+                .map((row) => (
+                  <option key={row.id} value={String(row.id)}>
+                    {row.numero} — {formatDateCourte(row.date_vente)}
+                  </option>
+                ))}
+            </select>
+            {errors.vente_id && <span className="form-error">{errors.vente_id}</span>}
+            <span className="form-hint">
+              Seules les ventes en brouillon peuvent recevoir des lignes.
+            </span>
+          </div>
+          <div className="form-field form-field-full">
+            <label htmlFor="ligne-produit">
+              Produit <span className="required-mark">*</span>
+            </label>
+            <select
+              id="ligne-produit"
+              name="produit_id"
+              className="inline-input"
+              value={String(formData.produit_id ?? '')}
+              onChange={(e) => {
+                setProduitSelectionne(e.target.value);
+                onChange('produit_id', e.target.value);
+                onChange('lot_id', '');
+              }}
+            >
+              <option value="">— Choisir un produit —</option>
+              {produitsData.map((row) => (
+                <option key={row.id} value={String(row.id)}>
+                  {row.nom}
+                </option>
+              ))}
+            </select>
+            {errors.produit_id && <span className="form-error">{errors.produit_id}</span>}
+          </div>
+          <div className="form-field form-field-full">
+            <label htmlFor="ligne-lot">
+              Lot <span className="required-mark">*</span>
+            </label>
+            <select
+              id="ligne-lot"
+              name="lot_id"
+              className="inline-input"
+              value={String(formData.lot_id ?? '')}
+              onChange={(e) => onChange('lot_id', e.target.value)}
+            >
+              <option value="">— Choisir un lot —</option>
+              {lotsDuProduit.map((row) => (
+                <option key={row.id} value={String(row.id)}>
+                  {row.numero_lot} — {row.quantite} en stock
+                </option>
+              ))}
+            </select>
+            {errors.lot_id && <span className="form-error">{errors.lot_id}</span>}
+          </div>
+          <div className="form-field">
+            <label htmlFor="ligne-quantite">
+              Quantité <span className="required-mark">*</span>
+            </label>
+            <input
+              id="ligne-quantite"
+              name="quantite"
+              type="number"
+              min="1"
+              step="1"
+              className="inline-input"
+              value={String(formData.quantite ?? '')}
+              onChange={(e) => onChange('quantite', e.target.value)}
+            />
+            {errors.quantite && <span className="form-error">{errors.quantite}</span>}
+            <span className="form-hint">Le prix unitaire provient du produit.</span>
+          </div>
+        </>
+      );
+    }
+
     return (
       <>
-        <div className="form-field">
-          <label htmlFor="reglement-facture">Facture *</label>
+        <div className="form-field form-field-full">
+          <label htmlFor="reglement-facture">
+            Facture <span className="required-mark">*</span>
+          </label>
           <select
             id="reglement-facture"
             name="facture_id"
             className="inline-input"
+            value={String(formData.facture_id ?? '')}
             onChange={(e) => onChange('facture_id', e.target.value)}
           >
             <option value="">— Choisir une facture —</option>
-            {factures.map((row) => (
-              <option key={row.id} value={row.id}>
-                {row.numero}
+            {facturesList.map((row) => (
+              <option key={row.id} value={String(row.id)}>
+                {row.numero} — {row.vente?.numero ?? '—'}
               </option>
             ))}
           </select>
           {errors.facture_id && <span className="form-error">{errors.facture_id}</span>}
         </div>
         <div className="form-field">
-          <label htmlFor="reglement-montant">Montant *</label>
+          <label htmlFor="reglement-montant">
+            Montant (MGA) <span className="required-mark">*</span>
+          </label>
           <input
             id="reglement-montant"
             name="montant"
@@ -240,34 +426,43 @@ export function VentesModal({
             min="0.01"
             step="0.01"
             className="inline-input"
+            value={String(formData.montant ?? '')}
             onChange={(e) => onChange('montant', e.target.value)}
           />
           {errors.montant && <span className="form-error">{errors.montant}</span>}
         </div>
         <div className="form-field">
-          <label htmlFor="reglement-mode">Mode *</label>
+          <label htmlFor="reglement-mode">
+            Mode <span className="required-mark">*</span>
+          </label>
           <select
             id="reglement-mode"
             name="mode"
             className="inline-input"
+            value={String(formData.mode ?? 'especes')}
             onChange={(e) => onChange('mode', e.target.value)}
           >
-            <option value="espèces">Espèces</option>
+            <option value="especes">Espèces</option>
             <option value="virement">Virement</option>
             <option value="cheque">Chèque</option>
             <option value="mobile">Mobile money</option>
           </select>
         </div>
         <div className="form-field">
-          <label htmlFor="reglement-date">Date *</label>
+          <label htmlFor="reglement-date">
+            Date <span className="required-mark">*</span>
+          </label>
           <input
             id="reglement-date"
             name="date_reglement"
             type="datetime-local"
             className="inline-input"
+            value={String(formData.date_reglement ?? '')}
             onChange={(e) => onChange('date_reglement', e.target.value)}
           />
-          {errors.date_reglement && <span className="form-error">{errors.date_reglement}</span>}
+          {errors.date_reglement && (
+            <span className="form-error">{errors.date_reglement}</span>
+          )}
         </div>
         <div className="form-field">
           <label htmlFor="reglement-reference">Référence</label>
@@ -276,6 +471,7 @@ export function VentesModal({
             name="reference"
             type="text"
             className="inline-input"
+            value={String(formData.reference ?? '')}
             onChange={(e) => onChange('reference', e.target.value)}
           />
         </div>
@@ -283,15 +479,31 @@ export function VentesModal({
     );
   };
 
+  const kindIcons: Record<VenteModalKind, ReactNode> = {
+    vente: <ShoppingCart size={18} />,
+    ligne: <ClipboardList size={18} />,
+    reglement: <Wallet size={18} />,
+  };
+
+  const kindSubtitles: Record<VenteModalKind, string> = {
+    vente: 'Le numéro est généré automatiquement, le statut est géré par les actions.',
+    ligne: 'Ajoutez un article vendu avec son lot et sa quantité.',
+    reglement: 'Enregistrez un paiement rattaché à une facture.',
+  };
+
+  const kindTitles: Record<VenteModalKind, string> = {
+    vente: 'une vente',
+    ligne: 'une ligne de vente',
+    reglement: 'un règlement',
+  };
+
   return (
     <EntityFormModal
       open={Boolean(modal)}
       onClose={() => setModal(null)}
-      title={
-        modal
-          ? `${modal.item ? 'Modifier' : 'Ajouter'} ${modal.kind === 'vente' ? 'une vente' : 'un règlement'}`
-          : ''
-      }
+      title={modal ? `${modal.item ? 'Modifier' : 'Ajouter'} ${kindTitles[modal.kind]}` : ''}
+      icon={modal ? kindIcons[modal.kind] : <ReceiptText size={18} />}
+      subtitle={modal ? kindSubtitles[modal.kind] : undefined}
       editItem={modal?.item ?? null}
       onSubmit={handleSave}
       renderForm={renderForm}
@@ -300,4 +512,8 @@ export function VentesModal({
       size="md"
     />
   );
+}
+
+function formatDateCourte(date: string): string {
+  return new Date(date).toLocaleDateString('fr-FR');
 }

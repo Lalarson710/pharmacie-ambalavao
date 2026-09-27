@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client';
 import { AuthProvider } from './features/auth/providers/AuthProvider';
 import App from './App.tsx';
 import './index.css';
+// Doit rester après index.css : règles d'impression du ticket de caisse.
+import './ticket-caisse.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

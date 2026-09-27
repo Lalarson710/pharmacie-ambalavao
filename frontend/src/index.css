@@ -1855,6 +1855,100 @@ a { color: inherit; }
   background: #cfe0c8;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   CAISSE — ÉLÉMENTS SPÉCIFIQUES
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* La fiche caisse a 4 cartes de synthèse (contre 3 pour achat/vente) */
+.caisse-detail .achat-detail-summary {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Badge Entrée / Sortie dans le tableau des mouvements */
+.caisse-mouvement-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.caisse-mouvement-entree {
+  background: #e4f4d8;
+  color: #2f6d1c;
+  border: 1px solid #bcdca8;
+}
+
+.caisse-mouvement-sortie {
+  background: #fdecec;
+  color: #9b2c2c;
+  border: 1px solid #f0c4c4;
+}
+
+.caisse-mouvement-montant {
+  font-weight: 700;
+}
+
+.caisse-mouvement-montant.caisse-mouvement-entree {
+  color: #2f6d1c;
+}
+
+.caisse-mouvement-montant.caisse-mouvement-sortie {
+  color: #9b2c2c;
+}
+
+/* Bloc de clôture façon relevé de caisse */
+.caise-cloture {
+  margin-top: 4px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #f0f9e8, #ffffff);
+  border: 1px solid #cfe0c8;
+  border-left: 4px solid var(--theme-dark);
+  border-radius: 10px;
+}
+
+.caise-cloture-row,
+.caise-cloture-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.caise-cloture-row strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.caise-cloture-total {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1.5px solid #9dbd95;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--theme-dark);
+}
+
+.caise-cloture-total strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--theme-dark);
+  white-space: nowrap;
+}
+
+.caise-cloture-note {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
 @media (max-width: 640px) {
   .achat-detail-hero {
     align-items: flex-start;
@@ -1881,30 +1975,142 @@ a { color: inherit; }
    ========================= */
 
 @media print {
-  /* Masquer toute l'application */
-  body * {
+  /* ─────────────────────────────────────────────────────────────────
+     1. NEUTRALISER LE CHROME DE L'APPLICATION (SIDEBAR, HEADER…)
+     ───────────────────────────────────────────────────────────────── */
+  html,
+  body {
+    background: #ffffff !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .sidebar,
+  .top-header,
+  .toast-container,
+  .loading-modal-overlay {
+    display: none !important;
+  }
+
+  /*
+   * Impression de page entiere (caisse, statistiques, rapports) :
+   * on retire le chrome applicatif mais on garde le contenu visible.
+   */
+  .app-layout {
+    display: block !important;
+    min-height: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .main-content,
+  .main-content.sidebar-collapsed {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  .content-area {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /*
+   * Les controles d'interface n'ont rien a faire sur papier.
+   * Regle limitee au mode « impression de page entiere » : sans cette
+   * restriction, elle masquerait aussi le contenu des fiches imprimees.
+   */
+  body:not(.printing-fiche):not(.printing-ticket) .page-toolbar,
+  body:not(.printing-fiche):not(.printing-ticket) .page-tabs,
+  body:not(.printing-fiche):not(.printing-ticket) .page-header-actions,
+  body:not(.printing-fiche):not(.printing-ticket) .row-actions,
+  body:not(.printing-fiche):not(.printing-ticket) .btn-primary,
+  body:not(.printing-fiche):not(.printing-ticket) .btn-ghost,
+  body:not(.printing-fiche):not(.printing-ticket) .btn-export-pdf,
+  body:not(.printing-fiche):not(.printing-ticket) .icon-button {
+    display: none !important;
+  }
+
+  /* Retirer le contenu de la page (tableaux, toolbar, onglets…) quand on
+     imprime une fiche, pour ne pas generer des pages blanches avant le
+     document. */
+  body.printing-fiche .page-container > *:not(.modal-overlay) {
+    display: none !important;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     2. RENDRE LA MODALE IMPRIMABLE (sinon : page blanche)
+        La .print-area est à l'intérieur de .modal-overlay / .modal-content.
+        On « dé-boîte » ces conteneurs pour qu'ils ne Roguent plus le flux.
+     ───────────────────────────────────────────────────────────────── */
+  body.printing-fiche * {
     visibility: hidden;
   }
 
-  /* Afficher uniquement la zone d'impression */
-  .print-area,
-  .print-area * {
+  body.printing-fiche .modal-overlay,
+  body.printing-fiche .modal-overlay *,
+  body.printing-fiche .modal-content,
+  body.printing-fiche .modal-content * {
     visibility: visible;
   }
 
-  /* Positionner la zone imprimée */
-  .print-area {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%);
-    width: 92%;
-    max-width: 1000px;
-    margin: 0;
-    padding: 20px;
-    background: white;
-    color: black;
-    font-size: 16px;
+  body.printing-fiche .modal-overlay {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    animation: none !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+
+  body.printing-fiche .modal-content {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    animation: none !important;
+  }
+
+  /* Le header de modale (titre + croix) n'a rien à faire sur papier */
+  body.printing-fiche .modal-header {
+    display: none !important;
+  }
+
+  body.printing-fiche .modal-body {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     3. AFFICHER UNIQUEMENT LA ZONE D'IMPRESSION
+     ───────────────────────────────────────────────────────────────── */
+  body.printing-fiche .print-area,
+  body.printing-fiche .print-area * {
+    visibility: visible;
+  }
+
+  body.printing-fiche .print-area {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   /* Cacher les boutons */
@@ -1942,19 +2148,22 @@ a { color: inherit; }
   .print-area table {
     width: 100% !important;
     border-collapse: collapse !important;
-    font-size: 15px;
+    font-size: 10.5pt;
   }
 
   .print-area th,
   .print-area td {
-    padding: 10px !important;
-    border: 1px solid #000 !important;
-    color: black !important;
+    padding: 7px 9px !important;
+    border: 1px solid #cfd6ce !important;
+    color: #000000 !important;
   }
 
-  .print-area th {
-    font-weight: bold;
-    text-align: center !important;
+  .print-area thead th {
+    background: #eef4ec !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .print-area td {
@@ -1976,10 +2185,310 @@ a { color: inherit; }
     font-size: 15px;
   }
 
-  /* Format de la feuille */
+  /* ─────────────────────────────────────────────────────────────────
+     4. RENDU MODERNE DE LA FICHE (achat / vente)
+     ───────────────────────────────────────────────────────────────── */
+  .print-area .achat-detail {
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  /* Bandeau d'en-tête */
+  .print-area .achat-detail-hero {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+    margin: 0 0 14px !important;
+    background: #eef4ec !important;
+    border: 1px solid #cfe0c8 !important;
+    border-left: 4px solid #1f6d2c !important;
+    border-radius: 8px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-area .achat-detail-hero-icon {
+    display: none !important;
+  }
+
+  .print-area .achat-detail-kicker {
+    font-size: 8pt !important;
+    letter-spacing: 0.12em !important;
+    color: #4a6b4f !important;
+  }
+
+  .print-area .achat-detail-hero-copy strong {
+    font-size: 15pt !important;
+    color: #14351a !important;
+  }
+
+  .print-area .achat-detail-hero-copy > span:last-child {
+    font-size: 9pt !important;
+    color: #4a5a4e !important;
+  }
+
+  /* Cartes de synthèse */
+  .print-area .achat-detail-summary {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    margin: 0 0 14px !important;
+  }
+
+  .print-area .achat-detail-summary-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+    background: #f7faf5 !important;
+    border: 1px solid #d9e4d5 !important;
+    border-radius: 8px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-area .achat-detail-summary-card span:not(.achat-detail-summary-icon) {
+    font-size: 8pt !important;
+    color: #5c6e61 !important;
+  }
+
+  .print-area .achat-detail-summary-card strong {
+    font-size: 12pt !important;
+    color: #14351a !important;
+  }
+
+  /* Sections */
+  .print-area .achat-detail-section {
+    display: block !important;
+    padding: 10px 12px !important;
+    margin: 0 0 12px !important;
+    background: #ffffff !important;
+    border: 1px solid #d9e4d5 !important;
+    border-radius: 8px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-area .achat-detail-section-heading {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 0 0 10px !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #e6ede2 !important;
+  }
+
+  .print-area .achat-detail-section-heading h4 {
+    font-size: 11pt !important;
+    margin: 0 !important;
+    color: #14351a !important;
+  }
+
+  .print-area .achat-detail-section-heading p {
+    font-size: 8pt !important;
+    color: #5c6e61 !important;
+  }
+
+  .print-area .achat-detail-count {
+    font-size: 8pt !important;
+    background: #eef4ec !important;
+    color: #3c5a41 !important;
+    border: 1px solid #cfe0c8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Grille d'informations */
+  .print-area .achat-detail-info-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px 18px !important;
+  }
+
+  .print-area .achat-detail-info-item {
+    display: block !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  .print-area .achat-detail-info-label {
+    display: block !important;
+    font-size: 8pt !important;
+    color: #5c6e61 !important;
+    margin-bottom: 2px !important;
+  }
+
+  .print-area .achat-detail-info-item > strong {
+    font-size: 10.5pt !important;
+    color: #000000 !important;
+  }
+
+  /* Badges de statut */
+  .print-area .badge {
+    border: 1px solid #9aa89b !important;
+    background: #f2f5f0 !important;
+    color: #2c3d30 !important;
+    font-size: 8.5pt !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Enveloppe du tableau */
+  .print-area .achat-detail-table-wrap {
+    overflow: visible !important;
+  }
+
+  .print-area .achat-detail-table tbody tr:nth-child(even) {
+    background: #f7faf5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-area .achat-detail-table tfoot td {
+    background: #eef4ec !important;
+    font-weight: 700 !important;
+    color: #14351a !important;
+    border-top: 1.5px solid #9dbd95 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-area .achat-detail-quantity {
+    color: #1f6d2c !important;
+  }
+
+  .print-area .achat-detail-amount {
+    color: #14351a !important;
+    font-weight: 700 !important;
+  }
+
+  .print-area .achat-detail-lot {
+    color: #3c4a3f !important;
+  }
+
+  /* Timeline / historique des statuts */
+  .print-area .achat-detail-timeline-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-area .achat-detail-timeline-dot {
+    background: #9dbd95 !important;
+    border: 1px solid #6f9166 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-area .achat-detail-timeline-line {
+    background: #cfd6ce !important;
+  }
+
+  .print-area .achat-detail-timeline-content strong {
+    color: #14351a !important;
+    font-size: 10pt !important;
+  }
+
+  .print-area .achat-detail-timeline-content span,
+  .print-area .achat-detail-timeline-content small {
+    color: #5c6e61 !important;
+    font-size: 8.5pt !important;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     5. ÉLÉMENTS SPÉCIFIQUES À LA CAISSE
+     ───────────────────────────────────────────────────────────────── */
+  .print-area .caisse-mouvement-type {
+    display: inline-block !important;
+    padding: 2px 7px !important;
+    border: 1px solid #9aa89b !important;
+    border-radius: 999px !important;
+    font-size: 8.5pt !important;
+    font-weight: 700 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-area .caisse-mouvement-entree {
+    background: #f2f5f0 !important;
+    color: #14351a !important;
+  }
+
+  .print-area .caisse-mouvement-sortie {
+    background: #f4f4f4 !important;
+    color: #333333 !important;
+  }
+
+  .print-area .caisse-mouvement-montant {
+    font-weight: 700 !important;
+    color: #000000 !important;
+  }
+
+  .print-area .caise-cloture {
+    padding: 10px 12px !important;
+    background: #ffffff !important;
+    border: 1px solid #9dbd95 !important;
+    border-left: 3px solid #4d8c14 !important;
+    border-radius: 8px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-area .caise-cloture-row,
+  .print-area .caise-cloture-total {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+  }
+
+  .print-area .caise-cloture-row {
+    padding: 2px 0 !important;
+    font-size: 9.5pt !important;
+    color: #3c4a3f !important;
+  }
+
+  .print-area .caise-cloture-row strong {
+    color: #000000 !important;
+    font-weight: 600 !important;
+  }
+
+  .print-area .caise-cloture-total {
+    margin-top: 6px !important;
+    padding-top: 6px !important;
+    border-top: 1.5px solid #9dbd95 !important;
+    font-size: 10pt !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.6px !important;
+    color: #14351a !important;
+  }
+
+  .print-area .caise-cloture-total strong {
+    font-size: 13pt !important;
+    color: #14351a !important;
+  }
+
+  .print-area .caise-cloture-note {
+    margin: 6px 0 0 !important;
+    font-size: 8.5pt !important;
+    color: #5c6e61 !important;
+  }
+}
+
+/*
+ * Format A4 pour les fiches. Injecte dynamiquement par la page concernee
+ * lorsqu'un ticket 80 mm est ouvert, cet @page prend le dessus.
+ */
+@media print {
   @page {
     size: A4;
-    margin: 15mm;
+    margin: 14mm;
   }
 }
 

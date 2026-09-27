@@ -186,6 +186,9 @@ Route::delete('/ventes/{id}', [VenteController::class, 'destroy'])
     ->middleware(['auth:sanctum', 'permission:vente.cancel']);
 Route::post('/ventes/{id}/confirmer', [VenteController::class, 'confirmer'])
     ->middleware(['auth:sanctum', 'permission:vente.confirm']);
+Route::post('/ventes/{id}/annuler', [VenteController::class, 'annuler'])
+    ->middleware(['auth:sanctum', 'permission:vente.cancel']);
+
 
 // LIGNES DE VENTE
 Route::get('/ventes/{venteId}/lignes', [VenteLigneController::class, 'index'])

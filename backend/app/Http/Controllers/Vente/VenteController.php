@@ -148,4 +148,34 @@ class VenteController
             ], 422);
         }
     }
+
+        public function annuler(int $id): JsonResponse
+    {
+        $vente = $this->trouverVenteUseCase->executer($id);
+
+        if (!$vente) {
+            return response()->json([
+                'message' => 'Vente introuvable.'
+            ], 404);
+        }
+
+        try {
+            $annulerVenteUseCase = app(
+                \App\Application\Vente\AnnulerVenteUseCase::class
+            );
+
+            $vente = $annulerVenteUseCase->executer($vente);
+
+            return response()->json([
+                'message' => 'Vente annulée avec succès.',
+                'vente' => $vente
+            ]);
+
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
 }

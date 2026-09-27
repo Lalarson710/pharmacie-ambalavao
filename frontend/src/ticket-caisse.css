@@ -1,0 +1,761 @@
+/* ==========================================================================
+   TICKET DE CAISSE
+   Format écran : aperçu proche d'un ticket thermique
+   Format impression : 80 mm
+   ========================================================================== */
+
+.ticket-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.ticket-preview-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.ticket-preview-hint {
+  max-width: 420px;
+  font-size: 0.7rem;
+  color: var(--text-muted, #6b7280);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   TICKET
+   ========================================================================== */
+
+.ticket-print {
+  box-sizing: border-box;
+
+  width: 340px;
+  max-width: 100%;
+
+  padding: 20px 18px 22px;
+
+  background: #ffffff;
+  color: #222222;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+
+  font-family:
+    'Inter',
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  text-align: center;
+}
+
+.ticket-print * {
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   LOGO + EN-TÊTE
+   ========================================================================== */
+
+.ticket-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 3px;
+}
+
+.ticket-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 3px;
+}
+
+.ticket-logo-circle {
+  fill: #67af1a;
+  opacity: 0.12;
+}
+
+.ticket-logo-cross {
+  fill: #4d8c14;
+}
+
+.ticket-shop {
+  margin: 0;
+
+  font-size: 16px;
+  font-weight: 800;
+
+  letter-spacing: 0.5px;
+
+  color: #3f7d11;
+
+  text-transform: uppercase;
+}
+
+.ticket-tagline {
+  margin: 1px 0 0;
+
+  font-size: 10px;
+  font-style: italic;
+
+  color: #6b7280;
+}
+
+.ticket-contact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 2px;
+
+  margin-top: 7px;
+
+  font-size: 9.5px;
+
+  color: #6b7280;
+}
+
+.ticket-contact span {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+}
+
+/* ==========================================================================
+   TITRE TICKET
+   ========================================================================== */
+
+.ticket-title {
+  margin: 14px 0 8px;
+
+  padding: 6px 0;
+
+  border-top: 1px dashed #9ca3af;
+  border-bottom: 1px dashed #9ca3af;
+
+  font-size: 12.5px;
+  font-weight: 800;
+
+  letter-spacing: 1.4px;
+
+  color: #222222;
+
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   BADGE DE STATUT
+   ========================================================================== */
+
+.ticket-status {
+  display: flex;
+  justify-content: center;
+
+  margin-bottom: 10px;
+}
+
+.ticket-status-badge {
+  display: inline-block;
+
+  padding: 3px 10px;
+
+  border: 1px solid currentColor;
+  border-radius: 999px;
+
+  font-size: 8.5px;
+  font-weight: 800;
+
+  letter-spacing: 0.6px;
+
+  text-transform: uppercase;
+}
+
+.ticket-status-payee {
+  color: #2f7a12;
+  background: #eef8e5;
+}
+
+.ticket-status-partiellement_payee {
+  color: #8a5a08;
+  background: #fdf4e3;
+}
+
+.ticket-status-impayee {
+  color: #a32020;
+  background: #fdecec;
+}
+
+.ticket-status-annulee {
+  color: #555555;
+  background: #f0f0f0;
+}
+
+/* ==========================================================================
+   INFORMATIONS
+   ========================================================================== */
+
+.ticket-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  text-align: left;
+}
+
+.ticket-info-row {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  font-size: 10.5px;
+}
+
+.ticket-info-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  color: #6b7280;
+}
+
+.ticket-info-row strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  max-width: 62%;
+
+  font-weight: 700;
+
+  color: #222222;
+
+  text-align: right;
+
+  word-break: break-word;
+}
+
+/* ==========================================================================
+   SÉPARATEUR
+   ========================================================================== */
+
+.ticket-divider {
+  margin: 11px 0;
+
+  border-top: 1px dashed #b9b9b9;
+}
+
+/* ==========================================================================
+   ARTICLES
+   ========================================================================== */
+
+.ticket-items {
+  width: 100%;
+
+  text-align: left;
+}
+
+.ticket-items-header {
+  display: grid;
+
+  grid-template-columns: minmax(0, 1fr) 26px 52px 62px;
+
+  gap: 4px;
+
+  padding-bottom: 5px;
+
+  border-bottom: 1px solid #d1d5db;
+
+  font-size: 8.5px;
+  font-weight: 800;
+
+  letter-spacing: 0.3px;
+
+  color: #555555;
+
+  text-transform: uppercase;
+}
+
+.ticket-items-header span:nth-child(2),
+.ticket-items-header span:nth-child(3),
+.ticket-items-header span:nth-child(4) {
+  text-align: right;
+}
+
+.ticket-item {
+  display: grid;
+
+  grid-template-columns: minmax(0, 1fr) 26px 52px 62px;
+
+  gap: 4px;
+
+  padding: 7px 0;
+
+  border-bottom: 1px dotted #d6d6d6;
+
+  align-items: start;
+}
+
+.ticket-item:last-child {
+  border-bottom: none;
+}
+
+.ticket-item-main {
+  min-width: 0;
+}
+
+.ticket-item-name {
+  font-size: 11.5px;
+  font-weight: 700;
+
+  line-height: 1.3;
+
+  color: #222222;
+
+  overflow-wrap: anywhere;
+}
+
+.ticket-item-lot {
+  margin-top: 2px;
+
+  font-size: 8.5px;
+
+  line-height: 1.3;
+
+  color: #777777;
+}
+
+.ticket-item-qty {
+  font-size: 10px;
+  font-weight: 700;
+
+  color: #3f7d11;
+
+  text-align: right;
+}
+
+.ticket-item-pu {
+  font-size: 9.5px;
+  font-weight: 500;
+
+  color: #555555;
+
+  text-align: right;
+
+  white-space: nowrap;
+}
+
+.ticket-item-total {
+  font-size: 10.5px;
+  font-weight: 700;
+
+  color: #222222;
+
+  text-align: right;
+
+  white-space: nowrap;
+}
+
+.ticket-empty {
+  margin: 12px 0;
+
+  font-size: 10px;
+
+  color: #777777;
+
+  text-align: center;
+}
+
+/* ==========================================================================
+   TOTAL
+   ========================================================================== */
+
+/* ==========================================================================
+   RÉCAPITULATIF
+   ========================================================================== */
+
+.ticket-summary {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  margin-bottom: 9px;
+
+  text-align: left;
+}
+
+.ticket-summary-row {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  font-size: 10px;
+}
+
+.ticket-summary-row span {
+  color: #6b7280;
+}
+
+.ticket-summary-row strong {
+  font-weight: 700;
+
+  color: #333333;
+
+  text-align: right;
+}
+
+/* ==========================================================================
+   TOTAL
+   ========================================================================== */
+
+.ticket-total {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 9px;
+
+  padding: 9px 11px;
+
+  border: 1.5px solid #3f7d11;
+  border-radius: 5px;
+
+  background: #f4faee;
+}
+
+.ticket-total-label {
+  font-size: 10.5px;
+  font-weight: 800;
+
+  letter-spacing: 0.7px;
+
+  color: #3f7d11;
+
+  text-transform: uppercase;
+}
+
+.ticket-total-value {
+  font-size: 15px;
+  font-weight: 900;
+
+  color: #2b5c0d;
+
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   PAIEMENT
+   ========================================================================== */
+
+.ticket-payment {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  padding: 8px 0 2px;
+
+  text-align: left;
+}
+
+.ticket-payment-row {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.ticket-payment-title {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  font-size: 10px;
+
+  color: #6b7280;
+}
+
+.ticket-payment strong {
+  font-size: 10.5px;
+  font-weight: 700;
+
+  color: #222222;
+
+  text-align: right;
+}
+
+/* Reste a payer : mis en avant quand il est non nul */
+.ticket-due {
+  color: #a32020 !important;
+}
+
+/* ==========================================================================
+   PIED DU TICKET
+   ========================================================================== */
+
+.ticket-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 2px;
+
+  margin-top: 4px;
+}
+
+.ticket-thanks {
+  margin: 0 0 3px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #4d8c14;
+}
+
+.ticket-footer-shop {
+  margin: 0;
+
+  font-size: 9.5px;
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+
+  color: #444444;
+}
+
+.ticket-footer-text {
+  margin: 0;
+
+  font-size: 8.5px;
+
+  color: #888888;
+}
+
+/* ==========================================================================
+   IMPRESSION THERMIQUE 80 MM
+   ========================================================================== */
+
+/*
+ * Ces règles ne doivent s'appliquer QUE lorsqu'un ticket de caisse est
+ * ouvert (classe `printing-ticket` posee par FactureTicketModal).
+ *
+ * Sans ce garde-fou, `body * { visibility: hidden !important }` masquait
+ * aussi les impressions de fiche (AchatDetailModal / VenteDetailModal)
+ * qui utilisent .print-area : la sortie etait une page blanche.
+ */
+@media print {
+  body.printing-ticket * {
+    visibility: hidden !important;
+  }
+
+  /*
+   * Afficher uniquement le ticket.
+   *
+   * ATTENTION A LA SPECIFICITE : `body.printing-ticket *` vaut (0,1,1) et
+   * l'emporterait sur un simple `.ticket-print *` (0,1,0). Le prefixe
+   * `body.printing-ticket` est donc indispensable ici, sans quoi le ticket
+   * resterait masque et l'impression sortirait blanche.
+   */
+  body.printing-ticket .ticket-print,
+  body.printing-ticket .ticket-print * {
+    visibility: visible !important;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     Remettre la modale dans le flux normal.
+     Sans cela, .modal-overlay (position: fixed) + .modal-content
+     (max-height: 90vh / overflow-y: auto) rognaient le ticket et
+     l'impression sortait blanche.
+     ───────────────────────────────────────────────────────────────── */
+  body.printing-ticket .modal-overlay {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    animation: none !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+
+  body.printing-ticket .modal-content {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    animation: none !important;
+  }
+
+  body.printing-ticket .modal-header {
+    display: none !important;
+  }
+
+  body.printing-ticket .modal-body {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Retirer du flux le contenu de la page pour ne pas generer
+     de pages blanches avant le ticket. */
+  body.printing-ticket .page-container > *:not(.modal-overlay) {
+    display: none !important;
+  }
+
+  body.printing-ticket .sidebar,
+  body.printing-ticket .top-header,
+  body.printing-ticket .toast-container {
+    display: none !important;
+  }
+
+  body.printing-ticket .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  /* L'apercu centre a l'ecran ne doit plus l'etre sur papier. */
+  body.printing-ticket .ticket-preview {
+    display: block !important;
+    gap: 0 !important;
+    align-items: initial !important;
+  }
+
+  .ticket-print {
+    position: static !important;
+
+    width: 80mm !important;
+    max-width: 80mm !important;
+
+    margin: 0 !important;
+
+    padding: 4mm 4mm 5mm !important;
+
+    border: none !important;
+    border-radius: 0 !important;
+
+    box-shadow: none !important;
+
+    background: #ffffff !important;
+
+    color: #000000 !important;
+
+    font-size: 10px;
+  }
+
+  /* ------------------------------------------------------------------
+     Couleurs imprimables
+     ------------------------------------------------------------------ */
+
+  .ticket-logo-circle {
+    fill: #000000 !important;
+    opacity: 0.08 !important;
+  }
+
+  .ticket-logo-cross {
+    fill: #000000 !important;
+  }
+
+  .ticket-shop,
+  .ticket-tagline,
+  .ticket-contact,
+  .ticket-title,
+  .ticket-info-row span,
+  .ticket-info-row strong,
+  .ticket-items-header,
+  .ticket-item-name,
+  .ticket-item-lot,
+  .ticket-item-qty,
+  .ticket-item-pu,
+  .ticket-item-total,
+  .ticket-summary-row span,
+  .ticket-summary-row strong,
+  .ticket-total-label,
+  .ticket-total-value,
+  .ticket-payment-title,
+  .ticket-payment strong,
+  .ticket-thanks,
+  .ticket-footer-shop,
+  .ticket-footer-text {
+    color: #000000 !important;
+  }
+
+  /* Badge de statut : lisible en niveaux de gris */
+  body.printing-ticket .ticket-status-badge {
+    color: #000000 !important;
+    background: #ffffff !important;
+    border: 1px solid #000000 !important;
+  }
+
+  /* Encadre du total : conserve en niveaux de gris pour l'imprimante
+     thermique (pas de fond vert, l'encre thermique est monochrome). */
+  body.printing-ticket .ticket-total {
+    background: #ffffff !important;
+    border: 1.5px solid #000000 !important;
+  }
+
+  /* Le reste du a payer reste lisible sans dependre de la couleur */
+  body.printing-ticket .ticket-due {
+    color: #000000 !important;
+    font-weight: 800;
+  }
+
+  /* ------------------------------------------------------------------
+     Éviter les coupures
+     ------------------------------------------------------------------ */
+
+  .ticket-head,
+  .ticket-title,
+  .ticket-status,
+  .ticket-info,
+  .ticket-item,
+  .ticket-summary,
+  .ticket-total,
+  .ticket-payment,
+  .ticket-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* ------------------------------------------------------------------
+     Page imprimante thermique
+     Le @page est injecte dynamiquement par FactureTicketModal : une regle
+     @page CSS ne peut pas etre conditionnee a la presence du ticket.
+     ------------------------------------------------------------------ */
+}

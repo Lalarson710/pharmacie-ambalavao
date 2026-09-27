@@ -20,6 +20,8 @@ interface EntityFormModalProps<T> {
   icon?: ReactNode;
   /** Sous-titre explicatif affiche sous le titre */
   subtitle?: string;
+  /** Libelle du bouton de validation (par defaut « Créer » / « Enregistrer les modifications ») */
+  submitLabel?: string;
 }
 
 interface EntityFormModalContentProps<T> {
@@ -37,6 +39,7 @@ interface EntityFormModalContentProps<T> {
   size?: 'sm' | 'md' | 'lg';
   icon?: ReactNode;
   subtitle?: string;
+  submitLabel?: string;
 }
 
 function attachFormData(node: ReactNode, formData: Record<string, unknown>): ReactNode {
@@ -73,6 +76,7 @@ function EntityFormModalContent<T extends { id: number | string }>({
   size = 'md',
   icon,
   subtitle,
+  submitLabel,
 }: EntityFormModalContentProps<T>) {
   const [formData, setFormData] = useState<Record<string, unknown>>(() =>
     getInitialData(editItem)
@@ -151,7 +155,8 @@ function EntityFormModalContent<T extends { id: number | string }>({
               <X size={16} /> Annuler
             </button>
             <button type="submit" className="btn-primary">
-              <Check size={16} /> {isEdit ? 'Enregistrer les modifications' : 'Créer'}
+              <Check size={16} />{' '}
+              {submitLabel ?? (isEdit ? 'Enregistrer les modifications' : 'Créer')}
             </button>
           </div>
         </div>

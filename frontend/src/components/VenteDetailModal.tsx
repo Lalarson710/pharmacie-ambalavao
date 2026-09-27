@@ -1,16 +1,15 @@
 import { useEffect } from 'react';
 import { Modal } from './Modal';
 import {
-  Building2,
   CalendarDays,
   ClipboardList,
   FileText,
   Hash,
-  History,
   Package,
   Printer,
   ReceiptText,
   StickyNote,
+  User,
   Wallet,
 } from 'lucide-react';
 import {
@@ -19,23 +18,21 @@ import {
   formatStatut,
   getStatutBadgeClass,
 } from '@/utils/formatters';
-import type { Achat, AchatLigne, AchatStatut } from '@/types';
+import type { Vente, VenteLigne } from '@/types';
 
-interface AchatDetailModalProps {
+interface VenteDetailModalProps {
   open: boolean;
-  achat: Achat | null;
-  lignes: AchatLigne[];
-  statutHistory: AchatStatut[];
+  vente: Vente | null;
+  lignes: VenteLigne[];
   onClose: () => void;
 }
 
-export function AchatDetailModal({
+export function VenteDetailModal({
   open,
-  achat,
+  vente,
   lignes,
-  statutHistory,
   onClose,
-}: AchatDetailModalProps) {
+}: VenteDetailModalProps) {
   // Bascule la classe qui active les regles d'impression A4 de la fiche.
   // Elle ne doit etre posee que le temps ou la fiche est ouverte : sinon
   // les impressions de page entiere (caisse, statistiques, rapports)
@@ -50,24 +47,24 @@ export function AchatDetailModal({
     };
   }, [open]);
 
-  if (!open || !achat) return null;
+  if (!open || !vente) return null;
 
-  const filteredLignes = lignes.filter((ligne) => ligne.achat_id === achat.id);
-  const totalLignes = filteredLignes.reduce(
+  const filteredLignes = lignes.filter((ligne) => ligne.vente_id === vente.id);
+  const totalQuantite = filteredLignes.reduce(
     (total, ligne) => total + Number(ligne.quantite),
-    0,
+    0
   );
   const totalMontant = filteredLignes.reduce(
     (total, ligne) => total + Number(ligne.montant),
-    0,
+    0
   );
-  const montantAchat = Number(achat.montant_total ?? 0);
+  const montantVente = Number(vente.montant_total ?? 0);
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title="Détail de l’achat"
+      title="Détail de la vente"
       size="lg"
     >
       <div className="achat-detail print-area">
@@ -76,23 +73,22 @@ export function AchatDetailModal({
             <ReceiptText size={22} />
           </div>
           <div className="achat-detail-hero-copy">
-            <span className="achat-detail-kicker">BON DE COMMANDE</span>
-            <strong>Achat {achat.numero ?? '—'}</strong>
+            <span className="achat-detail-kicker">TICKET DE VENTE</span>
+            <strong>Vente {vente.numero ?? '—'}</strong>
             <span>
-              {formatDate(achat.date_achat)} • {filteredLignes.length}{' '}
-              ligne(s)
+              {formatDate(vente.date_vente)} • {filteredLignes.length} ligne(s)
             </span>
           </div>
           <div className="achat-detail-hero-actions no-print">
-            <span className={`badge ${getStatutBadgeClass(achat.statut)}`}>
-              {formatStatut(achat.statut)}
+            <span className={`badge ${getStatutBadgeClass(vente.statut)}`}>
+              {formatStatut(vente.statut)}
             </span>
             <button
               type="button"
               className="btn-export-pdf no-print"
               onClick={() => window.print()}
-              title="Imprimer cet achat"
-              aria-label="Imprimer cet achat"
+              title="Imprimer cette vente"
+              aria-label="Imprimer cette vente"
             >
               <Printer size={15} /> Imprimer
             </button>
@@ -106,7 +102,7 @@ export function AchatDetailModal({
             </span>
             <div>
               <span>Montant total</span>
-              <strong>{formatCurrency(achat.montant_total)}</strong>
+              <strong>{formatCurrency(vente.montant_total)}</strong>
             </div>
           </div>
           <div className="achat-detail-summary-card">
@@ -115,7 +111,7 @@ export function AchatDetailModal({
             </span>
             <div>
               <span>Quantité totale</span>
-              <strong>{totalLignes} unité(s)</strong>
+              <strong>{totalQuantite} unité(s)</strong>
             </div>
           </div>
           <div className="achat-detail-summary-card">
@@ -136,36 +132,36 @@ export function AchatDetailModal({
             </div>
             <div>
               <h4>Informations générales</h4>
-              <p>Les informations principales de cet achat</p>
+              <p>Les informations principales de cette vente</p>
             </div>
           </div>
 
           <div className="achat-detail-info-grid">
             <div className="achat-detail-info-item">
               <span className="achat-detail-info-label">
-                <Hash size={14} /> Numéro d’achat
+                <Hash size={14} /> Numéro de vente
               </span>
-              <strong>{achat.numero || '—'}</strong>
+              <strong>{vente.numero || '—'}</strong>
             </div>
             <div className="achat-detail-info-item">
               <span className="achat-detail-info-label">
-                <Building2 size={14} /> Fournisseur
+                <User size={14} /> Client
               </span>
-              <strong>{achat.fournisseur?.nom ?? '—'}</strong>
+              <strong>{vente.client?.nom ?? 'Client de passage'}</strong>
             </div>
             <div className="achat-detail-info-item">
               <span className="achat-detail-info-label">
-                <CalendarDays size={14} /> Date d’achat
+                <CalendarDays size={14} /> Date de vente
               </span>
-              <strong>{formatDate(achat.date_achat)}</strong>
+              <strong>{formatDate(vente.date_vente)}</strong>
             </div>
             <div className="achat-detail-info-item">
               <span className="achat-detail-info-label">
                 <ReceiptText size={14} /> Statut
               </span>
               <strong>
-                <span className={`badge ${getStatutBadgeClass(achat.statut)}`}>
-                  {formatStatut(achat.statut)}
+                <span className={`badge ${getStatutBadgeClass(vente.statut)}`}>
+                  {formatStatut(vente.statut)}
                 </span>
               </strong>
             </div>
@@ -174,7 +170,7 @@ export function AchatDetailModal({
                 <StickyNote size={14} /> Observation
               </span>
               <strong className="achat-detail-observation">
-                {achat.observation ?? 'Aucune observation'}
+                {vente.observation ?? 'Aucune observation'}
               </strong>
             </div>
           </div>
@@ -187,7 +183,7 @@ export function AchatDetailModal({
             </div>
             <div>
               <h4>Détail des articles</h4>
-              <p>Produits, quantités, prix et numéros de lot</p>
+              <p>Produits, lots, quantités et prix unitaires</p>
             </div>
             <span className="achat-detail-count">
               {filteredLignes.length} ligne(s)
@@ -210,7 +206,7 @@ export function AchatDetailModal({
                 {filteredLignes.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="achat-detail-empty">
-                      Aucune ligne associée à cet achat.
+                      Aucune ligne associée à cette vente.
                     </td>
                   </tr>
                 ) : (
@@ -232,12 +228,12 @@ export function AchatDetailModal({
                       </td>
                       <td>
                         <span className="achat-detail-lot">
-                          {ligne.numero_lot ?? '—'}
+                          {ligne.lot?.numero_lot ?? '—'}
                         </span>
                       </td>
                       <td>
-                        {ligne.date_peremption
-                          ? formatDate(ligne.date_peremption)
+                        {ligne.lot?.date_peremption
+                          ? formatDate(ligne.lot.date_peremption)
                           : '—'}
                       </td>
                     </tr>
@@ -248,54 +244,16 @@ export function AchatDetailModal({
                 <tr>
                   <td colSpan={3}>Total des lignes</td>
                   <td className="achat-detail-num">
-                    {formatCurrency(totalMontant || montantAchat)}
+                    {formatCurrency(totalMontant || montantVente)}
                   </td>
                   <td colSpan={2}>
-                    {totalLignes} unité(s) au total
+                    {totalQuantite} unité(s) au total
                   </td>
                 </tr>
               </tfoot>
             </table>
           </div>
         </section>
-
-        {statutHistory.length > 0 && (
-          <section className="achat-detail-section">
-            <div className="achat-detail-section-heading">
-              <div className="achat-detail-section-icon history">
-                <History size={16} />
-              </div>
-              <div>
-                <h4>Historique des statuts</h4>
-                <p>Suivi des changements de statut de cet achat</p>
-              </div>
-              <span className="achat-detail-count">
-                {statutHistory.length} événement(s)
-              </span>
-            </div>
-
-            <div className="achat-detail-timeline">
-              {statutHistory.map((history, index) => (
-                <div
-                  className="achat-detail-timeline-item"
-                  key={history.id}
-                >
-                  <span className="achat-detail-timeline-dot" />
-                  <div className="achat-detail-timeline-content">
-                    <strong>{formatStatut(history.nouveau_statut)}</strong>
-                    <span>{formatDate(history.created_at)}</span>
-                    {history.commentaire && (
-                      <small>{history.commentaire}</small>
-                    )}
-                  </div>
-                  {index < statutHistory.length - 1 && (
-                    <span className="achat-detail-timeline-line" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </Modal>
   );

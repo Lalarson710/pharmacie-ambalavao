@@ -6,9 +6,10 @@ import type { Client } from '@/types';
 interface ClientsAssociesTabProps {
   data: Client[];
   search: string;
+  loading?: boolean;
 }
 
-export function ClientsAssociesTab({ data, search }: ClientsAssociesTabProps) {
+export function ClientsAssociesTab({ data, search, loading }: ClientsAssociesTabProps) {
   const filteredClients = search
     ? data.filter((row) =>
         [row.nom, row.telephone ?? '', row.email ?? '', row.adresse ?? '']
@@ -28,9 +29,9 @@ export function ClientsAssociesTab({ data, search }: ClientsAssociesTabProps) {
   return (
     <SectionCard title="Clients associés" subtitle={`${data.length} client(s)`}>
       <DataTable
-        data={filteredClients}
+        data={loading ? [] : filteredClients}
         columns={columns}
-        emptyMessage="Aucun client."
+        emptyMessage={loading ? 'Chargement des clients...' : 'Aucun client associé à une vente.'}
       />
     </SectionCard>
   );

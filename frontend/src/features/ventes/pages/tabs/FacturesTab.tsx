@@ -8,10 +8,11 @@ import type { Facture } from '@/types';
 interface FacturesTabProps {
   data: Facture[];
   search: string;
-  onPrint: () => void;
+  loading?: boolean;
+  onPrint: (item: Facture) => void;
 }
 
-export function FacturesTab({ data, search, onPrint }: FacturesTabProps) {
+export function FacturesTab({ data, search, loading, onPrint }: FacturesTabProps) {
   const filteredFactures = search
     ? data.filter((row) =>
         [row.numero, row.vente?.numero, row.vente?.client?.nom, row.statut]
@@ -36,7 +37,7 @@ export function FacturesTab({ data, search, onPrint }: FacturesTabProps) {
     {
       key: 'client',
       label: 'Client',
-      render: (row) => row.vente?.client?.nom ?? '—',
+      render: (row) => row.vente?.client?.nom ?? 'Client de passage',
     },
     {
       key: 'montant_total',
@@ -57,11 +58,16 @@ export function FacturesTab({ data, search, onPrint }: FacturesTabProps) {
   return (
     <SectionCard title="Liste des factures">
       <DataTable
-        data={filteredFactures}
+        data={loading ? [] : filteredFactures}
         columns={columns}
-        emptyMessage="Aucune facture."
+        emptyMessage={loading ? 'Chargement des factures...' : 'Aucune facture.'}
         actionsHeaderLabel="Actions"
-        actions={() => <RowActions onPrint={onPrint} />}
+        actions={(row) => (
+          <RowActions
+            onPrint={() => onPrint(row)}
+            printLabel="Imprimer le ticket de caisse"
+          />
+        )}
       />
     </SectionCard>
   );

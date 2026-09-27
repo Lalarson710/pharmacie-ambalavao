@@ -2,18 +2,19 @@ import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
 import { RowActions } from '@/components/RowActions';
+import { Lock, Printer } from 'lucide-react';
 import { formatCurrency, formatDateTime, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
 import type { Caisse } from '@/types';
 
 interface CaissesTabProps {
   data: Caisse[];
   search: string;
-  onOpenEdit: (item: Caisse) => void;
-  onDelete: (item: Caisse) => void;
-  onPrint: () => void;
+  loading?: boolean;
+  onClose: (item: Caisse) => void;
+  onPrint: (item: Caisse) => void;
 }
 
-export function CaissesTab({ data, search, onOpenEdit, onDelete, onPrint }: CaissesTabProps) {
+export function CaissesTab({ data, search, loading, onClose, onPrint }: CaissesTabProps) {
   const filteredCaisses = search
     ? data.filter((row) =>
         [
@@ -75,23 +76,58 @@ export function CaissesTab({ data, search, onOpenEdit, onDelete, onPrint }: Cais
     },
   ];
 
+  const renderActions = (row: Caisse) => {
+    if (row.statut !== 'ouverte') {
+      return (
+        <RowActions>
+          <button
+            type="button"
+            className="icon-button print"
+            onClick={() => onPrint(row)}
+            title="Imprimer la fiche de cette caisse"
+            aria-label="Imprimer la fiche de cette caisse"
+          >
+            <Printer size={14} />
+          </button>
+        </RowActions>
+      );
+    }
+
+    return (
+      <RowActions>
+        <button
+          type="button"
+          className="icon-button warning"
+          onClick={() => onClose(row)}
+          title="Fermer la caisse"
+          aria-label="Fermer la caisse"
+        >
+          <Lock size={14} />
+        </button>
+        <button
+          type="button"
+          className="icon-button print"
+          onClick={() => onPrint(row)}
+          title="Imprimer la fiche de cette caisse"
+          aria-label="Imprimer la fiche de cette caisse"
+        >
+          <Printer size={14} />
+        </button>
+      </RowActions>
+    );
+  };
+
   return (
     <SectionCard
       title="Liste des caisses"
       subtitle={`${data.length} caisse(s)`}
     >
       <DataTable
-        data={filteredCaisses}
+        data={loading ? [] : filteredCaisses}
         columns={columns}
-        emptyMessage="Aucune caisse enregistrée."
+        emptyMessage={loading ? 'Chargement des caisses...' : 'Aucune caisse enregistrée.'}
         actionsHeaderLabel="Actions"
-        actions={(row) => (
-          <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
-            onPrint={onPrint}
-          />
-        )}
+        actions={renderActions}
       />
     </SectionCard>
   );

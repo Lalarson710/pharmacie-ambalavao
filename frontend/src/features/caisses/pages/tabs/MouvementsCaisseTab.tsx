@@ -7,9 +7,10 @@ import type { MouvementCaisse } from '@/types';
 interface MouvementsCaisseTabProps {
   data: MouvementCaisse[];
   search: string;
+  loading?: boolean;
 }
 
-export function MouvementsCaisseTab({ data, search }: MouvementsCaisseTabProps) {
+export function MouvementsCaisseTab({ data, search, loading }: MouvementsCaisseTabProps) {
   const filteredMouvements = search
     ? data.filter((row) =>
         [
@@ -71,9 +72,11 @@ export function MouvementsCaisseTab({ data, search }: MouvementsCaisseTabProps) 
       subtitle={`${data.length} mouvement(s)`}
     >
       <DataTable
-        data={filteredMouvements}
+        data={loading ? [] : filteredMouvements}
         columns={columns}
-        emptyMessage="Aucun mouvement de caisse."
+        emptyMessage={
+          loading ? 'Chargement des mouvements...' : 'Aucun mouvement de caisse.'
+        }
         actionsHeaderLabel="Actions"
       />
     </SectionCard>

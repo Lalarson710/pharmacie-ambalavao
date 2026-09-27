@@ -2,18 +2,33 @@ import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
 import { RowActions } from '@/components/RowActions';
+import { CheckCircle, Eye, Printer, XCircle } from 'lucide-react';
 import { formatCurrency, formatDate, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
 import type { Vente } from '@/types';
 
 interface VentesTabProps {
   data: Vente[];
   search: string;
+  loading?: boolean;
   onOpenEdit: (item: Vente) => void;
   onDelete: (item: Vente) => void;
-  onPrint: () => void;
+  onConfirm: (item: Vente) => void;
+  onAnnuler: (item: Vente) => void;
+  onPrint: (item: Vente) => void;
+  onPreview: (item: Vente) => void;
 }
 
-export function VentesTab({ data, search, onOpenEdit, onDelete, onPrint }: VentesTabProps) {
+export function VentesTab({
+  data,
+  search,
+  loading,
+  onOpenEdit,
+  onDelete,
+  onConfirm,
+  onAnnuler,
+  onPrint,
+  onPreview,
+}: VentesTabProps) {
   const filteredVentes = search
     ? data.filter((row) =>
         [row.numero, row.client?.nom, row.statut, row.observation ?? '']
@@ -33,7 +48,7 @@ export function VentesTab({ data, search, onOpenEdit, onDelete, onPrint }: Vente
     {
       key: 'client',
       label: 'Client',
-      render: (row) => row.client?.nom ?? '—',
+      render: (row) => row.client?.nom ?? 'Client de passage',
     },
     {
       key: 'montant_total',
@@ -52,20 +67,111 @@ export function VentesTab({ data, search, onOpenEdit, onDelete, onPrint }: Vente
     { key: 'observation', label: 'Observation' },
   ];
 
+  const renderActions = (row: Vente) => {
+    if (row.statut === 'annulee') {
+      return (
+        <RowActions>
+          <button
+            type="button"
+            className="icon-button info"
+            onClick={() => onPreview(row)}
+            title="Voir les détails"
+            aria-label="Voir les détails"
+          >
+            <Eye size={14} />
+          </button>
+          <button
+            type="button"
+            className="icon-button print"
+            onClick={() => onPrint(row)}
+            title="Imprimer"
+            aria-label="Imprimer"
+          >
+            <Printer size={14} />
+          </button>
+        </RowActions>
+      );
+    }
+
+    if (row.statut === 'confirmee') {
+      return (
+        <RowActions>
+          <button
+            type="button"
+            className="icon-button info"
+            onClick={() => onPreview(row)}
+            title="Voir les détails"
+            aria-label="Voir les détails"
+          >
+            <Eye size={14} />
+          </button>
+          <button
+            type="button"
+            className="icon-button print"
+            onClick={() => onPrint(row)}
+            title="Imprimer"
+            aria-label="Imprimer"
+          >
+            <Printer size={14} />
+          </button>
+          <button
+            type="button"
+            className="icon-button warning"
+            onClick={() => onAnnuler(row)}
+            title="Annuler la vente"
+            aria-label="Annuler la vente"
+          >
+            <XCircle size={14} />
+          </button>
+        </RowActions>
+      );
+    }
+
+    // statut === 'brouillon'
+    return (
+      <RowActions
+        onEdit={() => onOpenEdit(row)}
+        onDelete={() => onDelete(row)}
+      >
+        <button
+          type="button"
+          className="icon-button info"
+          onClick={() => onPreview(row)}
+          title="Voir les détails"
+          aria-label="Voir les détails"
+        >
+          <Eye size={14} />
+        </button>
+        <button
+          type="button"
+          className="icon-button success"
+          onClick={() => onConfirm(row)}
+          title="Confirmer la vente"
+          aria-label="Confirmer la vente"
+        >
+          <CheckCircle size={14} />
+        </button>
+        <button
+          type="button"
+          className="icon-button warning"
+          onClick={() => onAnnuler(row)}
+          title="Annuler la vente"
+          aria-label="Annuler la vente"
+        >
+          <XCircle size={14} />
+        </button>
+      </RowActions>
+    );
+  };
+
   return (
     <SectionCard title="Liste des ventes">
       <DataTable
-        data={filteredVentes}
+        data={loading ? [] : filteredVentes}
         columns={columns}
-        emptyMessage="Aucune vente enregistrée."
+        emptyMessage={loading ? 'Chargement des ventes...' : 'Aucune vente enregistrée.'}
         actionsHeaderLabel="Actions"
-        actions={(row) => (
-          <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
-            onPrint={onPrint}
-          />
-        )}
+        actions={renderActions}
       />
     </SectionCard>
   );
