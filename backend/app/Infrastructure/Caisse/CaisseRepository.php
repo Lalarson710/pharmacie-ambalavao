@@ -45,6 +45,11 @@ class CaisseRepository implements CaisseRepositoryInterface
         return $caisse->fresh('utilisateur');
     }
 
+    public function supprimer(Caisse $caisse): bool
+    {
+        return $caisse->delete();
+    }
+
     public function calculerSoldeTheorique(int $caisseId): float
     {
         $caisse = Caisse::findOrFail($caisseId);

@@ -46,14 +46,27 @@ Route::get('/user', function (Request $request) {
 Route::post('/logout', [LogoutController::class, 'logout'])
     ->middleware('auth:sanctum');
 
-Route::get('/categories', [CategorieController::class, 'index']);
-Route::post('/categories', [CategorieController::class, 'store']);
-Route::get('/categories/{id}', [CategorieController::class, 'show']);
-Route::put('/categories/{id}', [CategorieController::class, 'update']);
-Route::delete('/categories/{id}', [CategorieController::class, 'destroy']);
+Route::get('/categories', [CategorieController::class, 'index'])
+    ->middleware(['auth:sanctum', 'permission:categorie.view']);
+Route::post('/categories', [CategorieController::class, 'store'])
+    ->middleware(['auth:sanctum', 'permission:categorie.create']);
+Route::get('/categories/{id}', [CategorieController::class, 'show'])
+    ->middleware(['auth:sanctum', 'permission:categorie.view']);
+Route::put('/categories/{id}', [CategorieController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:categorie.update']);
+Route::delete('/categories/{id}', [CategorieController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:categorie.delete']);
 
-Route::get('/unites', [UniteController::class, 'index']);
-Route::apiResource('unites', UniteController::class);
+Route::get('/unites', [UniteController::class, 'index'])
+    ->middleware(['auth:sanctum', 'permission:unite.view']);
+Route::post('/unites', [UniteController::class, 'store'])
+    ->middleware(['auth:sanctum', 'permission:unite.create']);
+Route::get('/unites/{id}', [UniteController::class, 'show'])
+    ->middleware(['auth:sanctum', 'permission:unite.view']);
+Route::put('/unites/{id}', [UniteController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:unite.update']);
+Route::delete('/unites/{id}', [UniteController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:unite.delete']);
 
 Route::get('/produits', [ProduitController::class, 'index'])
     ->middleware([
@@ -84,18 +97,21 @@ Route::delete('/produits/{id}', [ProduitController::class, 'destroy'])
         'permission:produit.delete'
     ]);
 
-Route::get('/lots', [LotController::class, 'index']);
-Route::post('/lots', [LotController::class, 'store']);
-Route::get('/lots/{id}', [LotController::class, 'show']);
-Route::put('/lots/{id}', [LotController::class, 'update']);
-Route::delete('/lots/{id}', [LotController::class, 'destroy']);
+Route::get('/lots', [LotController::class, 'index'])
+    ->middleware(['auth:sanctum', 'permission:lot.view']);
+Route::get('/lots/{id}', [LotController::class, 'show'])
+    ->middleware(['auth:sanctum', 'permission:lot.view']);
 
 Route::get('/mouvements-stock', [MouvementStockController::class, 'index'])
-    ->middleware(['auth:sanctum', 'permission:stock.view']);
+    ->middleware(['auth:sanctum', 'permission:mouvement_stock.view']);
 Route::post('/mouvements-stock', [MouvementStockController::class, 'store'])
-    ->middleware('auth:sanctum');
+    ->middleware(['auth:sanctum', 'permission:mouvement_stock.create']);
 Route::get('/mouvements-stock/{id}', [MouvementStockController::class, 'show'])
-    ->middleware(['auth:sanctum', 'permission:stock.view']);
+    ->middleware(['auth:sanctum', 'permission:mouvement_stock.view']);
+Route::put('/mouvements-stock/{id}', [MouvementStockController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:mouvement_stock.update']);
+Route::delete('/mouvements-stock/{id}', [MouvementStockController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:mouvement_stock.delete']);
 
 Route::get('/stocks/faibles', [StockController::class, 'stocksFaibles'])
     ->middleware(['auth:sanctum', 'permission:stock.view']);
@@ -107,15 +123,23 @@ Route::get('/stocks/rupture', [StockController::class, 'stocksEnRupture'])
     ->middleware(['auth:sanctum', 'permission:stock.view']);
 Route::get('/stocks/produits', [StockController::class, 'stockParProduit'])
     ->middleware(['auth:sanctum', 'permission:stock.view']);
+Route::get('/stocks/export', [StockController::class, 'export'])
+    ->middleware(['auth:sanctum', 'permission:stock.export']);
 
 Route::get('/inventaires', [InventaireController::class, 'index'])
-    ->middleware(['auth:sanctum', 'permission:stock.view']);
+    ->middleware(['auth:sanctum', 'permission:inventaire.view']);
 Route::get('/inventaires/{id}', [InventaireController::class, 'show'])
-    ->middleware(['auth:sanctum', 'permission:stock.view']);
+    ->middleware(['auth:sanctum', 'permission:inventaire.view']);
 Route::post('/inventaires', [InventaireController::class, 'store'])
-    ->middleware(['auth:sanctum', 'permission:stock.inventory']);
+    ->middleware(['auth:sanctum', 'permission:inventaire.create']);
+Route::put('/inventaires/{id}', [InventaireController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:inventaire.update']);
+Route::delete('/inventaires/{id}', [InventaireController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:inventaire.delete']);
 Route::post('/inventaires/{inventaireId}/lignes', [InventaireController::class, 'ajouterLigne'])
-    ->middleware(['auth:sanctum', 'permission:stock.inventory']);
+    ->middleware(['auth:sanctum', 'permission:inventaire.create']);
+Route::get('/inventaires/{id}/impression', [InventaireController::class, 'impression'])
+    ->middleware(['auth:sanctum', 'permission:inventaire.print']);
 
 // FOURNISSEURS
 Route::get('/fournisseurs', [FournisseurController::class, 'index'])
@@ -145,6 +169,8 @@ Route::post('/achats/{id}/confirmer', [AchatController::class, 'confirmer'])
     ->middleware(['auth:sanctum', 'permission:achat.update']);
 Route::post('/achats/{id}/annuler', [AchatController::class, 'annuler'])
     ->middleware(['auth:sanctum', 'permission:achat.update']);
+Route::get('/achats/{id}/impression', [AchatController::class, 'impression'])
+    ->middleware(['auth:sanctum', 'permission:achat.print']);
 
 // LIGNES D'ACHAT
 Route::get('/achats/{achatId}/lignes', [AchatLigneController::class, 'index'])
@@ -158,9 +184,13 @@ Route::put('/achat-lignes/{id}', [AchatLigneController::class, 'update'])
 Route::delete('/achat-lignes/{id}', [AchatLigneController::class, 'destroy'])
     ->middleware(['auth:sanctum', 'permission:achat.delete']);
 Route::get('/achats/{achatId}/statuts', [AchatStatutController::class, 'index'])
-    ->middleware(['auth:sanctum', 'permission:achat.view']);
+    ->middleware(['auth:sanctum', 'permission:achat_statut.view']);
 Route::post('/achats/{achatId}/statuts', [AchatStatutController::class, 'store'])
-    ->middleware(['auth:sanctum', 'permission:achat.update']);
+    ->middleware(['auth:sanctum', 'permission:achat_statut.create']);
+Route::put('/achat-statuts/{id}', [AchatStatutController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:achat_statut.update']);
+Route::delete('/achat-statuts/{id}', [AchatStatutController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:achat_statut.delete']);
 
 Route::get('/clients', [ClientController::class, 'index'])
     ->middleware(['auth:sanctum', 'permission:client.view']);
@@ -181,13 +211,15 @@ Route::post('/ventes', [VenteController::class, 'store'])
 Route::get('/ventes/{id}', [VenteController::class, 'show'])
     ->middleware(['auth:sanctum', 'permission:vente.view']);
 Route::put('/ventes/{id}', [VenteController::class, 'update'])
-    ->middleware(['auth:sanctum', 'permission:vente.create']);
+    ->middleware(['auth:sanctum', 'permission:vente.update']);
 Route::delete('/ventes/{id}', [VenteController::class, 'destroy'])
-    ->middleware(['auth:sanctum', 'permission:vente.cancel']);
+    ->middleware(['auth:sanctum', 'permission:vente.delete']);
 Route::post('/ventes/{id}/confirmer', [VenteController::class, 'confirmer'])
     ->middleware(['auth:sanctum', 'permission:vente.confirm']);
 Route::post('/ventes/{id}/annuler', [VenteController::class, 'annuler'])
     ->middleware(['auth:sanctum', 'permission:vente.cancel']);
+Route::get('/ventes/{id}/impression', [VenteController::class, 'impression'])
+    ->middleware(['auth:sanctum', 'permission:vente.print']);
 
 
 // LIGNES DE VENTE
@@ -202,41 +234,53 @@ Route::delete('/vente-lignes/{id}', [VenteLigneController::class, 'destroy'])
 
 // FACTURES
 Route::get('/factures', [FactureController::class, 'index'])
-    ->middleware(['auth:sanctum', 'permission:rapport.view']);
+    ->middleware(['auth:sanctum', 'permission:facture.view']);
 Route::get('/factures/{id}', [FactureController::class, 'show'])
-    ->middleware(['auth:sanctum', 'permission:rapport.view']);
+    ->middleware(['auth:sanctum', 'permission:facture.view']);
 Route::post('/factures', [FactureController::class, 'store'])
-    ->middleware(['auth:sanctum', 'permission:vente.confirm']);
+    ->middleware(['auth:sanctum', 'permission:facture.create']);
 Route::put('/factures/{id}', [FactureController::class, 'update'])
-    ->middleware(['auth:sanctum', 'permission:vente.confirm']);
+    ->middleware(['auth:sanctum', 'permission:facture.update']);
+Route::delete('/factures/{id}', [FactureController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:facture.delete']);
 
 // REGLEMENTS
 Route::get('/reglements', [ReglementController::class, 'index'])
-    ->middleware(['auth:sanctum', 'permission:rapport.view']);
+    ->middleware(['auth:sanctum', 'permission:reglement.view']);
 Route::get('/reglements/{id}', [ReglementController::class, 'show'])
-    ->middleware(['auth:sanctum', 'permission:rapport.view']);
+    ->middleware(['auth:sanctum', 'permission:reglement.view']);
 Route::post('/reglements', [ReglementController::class, 'store'])
-    ->middleware(['auth:sanctum', 'permission:vente.confirm']);
+    ->middleware(['auth:sanctum', 'permission:reglement.create']);
+Route::put('/reglements/{id}', [ReglementController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:reglement.update']);
+Route::delete('/reglements/{id}', [ReglementController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:reglement.delete']);
 
 // CAISSES
 Route::get('/caisses', [CaisseController::class, 'index'])
-    ->middleware(['auth:sanctum', 'permission:caisse.open']);
+    ->middleware(['auth:sanctum', 'permission:caisse.view']);
 Route::get('/caisses/{id}', [CaisseController::class, 'show'])
-    ->middleware(['auth:sanctum', 'permission:caisse.open']);
+    ->middleware(['auth:sanctum', 'permission:caisse.view']);
 Route::post('/caisses', [CaisseController::class, 'store'])
-    ->middleware(['auth:sanctum', 'permission:caisse.open']);
+    ->middleware(['auth:sanctum', 'permission:caisse.create']);
+Route::put('/caisses/{id}', [CaisseController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:caisse.update']);
+Route::delete('/caisses/{id}', [CaisseController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:caisse.delete']);
 Route::post('/caisses/{id}/fermer', [CaisseController::class, 'fermer'])
     ->middleware(['auth:sanctum', 'permission:caisse.close']);
+Route::get('/caisses/{id}/impression', [CaisseController::class, 'impression'])
+    ->middleware(['auth:sanctum', 'permission:caisse.print']);
 
 // MOUVEMENTS DE CAISSE
 Route::get('/mouvements-caisse', [MouvementCaisseController::class, 'index'])
-    ->middleware(['auth:sanctum', 'permission:caisse.open']);
+    ->middleware(['auth:sanctum', 'permission:caisse.view']);
 Route::get('/mouvements-caisse/{id}', [MouvementCaisseController::class, 'show'])
-    ->middleware(['auth:sanctum', 'permission:caisse.open']);
+    ->middleware(['auth:sanctum', 'permission:caisse.view']);
 Route::get('/caisses/{caisseId}/mouvements', [MouvementCaisseController::class, 'parCaisse'])
-    ->middleware(['auth:sanctum', 'permission:caisse.open']);
+    ->middleware(['auth:sanctum', 'permission:caisse.view']);
 Route::post('/mouvements-caisse', [MouvementCaisseController::class, 'store'])
-    ->middleware(['auth:sanctum', 'permission:caisse.open']);
+    ->middleware(['auth:sanctum', 'permission:caisse.create']);
 
 // RAPPORTS
 Route::get('/rapports', [RapportController::class, 'index'])
@@ -244,7 +288,13 @@ Route::get('/rapports', [RapportController::class, 'index'])
 Route::get('/rapports/{id}', [RapportController::class, 'show'])
     ->middleware(['auth:sanctum', 'permission:rapport.view']);
 Route::post('/rapports', [RapportController::class, 'store'])
-    ->middleware(['auth:sanctum', 'permission:rapport.export']);
+    ->middleware(['auth:sanctum', 'permission:rapport.create']);
+Route::put('/rapports/{id}', [RapportController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:rapport.update']);
+Route::delete('/rapports/{id}', [RapportController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:rapport.delete']);
+Route::get('/rapports/{id}/impression', [RapportController::class, 'impression'])
+    ->middleware(['auth:sanctum', 'permission:rapport.print']);
 
 // UTILISATEURS
 Route::get('/utilisateurs', [UtilisateurController::class, 'index'])
@@ -285,49 +335,49 @@ Route::delete(
 Route::get('/roles', [RoleController::class, 'index'])
     ->middleware([
         'auth:sanctum',
-        'permission:permission.manage'
+        'permission:role.view'
     ]);
 Route::get(
     '/roles/{roleId}/permissions',
     [RoleController::class, 'permissions']
 )->middleware([
     'auth:sanctum',
-    'permission:permission.manage'
+    'permission:role.view'
 ]);
 Route::put(
     '/roles/{roleId}/permissions',
     [RoleController::class, 'definirPermission']
 )->middleware([
     'auth:sanctum',
-    'permission:permission.manage'
+    'permission:role.update'
 ]);
 Route::delete(
     '/roles/{roleId}/permissions/{permissionId}',
     [RoleController::class, 'supprimerPermission']
 )->middleware([
     'auth:sanctum',
-    'permission:permission.manage'
+    'permission:role.update'
 ]);
 Route::post(
     '/roles',
     [RoleController::class, 'store']
 )->middleware([
     'auth:sanctum',
-    'permission:permission.manage'
+    'permission:role.create'
 ]);
 Route::put(
     '/roles/{roleId}',
     [RoleController::class, 'update']
 )->middleware([
     'auth:sanctum',
-    'permission:permission.manage'
+    'permission:role.update'
 ]);
 Route::delete(
     '/roles/{roleId}',
     [RoleController::class, 'destroy']
 )->middleware([
     'auth:sanctum',
-    'permission:permission.manage'
+    'permission:role.delete'
 ]);
 
 // PERMISSIONS
@@ -336,7 +386,28 @@ Route::get(
     [PermissionController::class, 'index']
 )->middleware([
     'auth:sanctum',
-    'permission:permission.manage'
+    'permission:permission.view'
+]);
+Route::post(
+    '/permissions',
+    [PermissionController::class, 'store']
+)->middleware([
+    'auth:sanctum',
+    'permission:permission.create'
+]);
+Route::put(
+    '/permissions/{id}',
+    [PermissionController::class, 'update']
+)->middleware([
+    'auth:sanctum',
+    'permission:permission.update'
+]);
+Route::delete(
+    '/permissions/{id}',
+    [PermissionController::class, 'destroy']
+)->middleware([
+    'auth:sanctum',
+    'permission:permission.delete'
 ]);
 
 // PERSONNELS
@@ -423,6 +494,11 @@ Route::get('/statistiques/chiffre-affaires', [
     'permission:statistique.view'
 ]);
 
+Route::get('/statistiques/impression', [StatistiquesController::class, 'impression'])
+    ->middleware(['auth:sanctum', 'permission:statistique.print']);
+Route::get('/statistiques/export', [StatistiquesController::class, 'export'])
+    ->middleware(['auth:sanctum', 'permission:statistique.export']);
+
 
 // FACTURE — IMPRESSION
 Route::get('/factures/{id}/impression', [
@@ -451,10 +527,34 @@ Route::post('/sauvegardes', [
     'permission:sauvegarde.create'
 ]);
 
+Route::put('/sauvegardes/{id}', [
+    SauvegardeController::class,
+    'update'
+])->middleware([
+    'auth:sanctum',
+    'permission:sauvegarde.update'
+]);
+
+Route::delete('/sauvegardes/{id}', [
+    SauvegardeController::class,
+    'destroy'
+])->middleware([
+    'auth:sanctum',
+    'permission:sauvegarde.delete'
+]);
+
 Route::post('/sauvegardes/restaurer', [
     SauvegardeController::class,
     'restaurer'
 ])->middleware([
     'auth:sanctum',
     'permission:sauvegarde.restore'
+]);
+
+Route::post('/sauvegardes/importer', [
+    SauvegardeController::class,
+    'importer'
+])->middleware([
+    'auth:sanctum',
+    'permission:sauvegarde.import'
 ]);

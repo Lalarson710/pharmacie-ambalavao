@@ -23,4 +23,18 @@ class RapportRepository implements RapportRepositoryInterface
     {
         return Rapport::create($donnees);
     }
+
+    public function modifier(
+        Rapport $rapport,
+        array $donnees
+    ): Rapport {
+        $rapport->update($donnees);
+
+        return $rapport->fresh();
+    }
+
+    public function supprimer(Rapport $rapport): bool
+    {
+        return $rapport->delete();
+    }
 }

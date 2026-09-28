@@ -12,5 +12,12 @@ interface InventaireRepositoryInterface
 
     public function creer(array $donnees): Inventaire;
 
+    public function modifier(
+        Inventaire $inventaire,
+        array $donnees
+    ): Inventaire;
+
+    public function supprimer(Inventaire $inventaire): bool;
+
     public function ajouterLigne(int $inventaireId, array $donnees): Inventaire;
 }

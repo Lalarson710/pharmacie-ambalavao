@@ -9,11 +9,19 @@ import { RowActions } from '@/components/RowActions';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/Toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { Client } from '@/types';
 import { clientsApi } from '../api/clients';
 
 export function ClientsPage() {
   const { showToast } = useToast();
+  const { hasPermission } = usePermissions();
+
+  const canView = hasPermission('client.view');
+  const canCreate = hasPermission('client.create');
+  const canEdit = hasPermission('client.update');
+  const canDelete = hasPermission('client.delete');
+
   const [data, setData] = useState<Client[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<Client | null>(null);
@@ -22,19 +30,25 @@ export function ClientsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!canView) return;
     const load = async () => {
       try {
         const result = await clientsApi.getAll();
         setData(result);
       } catch (error) {
         console.error('chargement clients:', error);
-        showToast('Impossible de charger les clients.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les clients.', 'error');
+        } else {
+          showToast('Impossible de charger les clients.', 'error');
+        }
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [showToast]);
+  }, [showToast, canView]);
 
   const filtered = search
     ? data.filter(
@@ -218,62 +232,74 @@ export function ClientsPage() {
 
   return (
     <div className="page-container">
-      <PageHeader
-        title="Clients"
-        subtitle={`${data.length} client(s) enregistré(s)`}
-      />
+      {canView ? (
+        <>
+          <PageHeader
+            title="Clients"
+            subtitle={`${data.length} client(s) enregistré(s)`}
+          />
 
-      <PageToolbar
-        search={search}
-        onSearch={setSearch}
-        placeholder="Rechercher un client..."
-        actions={
-          <button type="button" className="btn-primary" onClick={handleAddClick}>
-            <Plus size={15} /> Ajouter
-          </button>
-        }
-      />
+          <PageToolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Rechercher un client..."
+            actions={
+              canCreate && (
+                <button type="button" className="btn-primary" onClick={handleAddClick}>
+                  <Plus size={15} /> Ajouter
+                </button>
+              )
+            }
+          />
 
-      <SectionCard title="Liste des clients">
-        <DataTable
-          data={loading ? [] : filtered}
-          columns={columns}
-          emptyMessage={loading ? 'Chargement des clients...' : 'Aucun client enregistré.'}
-          actionsHeaderLabel="Actions"
-          actions={(row) => (
-            <RowActions
-              onEdit={() => handleEditClick(row)}
-              onDelete={() => setDeleteItem(row)}
+          <SectionCard title="Liste des clients">
+            <DataTable
+              data={loading ? [] : filtered}
+              columns={columns}
+              emptyMessage={loading ? 'Chargement des clients...' : 'Aucun client enregistré.'}
+              actionsHeaderLabel={canEdit || canDelete ? 'Actions' : undefined}
+              actions={(row) => (
+                <RowActions
+                  onEdit={canEdit ? () => handleEditClick(row) : undefined}
+                  onDelete={canDelete ? () => setDeleteItem(row) : undefined}
+                />
+              )}
             />
-          )}
-        />
-      </SectionCard>
+          </SectionCard>
 
-      <EntityFormModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editItem ? 'Modifier le client' : 'Ajouter un client'}
-        icon={<UserRound size={18} />}
-        subtitle={
-          editItem
-            ? 'Actualisez les informations de contact de ce client.'
-            : 'Enregistrez un nouveau client pour vos ventes.'
-        }
-        editItem={editItem}
-        onSubmit={handleSubmit}
-        renderForm={renderForm}
-        getInitialData={getInitialData}
-        validate={validate}
-        size="md"
-      />
+          <EntityFormModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            title={editItem ? 'Modifier le client' : 'Ajouter un client'}
+            icon={<UserRound size={18} />}
+            subtitle={
+              editItem
+                ? 'Actualisez les informations de contact de ce client.'
+                : 'Enregistrez un nouveau client pour vos ventes.'
+            }
+            editItem={editItem}
+            onSubmit={handleSubmit}
+            renderForm={renderForm}
+            getInitialData={getInitialData}
+            validate={validate}
+            size="md"
+          />
 
-      <ConfirmModal
-        open={!!deleteItem}
-        title="Supprimer le client"
-        message={`Confirmer la suppression de « ${deleteItem?.nom ?? ''} » ?`}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteItem(null)}
-      />
+          <ConfirmModal
+            open={!!deleteItem}
+            title="Supprimer le client"
+            message={`Confirmer la suppression de « ${deleteItem?.nom ?? ''} » ?`}
+            onConfirm={confirmDelete}
+            onCancel={() => setDeleteItem(null)}
+          />
+        </>
+      ) : (
+        <div className="page-empty-state">
+          <div className="empty-state-icon">🔒</div>
+          <h2>Accès non autorisé</h2>
+          <p>Vous n'avez pas les permissions nécessaires pour accéder à ce module.</p>
+        </div>
+      )}
     </div>
   );
 }

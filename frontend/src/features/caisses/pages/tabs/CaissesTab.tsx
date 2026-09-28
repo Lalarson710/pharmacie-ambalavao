@@ -5,16 +5,22 @@ import { RowActions } from '@/components/RowActions';
 import { Lock, Printer } from 'lucide-react';
 import { formatCurrency, formatDateTime, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
 import type { Caisse } from '@/types';
+import { useAuth } from '@/features/auth/store/authStore';
 
 interface CaissesTabProps {
   data: Caisse[];
   search: string;
   loading?: boolean;
-  onClose: (item: Caisse) => void;
+  onClose?: (item: Caisse) => void;
   onPrint: (item: Caisse) => void;
 }
 
 export function CaissesTab({ data, search, loading, onClose, onPrint }: CaissesTabProps) {
+  const { user } = useAuth();
+  const canPrintCaisse = user?.permissions?.some((p) => p.code === 'caisse.print' && p.pivot?.autorise === true) ?? false;
+
+  const hasClose = typeof onClose === 'function';
+
   const filteredCaisses = search
     ? data.filter((row) =>
         [
@@ -80,6 +86,35 @@ export function CaissesTab({ data, search, loading, onClose, onPrint }: CaissesT
     if (row.statut !== 'ouverte') {
       return (
         <RowActions>
+          {canPrintCaisse && (
+            <button
+              type="button"
+              className="icon-button print"
+              onClick={() => onPrint(row)}
+              title="Imprimer la fiche de cette caisse"
+              aria-label="Imprimer la fiche de cette caisse"
+            >
+              <Printer size={14} />
+            </button>
+          )}
+        </RowActions>
+      );
+    }
+
+    return (
+      <RowActions>
+        {hasClose && (
+          <button
+            type="button"
+            className="icon-button warning"
+            onClick={() => onClose!(row)}
+            title="Fermer la caisse"
+            aria-label="Fermer la caisse"
+          >
+            <Lock size={14} />
+          </button>
+        )}
+        {canPrintCaisse && (
           <button
             type="button"
             className="icon-button print"
@@ -89,30 +124,7 @@ export function CaissesTab({ data, search, loading, onClose, onPrint }: CaissesT
           >
             <Printer size={14} />
           </button>
-        </RowActions>
-      );
-    }
-
-    return (
-      <RowActions>
-        <button
-          type="button"
-          className="icon-button warning"
-          onClick={() => onClose(row)}
-          title="Fermer la caisse"
-          aria-label="Fermer la caisse"
-        >
-          <Lock size={14} />
-        </button>
-        <button
-          type="button"
-          className="icon-button print"
-          onClick={() => onPrint(row)}
-          title="Imprimer la fiche de cette caisse"
-          aria-label="Imprimer la fiche de cette caisse"
-        >
-          <Printer size={14} />
-        </button>
+        )}
       </RowActions>
     );
   };
@@ -126,7 +138,7 @@ export function CaissesTab({ data, search, loading, onClose, onPrint }: CaissesT
         data={loading ? [] : filteredCaisses}
         columns={columns}
         emptyMessage={loading ? 'Chargement des caisses...' : 'Aucune caisse enregistrée.'}
-        actionsHeaderLabel="Actions"
+        actionsHeaderLabel={hasClose || canPrintCaisse ? 'Actions' : undefined}
         actions={renderActions}
       />
     </SectionCard>

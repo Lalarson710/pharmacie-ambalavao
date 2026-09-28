@@ -5,15 +5,16 @@ import { RowActions } from '@/components/RowActions';
 import { CheckCircle, Eye, Printer, XCircle } from 'lucide-react';
 import { formatCurrency, formatDate, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
 import type { Vente } from '@/types';
+import { useAuth } from '@/features/auth/store/authStore';
 
 interface VentesTabProps {
   data: Vente[];
   search: string;
   loading?: boolean;
-  onOpenEdit: (item: Vente) => void;
-  onDelete: (item: Vente) => void;
-  onConfirm: (item: Vente) => void;
-  onAnnuler: (item: Vente) => void;
+  onOpenEdit?: (item: Vente) => void;
+  onDelete?: (item: Vente) => void;
+  onConfirm?: (item: Vente) => void;
+  onAnnuler?: (item: Vente) => void;
   onPrint: (item: Vente) => void;
   onPreview: (item: Vente) => void;
 }
@@ -29,6 +30,14 @@ export function VentesTab({
   onPrint,
   onPreview,
 }: VentesTabProps) {
+  const { user } = useAuth();
+  const canPrintVente = user?.permissions?.some((p) => p.code === 'vente.print' && p.pivot?.autorise === true) ?? false;
+
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+  const hasConfirm = typeof onConfirm === 'function';
+  const hasAnnuler = typeof onAnnuler === 'function';
+
   const filteredVentes = search
     ? data.filter((row) =>
         [row.numero, row.client?.nom, row.statut, row.observation ?? '']
@@ -80,15 +89,17 @@ export function VentesTab({
           >
             <Eye size={14} />
           </button>
-          <button
-            type="button"
-            className="icon-button print"
-            onClick={() => onPrint(row)}
-            title="Imprimer"
-            aria-label="Imprimer"
-          >
-            <Printer size={14} />
-          </button>
+          {canPrintVente && (
+            <button
+              type="button"
+              className="icon-button print"
+              onClick={() => onPrint(row)}
+              title="Imprimer"
+              aria-label="Imprimer"
+            >
+              <Printer size={14} />
+            </button>
+          )}
         </RowActions>
       );
     }
@@ -105,24 +116,28 @@ export function VentesTab({
           >
             <Eye size={14} />
           </button>
-          <button
-            type="button"
-            className="icon-button print"
-            onClick={() => onPrint(row)}
-            title="Imprimer"
-            aria-label="Imprimer"
-          >
-            <Printer size={14} />
-          </button>
-          <button
-            type="button"
-            className="icon-button warning"
-            onClick={() => onAnnuler(row)}
-            title="Annuler la vente"
-            aria-label="Annuler la vente"
-          >
-            <XCircle size={14} />
-          </button>
+          {canPrintVente && (
+            <button
+              type="button"
+              className="icon-button print"
+              onClick={() => onPrint(row)}
+              title="Imprimer"
+              aria-label="Imprimer"
+            >
+              <Printer size={14} />
+            </button>
+          )}
+          {hasAnnuler && (
+            <button
+              type="button"
+              className="icon-button warning"
+              onClick={() => onAnnuler!(row)}
+              title="Annuler la vente"
+              aria-label="Annuler la vente"
+            >
+              <XCircle size={14} />
+            </button>
+          )}
         </RowActions>
       );
     }
@@ -130,8 +145,8 @@ export function VentesTab({
     // statut === 'brouillon'
     return (
       <RowActions
-        onEdit={() => onOpenEdit(row)}
-        onDelete={() => onDelete(row)}
+        onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+        onDelete={hasDelete ? () => onDelete!(row) : undefined}
       >
         <button
           type="button"
@@ -142,24 +157,28 @@ export function VentesTab({
         >
           <Eye size={14} />
         </button>
-        <button
-          type="button"
-          className="icon-button success"
-          onClick={() => onConfirm(row)}
-          title="Confirmer la vente"
-          aria-label="Confirmer la vente"
-        >
-          <CheckCircle size={14} />
-        </button>
-        <button
-          type="button"
-          className="icon-button warning"
-          onClick={() => onAnnuler(row)}
-          title="Annuler la vente"
-          aria-label="Annuler la vente"
-        >
-          <XCircle size={14} />
-        </button>
+        {hasConfirm && (
+          <button
+            type="button"
+            className="icon-button success"
+            onClick={() => onConfirm!(row)}
+            title="Confirmer la vente"
+            aria-label="Confirmer la vente"
+          >
+            <CheckCircle size={14} />
+          </button>
+        )}
+        {hasAnnuler && (
+          <button
+            type="button"
+            className="icon-button warning"
+            onClick={() => onAnnuler!(row)}
+            title="Annuler la vente"
+            aria-label="Annuler la vente"
+          >
+            <XCircle size={14} />
+          </button>
+        )}
       </RowActions>
     );
   };
@@ -170,7 +189,7 @@ export function VentesTab({
         data={loading ? [] : filteredVentes}
         columns={columns}
         emptyMessage={loading ? 'Chargement des ventes...' : 'Aucune vente enregistrée.'}
-        actionsHeaderLabel="Actions"
+        actionsHeaderLabel={hasEdit || hasDelete || hasConfirm || hasAnnuler ? 'Actions' : undefined}
         actions={renderActions}
       />
     </SectionCard>

@@ -7,8 +7,8 @@ import type { Role } from '@/types';
 interface RolesTabProps {
   rolesData: Role[] | undefined;
   search: string;
-  onOpenEdit: (item: Role) => void;
-  onDelete: (item: Role) => void;
+  onOpenEdit?: (item: Role) => void;
+  onDelete?: (item: Role) => void;
   loading?: boolean;
 }
 
@@ -39,8 +39,8 @@ export function RolesTab({ rolesData = [], search, onOpenEdit, onDelete, loading
         actionsHeaderLabel="Actions"
         actions={(row) => (
           <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
+            onEdit={onOpenEdit ? () => onOpenEdit(row) : undefined}
+            onDelete={onDelete ? () => onDelete(row) : undefined}
           />
         )}
       />

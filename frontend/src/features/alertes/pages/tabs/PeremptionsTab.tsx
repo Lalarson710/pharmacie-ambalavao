@@ -7,9 +7,10 @@ import type { AlertePeremption } from '@/types';
 interface PeremptionsTabProps {
   data: AlertePeremption[];
   search: string;
+  loading?: boolean;
 }
 
-export function PeremptionsTab({ data, search }: PeremptionsTabProps) {
+export function PeremptionsTab({ data, search, loading = false }: PeremptionsTabProps) {
   const filteredPeremptions = search
     ? data.filter(
         (row) =>
@@ -35,11 +36,11 @@ export function PeremptionsTab({ data, search }: PeremptionsTabProps) {
   ];
 
   return (
-    <SectionCard title="Péremptions proches" subtitle={`${data.length} alerte(s)`}>
+    <SectionCard title="Péremptions proches" subtitle={loading ? 'Chargement...' : `${data.length} alerte(s)`}>
       <DataTable
-        data={filteredPeremptions}
+        data={loading ? [] : filteredPeremptions}
         columns={columns}
-        emptyMessage="Aucune pérémentation proche."
+        emptyMessage={loading ? 'Chargement des alertes...' : 'Aucune pérémentation proche.'}
       />
     </SectionCard>
   );

@@ -6,9 +6,10 @@ import type { AlerteRupture } from '@/types';
 interface RupturesTabProps {
   data: AlerteRupture[];
   search: string;
+  loading?: boolean;
 }
 
-export function RupturesTab({ data, search }: RupturesTabProps) {
+export function RupturesTab({ data, search, loading = false }: RupturesTabProps) {
   const filteredRuptures = search
     ? data.filter((row) =>
         row.nom.toLowerCase().includes(search.toLowerCase())
@@ -27,11 +28,11 @@ export function RupturesTab({ data, search }: RupturesTabProps) {
   ];
 
   return (
-    <SectionCard title="Ruptures de stock" subtitle={`${data.length} alerte(s)`}>
+    <SectionCard title="Ruptures de stock" subtitle={loading ? 'Chargement...' : `${data.length} alerte(s)`}>
       <DataTable
-        data={filteredRuptures}
+        data={loading ? [] : filteredRuptures}
         columns={columns}
-        emptyMessage="Aucune rupture de stock."
+        emptyMessage={loading ? 'Chargement des alertes...' : 'Aucune rupture de stock.'}
       />
     </SectionCard>
   );

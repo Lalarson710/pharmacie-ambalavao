@@ -1,5 +1,6 @@
 import { DataTable, type Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { RowActions } from '@/components/RowActions';
 import { formatDate } from '@/utils/formatters';
 import type { Inventaire } from '@/types';
 
@@ -7,13 +8,20 @@ interface InventairesTabProps {
   data: Inventaire[];
   search: string;
   loading?: boolean;
+  onOpenEdit?: (item: Inventaire) => void;
+  onDelete?: (item: Inventaire) => void;
 }
 
 export function InventairesTab({
   data,
   search,
   loading = false,
+  onOpenEdit,
+  onDelete,
 }: InventairesTabProps) {
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+
   const filteredInventaires = search
     ? data.filter((row) =>
         [
@@ -65,6 +73,13 @@ export function InventairesTab({
             ? 'Chargement des inventaires...'
             : 'Aucun inventaire enregistré.'
         }
+        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
+        actions={(hasEdit || hasDelete) ? (row) => (
+          <RowActions
+            onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+            onDelete={hasDelete ? () => onDelete!(row) : undefined}
+          />
+        ) : undefined}
       />
     </SectionCard>
   );

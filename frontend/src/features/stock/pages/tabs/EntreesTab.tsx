@@ -1,5 +1,6 @@
 import { DataTable, type Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { RowActions } from '@/components/RowActions';
 import { formatDate } from '@/utils/formatters';
 import type { MouvementStock } from '@/types';
 
@@ -7,13 +8,20 @@ interface EntreesTabProps {
   data: MouvementStock[];
   search: string;
   loading?: boolean;
+  onOpenEdit?: (item: MouvementStock) => void;
+  onDelete?: (item: MouvementStock) => void;
 }
 
 export function EntreesTab({
   data,
   search,
   loading = false,
+  onOpenEdit,
+  onDelete,
 }: EntreesTabProps) {
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+
   const filteredEntrees = search
     ? data.filter((row) =>
         [
@@ -58,6 +66,13 @@ export function EntreesTab({
             ? 'Chargement des entrées...'
             : 'Aucune entrée enregistrée.'
         }
+        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
+        actions={(hasEdit || hasDelete) ? (row) => (
+          <RowActions
+            onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+            onDelete={hasDelete ? () => onDelete!(row) : undefined}
+          />
+        ) : undefined}
       />
     </SectionCard>
   );

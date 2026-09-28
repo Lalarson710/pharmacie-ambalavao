@@ -42,4 +42,9 @@ class FactureRepository implements FactureRepositoryInterface
 
         return $facture->fresh('vente.client');
     }
+
+    public function supprimer(Facture $facture): bool
+    {
+        return $facture->delete();
+    }
 }

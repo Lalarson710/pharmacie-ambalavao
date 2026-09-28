@@ -5,15 +5,16 @@ import { RowActions } from '@/components/RowActions';
 import { CheckCircle, Eye, Printer, XCircle } from 'lucide-react';
 import { formatCurrency, formatDate, getStatutBadgeClass, formatStatut } from '@/utils/formatters';
 import type { Achat } from '@/types';
+import { useAuth } from '@/features/auth/store/authStore';
 
 interface AchatsTabProps {
   data: Achat[];
   search: string;
   loading?: boolean;
-  onOpenEdit: (item: Achat) => void;
-  onDelete: (item: Achat) => void;
-  onConfirm: (item: Achat) => void;
-  onAnnuler: (item: Achat) => void;
+  onOpenEdit?: (item: Achat) => void;
+  onDelete?: (item: Achat) => void;
+  onConfirm?: (item: Achat) => void;
+  onAnnuler?: (item: Achat) => void;
   onPrint: (item: Achat) => void;
   onPreview: (item: Achat) => void;
 }
@@ -29,6 +30,14 @@ export function AchatsTab({
   onPrint,
   onPreview,
 }: AchatsTabProps) {
+  const { user } = useAuth();
+  const canPrintAchat = user?.permissions?.some((p) => p.code === 'achat.print' && p.pivot?.autorise === true) ?? false;
+
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+  const hasConfirm = typeof onConfirm === 'function';
+  const hasAnnuler = typeof onAnnuler === 'function';
+
   const filteredAchats = search
     ? data.filter((row) =>
         [row.numero, row.fournisseur?.nom, row.statut, row.observation ?? '']
@@ -80,15 +89,17 @@ export function AchatsTab({
           >
             <Eye size={14} />
           </button>
-          <button
-            type="button"
-            className="icon-button print"
-            onClick={() => onPrint(row)}
-            title="Imprimer"
-            aria-label="Imprimer"
-          >
-            <Printer size={14} />
-          </button>
+          {canPrintAchat && (
+            <button
+              type="button"
+              className="icon-button print"
+              onClick={() => onPrint(row)}
+              title="Imprimer"
+              aria-label="Imprimer"
+            >
+              <Printer size={14} />
+            </button>
+          )}
         </RowActions>
       );
     }
@@ -105,24 +116,28 @@ export function AchatsTab({
           >
             <Eye size={14} />
           </button>
-          <button
-            type="button"
-            className="icon-button print"
-            onClick={() => onPrint(row)}
-            title="Imprimer"
-            aria-label="Imprimer"
-          >
-            <Printer size={14} />
-          </button>
-          <button
-            type="button"
-            className="icon-button warning"
-            onClick={() => onAnnuler(row)}
-            title="Annuler l'achat"
-            aria-label="Annuler l'achat"
-          >
-            <XCircle size={14} />
-          </button>
+          {canPrintAchat && (
+            <button
+              type="button"
+              className="icon-button print"
+              onClick={() => onPrint(row)}
+              title="Imprimer"
+              aria-label="Imprimer"
+            >
+              <Printer size={14} />
+            </button>
+          )}
+          {hasAnnuler && (
+            <button
+              type="button"
+              className="icon-button warning"
+              onClick={() => onAnnuler!(row)}
+              title="Annuler l'achat"
+              aria-label="Annuler l'achat"
+            >
+              <XCircle size={14} />
+            </button>
+          )}
         </RowActions>
       );
     }
@@ -130,27 +145,31 @@ export function AchatsTab({
     // statut === 'brouillon'
     return (
       <RowActions
-        onEdit={() => onOpenEdit(row)}
-        onDelete={() => onDelete(row)}
+        onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+        onDelete={hasDelete ? () => onDelete!(row) : undefined}
       >
-        <button
-          type="button"
-          className="icon-button success"
-          onClick={() => onConfirm(row)}
-          title="Confirmer l'achat"
-          aria-label="Confirmer l'achat"
-        >
-          <CheckCircle size={14} />
-        </button>
-        <button
-          type="button"
-          className="icon-button warning"
-          onClick={() => onAnnuler(row)}
-          title="Annuler l'achat"
-          aria-label="Annuler l'achat"
-        >
-          <XCircle size={14} />
-        </button>
+        {hasConfirm && (
+          <button
+            type="button"
+            className="icon-button success"
+            onClick={() => onConfirm!(row)}
+            title="Confirmer l'achat"
+            aria-label="Confirmer l'achat"
+          >
+            <CheckCircle size={14} />
+          </button>
+        )}
+        {hasAnnuler && (
+          <button
+            type="button"
+            className="icon-button warning"
+            onClick={() => onAnnuler!(row)}
+            title="Annuler l'achat"
+            aria-label="Annuler l'achat"
+          >
+            <XCircle size={14} />
+          </button>
+        )}
       </RowActions>
     );
   };
@@ -161,7 +180,7 @@ export function AchatsTab({
         data={loading ? [] : filteredAchats}
         columns={columns}
         emptyMessage={loading ? 'Chargement des achats...' : 'Aucun achat enregistré.'}
-        actionsHeaderLabel="Actions"
+        actionsHeaderLabel={hasEdit || hasDelete || hasConfirm || hasAnnuler ? 'Actions' : undefined}
         actions={renderActions}
       />
     </SectionCard>

@@ -10,8 +10,8 @@ interface LignesVenteTabProps {
   ventes: Vente[];
   search: string;
   loading?: boolean;
-  onOpenEdit: (item: VenteLigne) => void;
-  onDelete: (item: VenteLigne) => void;
+  onOpenEdit?: (item: VenteLigne) => void;
+  onDelete?: (item: VenteLigne) => void;
 }
 
 export function LignesVenteTab({
@@ -22,6 +22,9 @@ export function LignesVenteTab({
   onOpenEdit,
   onDelete,
 }: LignesVenteTabProps) {
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+
   const filteredLignes = search
     ? data.filter((row) =>
         [row.produit?.nom, row.lot?.numero_lot, String(row.quantite)]
@@ -92,8 +95,8 @@ export function LignesVenteTab({
 
     return (
       <RowActions
-        onEdit={() => onOpenEdit(row)}
-        onDelete={() => onDelete(row)}
+        onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+        onDelete={hasDelete ? () => onDelete!(row) : undefined}
         editLabel="Modifier la ligne"
         deleteLabel="Supprimer la ligne"
       />
@@ -106,7 +109,7 @@ export function LignesVenteTab({
         data={loading ? [] : filteredLignes}
         columns={columns}
         emptyMessage={loading ? 'Chargement des lignes...' : 'Aucune ligne de vente.'}
-        actionsHeaderLabel="Actions"
+        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
         actions={renderActions}
       />
     </SectionCard>

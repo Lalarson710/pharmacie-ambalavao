@@ -5,6 +5,7 @@ import { PageTabs } from '@/components/PageTabs';
 import { PageToolbar } from '@/components/PageToolbar';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/Toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { Client, Facture, Lot, Produit, Reglement, Vente, VenteLigne } from '@/types';
 import { clientsApi } from '../../clients/api/clients';
 import { produitsApi } from '../../produits/api/produits';
@@ -36,7 +37,31 @@ interface VenteActionTarget {
 
 export function VentesPage() {
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState('ventes');
+  const { hasPermission } = usePermissions();
+
+  // Permission mapping for tabs
+  const tabPermissions: Record<string, string> = {
+    ventes: 'vente.view',
+    lignes: 'vente_ligne.view',
+    clients: 'client.view',
+    factures: 'facture.view',
+    reglements: 'reglement.view',
+  };
+
+  // Permission mapping for actions per tab
+  const tabActionPermissions: Record<string, { create: string; update: string; delete: string }> = {
+    ventes: { create: 'vente.create', update: 'vente.update', delete: 'vente.delete' },
+    lignes: { create: 'vente_ligne.create', update: 'vente_ligne.update', delete: 'vente_ligne.delete' },
+    clients: { create: 'client.create', update: 'client.update', delete: 'client.delete' },
+    factures: { create: 'facture.create', update: 'facture.update', delete: 'facture.delete' },
+    reglements: { create: 'reglement.create', update: 'reglement.update', delete: 'reglement.delete' },
+  };
+
+  // Filter tabs based on view permissions
+  const allowedTabs = ventesTabs.filter((tab) => hasPermission(tabPermissions[tab.id]));
+  const defaultActiveTab = allowedTabs[0]?.id ?? 'ventes';
+
+  const [activeTab, setActiveTab] = useState(defaultActiveTab);
   const [data, setData] = useState<Vente[]>([]);
   const [lignesData, setLignesData] = useState<VenteLigne[]>([]);
   const [clientsData, setClientsData] = useState<Client[]>([]);
@@ -64,14 +89,25 @@ export function VentesPage() {
     reglements: true,
   });
 
+  // Check permissions for active tab
+  const canCreate = hasPermission(tabActionPermissions[activeTab]?.create);
+  const canEdit = hasPermission(tabActionPermissions[activeTab]?.update);
+  const canDelete = hasPermission(tabActionPermissions[activeTab]?.delete);
+
   useEffect(() => {
+    if (!hasPermission('vente.view')) return;
     const load = async () => {
       try {
         const result = await ventesApi.getAll();
         setData(result);
       } catch (error) {
         console.error('chargement ventes:', error);
-        showToast('Impossible de charger les ventes.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les ventes.', 'error');
+        } else {
+          showToast('Impossible de charger les ventes.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, ventes: false }));
       }
@@ -80,13 +116,19 @@ export function VentesPage() {
   }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('vente_ligne.view')) return;
     const load = async () => {
       try {
         const result = await ventesLignesApi.getAll();
         setLignesData(result);
       } catch (error) {
         console.error('chargement lignes de vente:', error);
-        showToast('Impossible de charger les lignes de vente.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les lignes de vente.', 'error');
+        } else {
+          showToast('Impossible de charger les lignes de vente.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, lignes: false }));
       }
@@ -95,13 +137,19 @@ export function VentesPage() {
   }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('client.view')) return;
     const load = async () => {
       try {
         const result = await clientsApi.getAll();
         setClientsData(result);
       } catch (error) {
         console.error('chargement clients:', error);
-        showToast('Impossible de charger les clients.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les clients.', 'error');
+        } else {
+          showToast('Impossible de charger les clients.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, clients: false }));
       }
@@ -110,6 +158,7 @@ export function VentesPage() {
   }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('produit.view')) return;
     const load = async () => {
       try {
         const result = await produitsApi.getAll();
@@ -121,9 +170,10 @@ export function VentesPage() {
       }
     };
     load();
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('lot.view')) return;
     const load = async () => {
       try {
         const result = await lotsApi.getAll();
@@ -135,16 +185,22 @@ export function VentesPage() {
       }
     };
     load();
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('facture.view')) return;
     const load = async () => {
       try {
         const result = await facturesApi.getAll();
         setFacturesData(result);
       } catch (error) {
         console.error('chargement factures:', error);
-        showToast('Impossible de charger les factures.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les factures.', 'error');
+        } else {
+          showToast('Impossible de charger les factures.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, factures: false }));
       }
@@ -153,13 +209,19 @@ export function VentesPage() {
   }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('reglement.view')) return;
     const load = async () => {
       try {
         const result = await reglementsApi.getAll();
         setReglementsData(result);
       } catch (error) {
         console.error('chargement règlements:', error);
-        showToast('Impossible de charger les règlements.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les règlements.', 'error');
+        } else {
+          showToast('Impossible de charger les règlements.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, reglements: false }));
       }
@@ -335,94 +397,104 @@ export function VentesPage() {
 
   return (
     <div className="page-container">
-      <PageHeader
-        title="Ventes"
-        subtitle={`${data.length} vente(s) enregistrée(s)`}
-      />
+      {allowedTabs.length === 0 ? (
+        <div className="page-empty-state">
+          <div className="empty-state-icon">🔒</div>
+          <h2>Accès non autorisé</h2>
+          <p>Vous n'avez pas les permissions nécessaires pour accéder à ce module.</p>
+        </div>
+      ) : (
+        <>
+          <PageHeader
+            title="Ventes"
+            subtitle={`${data.length} vente(s) enregistrée(s)`}
+          />
 
-      <PageToolbar
-        search={search}
-        onSearch={setSearch}
-        placeholder="Rechercher dans l'onglet..."
-        actions={
-          <>
-            {activeTab === 'ventes' && (
-              <button type="button" className="btn-primary" onClick={() => openAdd('vente')}>
-                <Plus size={15} /> Ajouter une vente
-              </button>
-            )}
-            {activeTab === 'lignes' && (
-              <button type="button" className="btn-primary" onClick={() => openAdd('ligne')}>
-                <Plus size={15} /> Ajouter une ligne
-              </button>
-            )}
-            {activeTab === 'reglements' && (
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => openAdd('reglement')}
-              >
-                <Plus size={15} /> Ajouter un règlement
-              </button>
-            )}
-          </>
-        }
-      />
+          <PageToolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Rechercher dans l'onglet..."
+            actions={
+              <>
+                {activeTab === 'ventes' && canCreate && (
+                  <button type="button" className="btn-primary" onClick={() => openAdd('vente')}>
+                    <Plus size={15} /> Ajouter une vente
+                  </button>
+                )}
+                {activeTab === 'lignes' && canCreate && (
+                  <button type="button" className="btn-primary" onClick={() => openAdd('ligne')}>
+                    <Plus size={15} /> Ajouter une ligne
+                  </button>
+                )}
+                {activeTab === 'reglements' && canCreate && (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => openAdd('reglement')}
+                  >
+                    <Plus size={15} /> Ajouter un règlement
+                  </button>
+                )}
+              </>
+            }
+          />
 
-      <PageTabs
-        tabs={ventesTabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+          <PageTabs
+            tabs={allowedTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
-      {activeTab === 'ventes' && (
-        <VentesTab
-          data={data}
-          search={search}
-          loading={loading.ventes}
-          onOpenEdit={(item) => openEdit('vente', item)}
-          onDelete={(item) => setDeleteTarget({ kind: 'vente', item })}
-          onConfirm={(item) => setActionTarget({ action: 'confirmer', item })}
-          onAnnuler={(item) => setActionTarget({ action: 'annuler', item })}
-          onPrint={handlePrint}
-          onPreview={handlePreview}
-        />
-      )}
+          {activeTab === 'ventes' && (
+            <VentesTab
+              data={data}
+              search={search}
+              loading={loading.ventes}
+              onOpenEdit={canEdit ? (item) => openEdit('vente', item) : undefined}
+              onDelete={canDelete ? (item) => setDeleteTarget({ kind: 'vente', item }) : undefined}
+              onConfirm={canEdit ? (item) => setActionTarget({ action: 'confirmer', item }) : undefined}
+              onAnnuler={canEdit ? (item) => setActionTarget({ action: 'annuler', item }) : undefined}
+              onPrint={handlePrint}
+              onPreview={handlePreview}
+            />
+          )}
 
-      {activeTab === 'lignes' && (
-        <LignesVenteTab
-          data={lignesData}
-          ventes={data}
-          search={search}
-          loading={loading.lignes}
-          onOpenEdit={(item) => openEdit('ligne', item)}
-          onDelete={(item) => setDeleteTarget({ kind: 'ligne', item })}
-        />
-      )}
+          {activeTab === 'lignes' && (
+            <LignesVenteTab
+              data={lignesData}
+              ventes={data}
+              search={search}
+              loading={loading.lignes}
+              onOpenEdit={canEdit ? (item) => openEdit('ligne', item) : undefined}
+              onDelete={canDelete ? (item) => setDeleteTarget({ kind: 'ligne', item }) : undefined}
+            />
+          )}
 
-      {activeTab === 'clients' && (
-        <ClientsAssociesTab
-          data={clientsAssocies}
-          search={search}
-          loading={loading.clients}
-        />
-      )}
+          {activeTab === 'clients' && (
+            <ClientsAssociesTab
+              data={clientsAssocies}
+              search={search}
+              loading={loading.clients}
+            />
+          )}
 
-      {activeTab === 'factures' && (
-        <FacturesTab
-          data={facturesData}
-          search={search}
-          loading={loading.factures}
-          onPrint={openTicket}
-        />
-      )}
+          {activeTab === 'factures' && (
+            <FacturesTab
+              data={facturesData}
+              search={search}
+              loading={loading.factures}
+              onPrint={openTicket}
+            />
+          )}
 
-      {activeTab === 'reglements' && (
-        <ReglementsTab
-          data={reglementsData}
-          search={search}
-          loading={loading.reglements}
-        />
+          {activeTab === 'reglements' && (
+            <ReglementsTab
+              data={reglementsData}
+              search={search}
+              loading={loading.reglements}
+            />
+          )}
+        </>
       )}
 
       <VentesModal

@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { PageTabs } from '@/components/PageTabs';
 import { PageToolbar } from '@/components/PageToolbar';
 import { useToast } from '@/components/Toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { CaisseDetailModal } from '@/components/CaisseDetailModal';
 import type { Achat, Caisse, Fournisseur, MouvementCaisse } from '@/types';
 import { caissesApi, mouvementsCaisseApi } from '../api/caisses';
@@ -16,7 +17,25 @@ import { MouvementsCaisseTab } from './tabs/MouvementsCaisseTab';
 
 export function CaissesPage() {
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState('caisses');
+  const { hasPermission } = usePermissions();
+
+  // Permission mapping for tabs
+  const tabPermissions: Record<string, string> = {
+    caisses: 'caisse.view',
+    mouvements: 'mouvement_caisse.view',
+  };
+
+  // Permission mapping for actions per tab
+  const tabActionPermissions: Record<string, { create: string; update: string; delete: string }> = {
+    caisses: { create: 'caisse.create', update: 'caisse.update', delete: 'caisse.delete' },
+    mouvements: { create: 'mouvement_caisse.create', update: 'mouvement_caisse.update', delete: 'mouvement_caisse.delete' },
+  };
+
+  // Filter tabs based on view permissions
+  const allowedTabs = caisseTabs.filter((tab) => hasPermission(tabPermissions[tab.id]));
+  const defaultActiveTab = allowedTabs[0]?.id ?? 'caisses';
+
+  const [activeTab, setActiveTab] = useState(defaultActiveTab);
   const [caisseData, setCaisseData] = useState<Caisse[]>([]);
   const [mouvementsData, setMouvementsData] = useState<MouvementCaisse[]>([]);
   const [fournisseursData, setFournisseursData] = useState<Fournisseur[]>([]);
@@ -32,14 +51,24 @@ export function CaissesPage() {
     achats: true,
   });
 
+  // Check permissions for active tab
+  const canCreate = hasPermission(tabActionPermissions[activeTab]?.create);
+  const canEdit = hasPermission(tabActionPermissions[activeTab]?.update);
+
   useEffect(() => {
+    if (!hasPermission('caisse.view')) return;
     const load = async () => {
       try {
         const result = await caissesApi.getAll();
         setCaisseData(result);
       } catch (error) {
         console.error('chargement caisses:', error);
-        showToast('Impossible de charger les caisses.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les caisses.', 'error');
+        } else {
+          showToast('Impossible de charger les caisses.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, caisses: false }));
       }
@@ -48,13 +77,19 @@ export function CaissesPage() {
   }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('mouvement_caisse.view')) return;
     const load = async () => {
       try {
         const result = await mouvementsCaisseApi.getAll();
         setMouvementsData(result);
       } catch (error) {
         console.error('chargement mouvements de caisse:', error);
-        showToast('Impossible de charger les mouvements de caisse.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les mouvements de caisse.', 'error');
+        } else {
+          showToast('Impossible de charger les mouvements de caisse.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, mouvements: false }));
       }
@@ -63,6 +98,7 @@ export function CaissesPage() {
   }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('fournisseur.view')) return;
     const load = async () => {
       try {
         const result = await fournisseursApi.getAll();
@@ -74,9 +110,10 @@ export function CaissesPage() {
       }
     };
     load();
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('achat.view')) return;
     const load = async () => {
       try {
         const result = await achatsApi.getAll();
@@ -88,7 +125,7 @@ export function CaissesPage() {
       }
     };
     load();
-  }, []);
+  }, [showToast]);
 
   /**
    * Ouvre la fiche detaillee de la caisse puis declenche l'impression.
@@ -142,67 +179,77 @@ export function CaissesPage() {
 
   return (
     <div className="page-container">
-      <PageHeader
-        title="Caisse"
-        subtitle={`${caisseData.length} caisse(s) • ${mouvementsData.length} mouvement(s)`}
-      />
+      {allowedTabs.length === 0 ? (
+        <div className="page-empty-state">
+          <div className="empty-state-icon">🔒</div>
+          <h2>Accès non autorisé</h2>
+          <p>Vous n'avez pas les permissions nécessaires pour accéder à ce module.</p>
+        </div>
+      ) : (
+        <>
+          <PageHeader
+            title="Caisse"
+            subtitle={`${caisseData.length} caisse(s) • ${mouvementsData.length} mouvement(s)`}
+          />
 
-      <PageToolbar
-        search={search}
-        onSearch={setSearch}
-        placeholder="Rechercher dans l’onglet..."
-        actions={
-          <>
-            {activeTab === 'caisses' && (
+          <PageToolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Rechercher dans l’onglet..."
+            actions={
               <>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={openCaisse}
-                >
-                  <Plus size={15} />
-                  Ouvrir une caisse
-                </button>
+                {activeTab === 'caisses' && canCreate && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={openCaisse}
+                    >
+                      <Plus size={15} />
+                      Ouvrir une caisse
+                    </button>
 
+                  </>
+                )}
+
+                {activeTab === 'mouvements' && canCreate && (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={openSortie}
+                  >
+                    <Plus size={15} />
+                    Sortie de caisse
+                  </button>
+                )}
               </>
-            )}
+            }
+          />
 
-            {activeTab === 'mouvements' && (
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={openSortie}
-              >
-                <Plus size={15} />
-                Sortie de caisse
-              </button>
-            )}
-          </>
-        }
-      />
+          <PageTabs
+            tabs={allowedTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
-      <PageTabs
-        tabs={caisseTabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+          {activeTab === 'caisses' && (
+            <CaissesTab
+              data={caisseData}
+              search={search}
+              loading={loading.caisses}
+              onClose={canEdit ? openClose : undefined}
+              onPrint={handlePrint}
+            />
+          )}
 
-      {activeTab === 'caisses' && (
-        <CaissesTab
-          data={caisseData}
-          search={search}
-          loading={loading.caisses}
-          onClose={openClose}
-          onPrint={handlePrint}
-        />
-      )}
-
-      {activeTab === 'mouvements' && (
-        <MouvementsCaisseTab
-          data={mouvementsData}
-          search={search}
-          loading={loading.mouvements}
-        />
+          {activeTab === 'mouvements' && (
+            <MouvementsCaisseTab
+              data={mouvementsData}
+              search={search}
+              loading={loading.mouvements}
+            />
+          )}
+        </>
       )}
 
       <CaisseModal

@@ -13,4 +13,11 @@ interface ReglementRepositoryInterface
     public function listerParFacture(int $factureId): array;
 
     public function creer(array $donnees): Reglement;
+
+    public function modifier(
+        Reglement $reglement,
+        array $donnees
+    ): Reglement;
+
+    public function supprimer(Reglement $reglement): bool;
 }

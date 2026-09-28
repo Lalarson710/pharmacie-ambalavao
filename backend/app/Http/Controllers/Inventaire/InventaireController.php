@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Inventaire;
 use App\Application\Inventaire\AjouterLigneInventaireUseCase;
 use App\Application\Inventaire\CreerInventaireUseCase;
 use App\Application\Inventaire\ListerInventairesUseCase;
+use App\Application\Inventaire\ModifierInventaireUseCase;
+use App\Application\Inventaire\SupprimerInventaireUseCase;
 use App\Application\Inventaire\TrouverInventaireUseCase;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +19,8 @@ class InventaireController extends Controller
         private ListerInventairesUseCase $listerInventairesUseCase,
         private TrouverInventaireUseCase $trouverInventaireUseCase,
         private CreerInventaireUseCase $creerInventaireUseCase,
+        private ModifierInventaireUseCase $modifierInventaireUseCase,
+        private SupprimerInventaireUseCase $supprimerInventaireUseCase,
         private AjouterLigneInventaireUseCase $ajouterLigneInventaireUseCase
     ) {
     }
@@ -53,6 +57,60 @@ class InventaireController extends Controller
         return response()->json($inventaire, 201);
     }
 
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $inventaire = $this->trouverInventaireUseCase->executer($id);
+
+        if (!$inventaire) {
+            return response()->json([
+                'message' => 'Inventaire introuvable.'
+            ], 404);
+        }
+
+        try {
+            $donnees = $request->validate([
+                'date_inventaire' => ['sometimes', 'date'],
+                'motif' => ['nullable', 'string'],
+            ]);
+
+            $inventaire = $this->modifierInventaireUseCase->executer(
+                $inventaire,
+                $donnees
+            );
+
+            return response()->json($inventaire);
+
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $inventaire = $this->trouverInventaireUseCase->executer($id);
+
+        if (!$inventaire) {
+            return response()->json([
+                'message' => 'Inventaire introuvable.'
+            ], 404);
+        }
+
+        try {
+            $this->supprimerInventaireUseCase->executer($inventaire);
+
+            return response()->json([
+                'message' => 'Inventaire supprimé avec succès.'
+            ]);
+
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
     public function ajouterLigne(
         Request $request,
         int $inventaireId
@@ -83,5 +141,18 @@ class InventaireController extends Controller
                 'message' => $e->getMessage()
             ], 404);
         }
+    }
+
+    public function impression(int $id): JsonResponse
+    {
+        $inventaire = $this->trouverInventaireUseCase->executer($id);
+
+        if (!$inventaire) {
+            return response()->json([
+                'message' => 'Inventaire introuvable.'
+            ], 404);
+        }
+
+        return response()->json($inventaire);
     }
 }

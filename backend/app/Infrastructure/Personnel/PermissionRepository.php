@@ -18,4 +18,20 @@ class PermissionRepository implements PermissionRepositoryInterface
     {
         return Permission::find($id);
     }
+
+    public function creer(array $donnees): Permission
+    {
+        return Permission::create($donnees);
+    }
+
+    public function modifier(Permission $permission, array $donnees): Permission
+    {
+        $permission->update($donnees);
+        return $permission->fresh();
+    }
+
+    public function supprimer(Permission $permission): bool
+    {
+        return $permission->delete();
+    }
 }

@@ -106,7 +106,7 @@ class AchatController extends Controller
 
         if ($request->has('statut')) {
             return response()->json([
-                'message' => 'Le statut d’un achat ne peut pas être modifié directement.'
+                'message' => 'Le statut d\'un achat ne peut pas être modifié directement.'
             ], 422);
         }
 
@@ -201,6 +201,18 @@ class AchatController extends Controller
                 'message' => $e->getMessage()
             ], 409);
         }
-    }   
+    }
 
+    public function impression(int $id): JsonResponse
+    {
+        $achat = $this->trouverAchatUseCase->executer($id);
+
+        if (!$achat) {
+            return response()->json([
+                'message' => 'Achat introuvable.'
+            ], 404);
+        }
+
+        return response()->json($achat);
+    }
 }

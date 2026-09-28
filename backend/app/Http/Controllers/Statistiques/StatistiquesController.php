@@ -75,4 +75,41 @@ class StatistiquesController extends Controller
             ),
         ]);
     }
+
+    public function impression(Request $request): JsonResponse
+    {
+        $dateDebut = $request->query(
+            'date_debut',
+            now()->startOfMonth()->toDateString()
+        );
+
+        $dateFin = $request->query(
+            'date_fin',
+            now()->toDateString()
+        );
+
+        return response()->json([
+            'date_debut' => $dateDebut,
+            'date_fin' => $dateFin,
+        ]);
+    }
+
+    public function export(Request $request): JsonResponse
+    {
+        $dateDebut = $request->query(
+            'date_debut',
+            now()->startOfMonth()->toDateString()
+        );
+
+        $dateFin = $request->query(
+            'date_fin',
+            now()->toDateString()
+        );
+
+        return response()->json([
+            'date_debut' => $dateDebut,
+            'date_fin' => $dateFin,
+            'format' => 'pdf',
+        ]);
+    }
 }

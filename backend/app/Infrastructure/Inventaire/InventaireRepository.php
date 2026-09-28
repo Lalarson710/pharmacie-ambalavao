@@ -26,6 +26,20 @@ class InventaireRepository implements InventaireRepositoryInterface
         return Inventaire::create($donnees);
     }
 
+    public function modifier(
+        Inventaire $inventaire,
+        array $donnees
+    ): Inventaire {
+        $inventaire->update($donnees);
+
+        return $inventaire->fresh('lignes.lot.produit');
+    }
+
+    public function supprimer(Inventaire $inventaire): bool
+    {
+        return $inventaire->delete();
+    }
+
     public function ajouterLigne(int $inventaireId, array $donnees): Inventaire
     {
         $inventaire = Inventaire::findOrFail($inventaireId);

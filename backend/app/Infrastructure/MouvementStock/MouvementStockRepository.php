@@ -24,4 +24,17 @@ class MouvementStockRepository implements MouvementStockRepositoryInterface
         return $mouvementStock->load('lot.produit');
     }
 
+    public function modifier(
+        MouvementStock $mouvementStock,
+        array $donnees
+    ): MouvementStock {
+        $mouvementStock->update($donnees);
+
+        return $mouvementStock->fresh('lot.produit');
+    }
+
+    public function supprimer(MouvementStock $mouvementStock): bool
+    {
+        return $mouvementStock->delete();
+    }
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
@@ -10,19 +10,54 @@ import { ConfirmModal } from '@/components/ConfirmModal';
 import { sauvegardes } from '@/data/mockData';
 import { formatFileSize, formatDateTime } from '@/utils/formatters';
 import type { Sauvegarde } from '@/types';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useToast } from '@/components/Toast';
 
 export function SauvegardesPage() {
+  const { hasPermission } = usePermissions();
+  const { showToast } = useToast();
+
+  // Check permissions
+  const canView = hasPermission('sauvegarde.view');
+  const canCreate = hasPermission('sauvegarde.create');
+  const canRestore = hasPermission('sauvegarde.restore');
+  const canImport = hasPermission('sauvegarde.import');
+  const canDelete = hasPermission('sauvegarde.delete');
+
   const [search, setSearch] = useState('');
   const [restoreItem, setRestoreItem] = useState<Sauvegarde | null>(null);
   const [createConfirm, setCreateConfirm] = useState(false);
+  const [data, setData] = useState<Sauvegarde[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load data if user has view permission
+  useEffect(() => {
+    if (!canView) return;
+    const loadData = async () => {
+      try {
+        // TODO: Replace with actual API call
+        // const data = await sauvegardesApi.getAll();
+        setData(sauvegardes);
+      } catch (error) {
+        console.error('Erreur lors du chargement des sauvegardes:', error);
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les sauvegardes.', 'error');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [canView, showToast]);
 
   const filtered = search
-    ? sauvegardes.filter(
+    ? data.filter(
         (r) =>
           r.nom_fichier.toLowerCase().includes(search.toLowerCase()) ||
           r.chemin.toLowerCase().includes(search.toLowerCase())
       )
-    : sauvegardes;
+    : data;
 
   const columns: Column<Sauvegarde>[] = [
     { key: 'id', label: '#' },
@@ -60,11 +95,23 @@ export function SauvegardesPage() {
     setRestoreItem(null);
   };
 
+  if (!canView) {
+    return (
+      <div className="page-container">
+        <div className="page-empty-state">
+          <div className="empty-state-icon">🔒</div>
+          <h2>Accès non autorisé</h2>
+          <p>Vous n'avez pas les permissions nécessaires pour accéder à ce module.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container">
       <PageHeader
         title="Sauvegardes"
-        subtitle={`${sauvegardes.length} sauvegarde(s) disponible(s)`}
+        subtitle={`${data.length} sauvegarde(s) disponible(s)`}
       />
 
       <PageToolbar
@@ -72,33 +119,55 @@ export function SauvegardesPage() {
         onSearch={setSearch}
         placeholder="Rechercher une sauvegarde..."
         actions={
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={handleSauvegarder}
-          >
-            <Plus size={15} /> Créer une sauvegarde
-          </button>
+          <>
+            {canCreate && (
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleSauvegarder}
+              >
+                <Plus size={15} /> Créer une sauvegarde
+              </button>
+            )}
+            {canImport && (
+              <button type="button" className="btn-secondary" onClick={() => { /* TODO: import */ }}>
+                Importer
+              </button>
+            )}
+          </>
         }
       />
 
       <SectionCard title="Liste des sauvegardes">
         <DataTable
-          data={filtered}
+          data={loading ? [] : filtered}
           columns={columns}
-          emptyMessage="Aucune sauvegarde disponible."
+          emptyMessage={loading ? 'Chargement des sauvegardes...' : 'Aucune sauvegarde disponible.'}
           actionsHeaderLabel="Actions"
           actions={(row) => (
             <RowActions>
-              <button
-                type="button"
-                className="btn-ghost btn-sm"
-                onClick={() => handleRestore(row)}
-                title="Restaurer"
-                aria-label="Restaurer"
-              >
-                <RefreshCw size={14} /> Restaurer
-              </button>
+              {canRestore && (
+                <button
+                  type="button"
+                  className="btn-ghost btn-sm"
+                  onClick={() => handleRestore(row)}
+                  title="Restaurer"
+                  aria-label="Restaurer"
+                >
+                  <RefreshCw size={14} /> Restaurer
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  type="button"
+                  className="btn-ghost btn-sm"
+                  onClick={() => { /* TODO: delete */ }}
+                  title="Supprimer"
+                  aria-label="Supprimer"
+                >
+                  Supprimer
+                </button>
+              )}
             </RowActions>
           )}
         />

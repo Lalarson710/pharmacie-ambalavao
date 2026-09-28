@@ -1,5 +1,6 @@
 import { DataTable, type Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { RowActions } from '@/components/RowActions';
 import { formatCurrency } from '@/utils/formatters';
 import type { Produit } from '@/types';
 
@@ -11,13 +12,20 @@ interface StockProduitTabProps {
   data: StockProduit[];
   search: string;
   loading?: boolean;
+  onOpenEdit?: (item: StockProduit) => void;
+  onDelete?: (item: StockProduit) => void;
 }
 
 export function StockProduitTab({
   data,
   search,
   loading = false,
+  onOpenEdit,
+  onDelete,
 }: StockProduitTabProps) {
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+
   const filteredStock = search
     ? data.filter((row) =>
         [
@@ -73,6 +81,13 @@ export function StockProduitTab({
             ? 'Chargement du stock par produit...'
             : 'Aucun produit en stock.'
         }
+        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
+        actions={(hasEdit || hasDelete) ? (row) => (
+          <RowActions
+            onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+            onDelete={hasDelete ? () => onDelete!(row) : undefined}
+          />
+        ) : undefined}
       />
     </SectionCard>
   );

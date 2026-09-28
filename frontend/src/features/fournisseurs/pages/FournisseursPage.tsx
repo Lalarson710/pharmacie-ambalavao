@@ -9,11 +9,19 @@ import { RowActions } from '@/components/RowActions';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/Toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { Fournisseur } from '@/types';
 import { fournisseursApi } from '../api/fournisseurs';
 
 export function FournisseursPage() {
   const { showToast } = useToast();
+  const { hasPermission } = usePermissions();
+
+  const canView = hasPermission('fournisseur.view');
+  const canCreate = hasPermission('fournisseur.create');
+  const canEdit = hasPermission('fournisseur.update');
+  const canDelete = hasPermission('fournisseur.delete');
+
   const [data, setData] = useState<Fournisseur[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -22,6 +30,7 @@ export function FournisseursPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
+    if (!canView) return;
     const loadFournisseurs = async () => {
       try {
         const fetched = await fournisseursApi.getAll();
@@ -29,13 +38,18 @@ export function FournisseursPage() {
         setData(fetched);
       } catch (error) {
         console.error('Erreur chargement:', error);
-        showToast('Impossible de charger les fournisseurs.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les fournisseurs.', 'error');
+        } else {
+          showToast('Impossible de charger les fournisseurs.', 'error');
+        }
       } finally {
         setLoading(false);
       }
     };
     loadFournisseurs();
-  }, [showToast]);
+  }, [showToast, canView]);
 
   const filtered = search
     ? data.filter(
@@ -223,57 +237,69 @@ export function FournisseursPage() {
 
   return (
     <div className="page-container">
-      <PageHeader
-        title="Fournisseurs"
-        subtitle={`${data.length} fournisseur(s) enregistré(s)`}
-      />
+      {canView ? (
+        <>
+          <PageHeader
+            title="Fournisseurs"
+            subtitle={`${data.length} fournisseur(s) enregistré(s)`}
+          />
 
-      <PageToolbar
-        search={search}
-        onSearch={setSearch}
-        placeholder="Rechercher un fournisseur..."
-        actions={
-          <button type="button" className="btn-primary" onClick={handleAddClick}>
-            <Plus size={15} /> Ajouter
-          </button>
-        }
-      />
+          <PageToolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Rechercher un fournisseur..."
+            actions={
+              canCreate && (
+                <button type="button" className="btn-primary" onClick={handleAddClick}>
+                  <Plus size={15} /> Ajouter
+                </button>
+              )
+            }
+          />
 
-      <SectionCard title="Liste des fournisseurs">
-        <DataTable
-          data={loading ? [] : filtered}
-          columns={columns}
-          emptyMessage={loading ? 'Chargement des fournisseurs...' : 'Aucun fournisseur enregistré.'}
-          actionsHeaderLabel="Actions"
-          actions={(row) => (
-            <RowActions
-              onEdit={() => handleEditClick(row)}
-              onDelete={() => setDeleteItem(row)}
+          <SectionCard title="Liste des fournisseurs">
+            <DataTable
+              data={loading ? [] : filtered}
+              columns={columns}
+              emptyMessage={loading ? 'Chargement des fournisseurs...' : 'Aucun fournisseur enregistré.'}
+              actionsHeaderLabel={canEdit || canDelete ? 'Actions' : undefined}
+              actions={(row) => (
+                <RowActions
+                  onEdit={canEdit ? () => handleEditClick(row) : undefined}
+                  onDelete={canDelete ? () => setDeleteItem(row) : undefined}
+                />
+              )}
             />
-          )}
-        />
-      </SectionCard>
+          </SectionCard>
 
-      <EntityFormModal
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setEditItem(null);
-        }}
-        title={editItem ? 'Modifier le fournisseur' : 'Ajouter un fournisseur'}
-        icon={<Building2 size={18} />}
-        subtitle={
-          editItem
-            ? 'Actualisez les coordonnées de ce fournisseur.'
-            : 'Enregistrez un nouveau fournisseur pour vos achats.'
-        }
-        editItem={editItem}
-        onSubmit={handleSubmit}
-        renderForm={renderForm}
-        getInitialData={getInitialData}
-        validate={validate}
-        size="md"
-      />
+          <EntityFormModal
+            open={modalOpen}
+            onClose={() => {
+              setModalOpen(false);
+              setEditItem(null);
+            }}
+            title={editItem ? 'Modifier le fournisseur' : 'Ajouter un fournisseur'}
+            icon={<Building2 size={18} />}
+            subtitle={
+              editItem
+                ? 'Actualisez les coordonnées de ce fournisseur.'
+                : 'Enregistrez un nouveau fournisseur pour vos achats.'
+            }
+            editItem={editItem}
+            onSubmit={handleSubmit}
+            renderForm={renderForm}
+            getInitialData={getInitialData}
+            validate={validate}
+            size="md"
+          />
+        </>
+      ) : (
+        <div className="page-empty-state">
+          <div className="empty-state-icon">🔒</div>
+          <h2>Accès non autorisé</h2>
+          <p>Vous n'avez pas les permissions nécessaires pour accéder à ce module.</p>
+        </div>
+      )}
 
       <ConfirmModal
         open={!!deleteItem}

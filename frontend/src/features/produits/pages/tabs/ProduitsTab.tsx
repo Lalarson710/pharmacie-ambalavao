@@ -9,11 +9,13 @@ interface ProduitsTabProps {
   data: Produit[];
   search: string;
   loading?: boolean;
-  onOpenEdit: (item: Produit) => void;
-  onDelete: (item: Produit) => void;
+  onOpenEdit?: (item: Produit) => void;
+  onDelete?: (item: Produit) => void;
 }
 
 export function ProduitsTab({ data, search, loading, onOpenEdit, onDelete }: ProduitsTabProps) {
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
   const filteredProducts = search
     ? data.filter((row) =>
         [row.nom, row.code_barres, row.description]
@@ -41,13 +43,13 @@ export function ProduitsTab({ data, search, loading, onOpenEdit, onDelete }: Pro
         data={loading ? [] : filteredProducts}
         columns={columns}
         emptyMessage={loading ? 'Chargement des produits...' : 'Aucun produit enregistré.'}
-        actionsHeaderLabel="Actions"
-        actions={(row) => (
+        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
+        actions={(hasEdit || hasDelete) ? (row) => (
           <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
+            onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+            onDelete={hasDelete ? () => onDelete!(row) : undefined}
           />
-        )}
+        ) : undefined}
       />
     </SectionCard>
   );

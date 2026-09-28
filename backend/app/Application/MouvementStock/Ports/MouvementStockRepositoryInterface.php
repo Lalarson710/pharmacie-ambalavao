@@ -12,4 +12,10 @@ interface MouvementStockRepositoryInterface
 
     public function creer(array $donnees): MouvementStock;
 
+    public function modifier(
+        MouvementStock $mouvementStock,
+        array $donnees
+    ): MouvementStock;
+
+    public function supprimer(MouvementStock $mouvementStock): bool;
 }

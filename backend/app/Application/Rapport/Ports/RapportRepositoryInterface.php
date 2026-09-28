@@ -11,4 +11,11 @@ interface RapportRepositoryInterface
     public function trouverParId(int $id): ?Rapport;
 
     public function creer(array $donnees): Rapport;
+
+    public function modifier(
+        Rapport $rapport,
+        array $donnees
+    ): Rapport;
+
+    public function supprimer(Rapport $rapport): bool;
 }

@@ -37,4 +37,18 @@ class ReglementRepository implements ReglementRepositoryInterface
             'facture.vente.client'
         ]);
     }
+
+    public function modifier(
+        Reglement $reglement,
+        array $donnees
+    ): Reglement {
+        $reglement->update($donnees);
+
+        return $reglement->fresh('facture.vente.client');
+    }
+
+    public function supprimer(Reglement $reglement): bool
+    {
+        return $reglement->delete();
+    }
 }

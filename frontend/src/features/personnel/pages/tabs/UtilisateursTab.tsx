@@ -9,8 +9,8 @@ interface UtilisateursTabProps {
   search: string;
   selectedUserId: number | null;
   setSelectedUserId: (userId: number | null) => void;
-  onOpenEdit: (item: User) => void;
-  onDelete: (item: User) => void;
+  onOpenEdit?: (item: User) => void;
+  onDelete?: (item: User) => void;
   loading?: boolean;
 }
 
@@ -68,8 +68,8 @@ export function UtilisateursTab({
         actionsHeaderLabel="Actions"
         actions={(row) => (
           <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
+            onEdit={onOpenEdit ? () => onOpenEdit(row) : undefined}
+            onDelete={onDelete ? () => onDelete(row) : undefined}
           />
         )}
       />

@@ -52,7 +52,14 @@ class StockController extends Controller
     public function stocksEnRupture(): JsonResponse
     {
         $stocksEnRupture = $this->listerStocksEnRuptureUseCase->executer();
-
+ 
         return response()->json($stocksEnRupture);
+    }
+ 
+    public function export(): JsonResponse
+    {
+        $stock = $this->listerStockParProduitUseCase->executer();
+ 
+        return response()->json($stock);
     }
 }

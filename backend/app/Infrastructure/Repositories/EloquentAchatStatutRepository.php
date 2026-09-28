@@ -8,9 +8,33 @@ use App\Application\Achat\Ports\AchatStatutRepositoryInterface;
 
 class EloquentAchatStatutRepository implements AchatStatutRepositoryInterface
 {
-    public function creer(array $donnes): AchatStatut
+    public function lister(): array
     {
-        return AchatStatut::create($donnes);
+        return AchatStatut::orderBy('created_at', 'desc')->get()->all();
+    }
+
+    public function trouverParId(int $id): ?AchatStatut
+    {
+        return AchatStatut::find($id);
+    }
+
+    public function creer(array $donnees): AchatStatut
+    {
+        return AchatStatut::create($donnees);
+    }
+
+    public function modifier(
+        AchatStatut $achatStatut,
+        array $donnees
+    ): AchatStatut {
+        $achatStatut->update($donnees);
+
+        return $achatStatut->fresh();
+    }
+
+    public function supprimer(AchatStatut $achatStatut): bool
+    {
+        return $achatStatut->delete();
     }
 
     public function listerParAchat(int $achatId): array

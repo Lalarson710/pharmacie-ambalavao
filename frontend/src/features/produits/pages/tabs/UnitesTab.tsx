@@ -8,11 +8,14 @@ interface UnitesTabProps {
   data: Unite[];
   search: string;
   loading?: boolean;
-  onOpenEdit: (item: Unite) => void;
-  onDelete: (item: Unite) => void;
+  onOpenEdit?: (item: Unite) => void;
+  onDelete?: (item: Unite) => void;
 }
 
 export function UnitesTab({ data, search, loading, onOpenEdit, onDelete }: UnitesTabProps) {
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+
   const filteredUnits = search
     ? data.filter((row) =>
         [row.nom, row.abreviation]
@@ -34,13 +37,13 @@ export function UnitesTab({ data, search, loading, onOpenEdit, onDelete }: Unite
         data={loading ? [] : filteredUnits}
         columns={columns}
         emptyMessage={loading ? 'Chargement des unités...' : 'Aucune unité.'}
-        actionsHeaderLabel="Actions"
-        actions={(row) => (
+        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
+        actions={(hasEdit || hasDelete) ? (row) => (
           <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
+            onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+            onDelete={hasDelete ? () => onDelete!(row) : undefined}
           />
-        )}
+        ) : undefined}
       />
     </SectionCard>
   );

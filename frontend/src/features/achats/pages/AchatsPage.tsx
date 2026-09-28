@@ -5,6 +5,7 @@ import { PageTabs } from '@/components/PageTabs';
 import { PageToolbar } from '@/components/PageToolbar';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/Toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { Achat, AchatLigne, Fournisseur, AchatStatut } from '@/types';
 import { achatsApi, achatsLignesApi } from '../api/achats';
 import { fournisseursApi } from '../../fournisseurs/api/fournisseurs';
@@ -31,7 +32,27 @@ interface AchatActionTarget {
 
 export function AchatsPage() {
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState('achats');
+  const { hasPermission } = usePermissions();
+
+  // Permission mapping for tabs
+  const tabPermissions: Record<string, string> = {
+    achats: 'achat.view',
+    lignes: 'achat_ligne.view',
+    fournisseurs: 'fournisseur.view',
+  };
+
+  // Permission mapping for actions per tab
+  const tabActionPermissions: Record<string, { create: string; update: string; delete: string }> = {
+    achats: { create: 'achat.create', update: 'achat.update', delete: 'achat.delete' },
+    lignes: { create: 'achat_ligne.create', update: 'achat_ligne.update', delete: 'achat_ligne.delete' },
+    fournisseurs: { create: 'fournisseur.create', update: 'fournisseur.update', delete: 'fournisseur.delete' },
+  };
+
+  // Filter tabs based on view permissions
+  const allowedTabs = achatsTabs.filter((tab) => hasPermission(tabPermissions[tab.id]));
+  const defaultActiveTab = allowedTabs[0]?.id ?? 'achats';
+
+  const [activeTab, setActiveTab] = useState(defaultActiveTab);
   const [data, setData] = useState<Achat[]>([]);
   const [lignesData, setLignesData] = useState<AchatLigne[]>([]);
   const [fournisseursData, setFournisseursData] = useState<Fournisseur[]>([]);
@@ -45,14 +66,25 @@ export function AchatsPage() {
   const [statutHistory, setStatutHistory] = useState<AchatStatut[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Check permissions for active tab
+  const canCreate = hasPermission(tabActionPermissions[activeTab]?.create);
+  const canEdit = hasPermission(tabActionPermissions[activeTab]?.update);
+  const canDelete = hasPermission(tabActionPermissions[activeTab]?.delete);
+
   useEffect(() => {
+    if (!hasPermission('achat.view')) return;
     const load = async () => {
       try {
         const result = await achatsApi.getAll();
         setData(result);
       } catch (error) {
         console.error('chargement achats:', error);
-        showToast('Impossible de charger les achats.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les achats.', 'error');
+        } else {
+          showToast('Impossible de charger les achats.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, achats: false }));
       }
@@ -61,13 +93,19 @@ export function AchatsPage() {
   }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('achat_ligne.view')) return;
     const load = async () => {
       try {
         const result = await achatsLignesApi.getAll();
         setLignesData(result);
       } catch (error) {
         console.error('chargement lignes:', error);
-        showToast('Impossible de charger les lignes.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les lignes d\'achat.', 'error');
+        } else {
+          showToast('Impossible de charger les lignes.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, lignes: false }));
       }
@@ -76,13 +114,19 @@ export function AchatsPage() {
   }, [showToast]);
 
   useEffect(() => {
+    if (!hasPermission('fournisseur.view')) return;
     const load = async () => {
       try {
         const result = await fournisseursApi.getAll();
         setFournisseursData(result);
       } catch (error) {
         console.error('chargement fournisseurs:', error);
-        showToast('Impossible de charger les fournisseurs.', 'error');
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les fournisseurs.', 'error');
+        } else {
+          showToast('Impossible de charger les fournisseurs.', 'error');
+        }
       } finally {
         setLoading((prev) => ({ ...prev, fournisseurs: false }));
       }
@@ -229,73 +273,87 @@ export function AchatsPage() {
 
   return (
     <div className="page-container">
-      <PageHeader
-        title="Achats"
-        subtitle={`${data.length} achat(s) enregistré(s)`}
-      />
+      {allowedTabs.length === 0 ? (
+        <div className="page-empty-state">
+          <div className="empty-state-icon">🔒</div>
+          <h2>Accès non autorisé</h2>
+          <p>Vous n'avez pas les permissions nécessaires pour accéder à ce module.</p>
+        </div>
+      ) : (
+        <>
+          <PageHeader
+            title="Achats"
+            subtitle={`${data.length} achat(s) enregistré(s)`}
+          />
 
-      <PageToolbar
-        search={search}
-        onSearch={setSearch}
-        placeholder="Rechercher dans l'onglet..."
-        actions={
-          <>
-            {activeTab === 'achats' && (
-              <button type="button" className="btn-primary" onClick={() => openAdd('achat')}>
-                <Plus size={15} /> Ajouter un achat
-              </button>
-            )}
-            {activeTab === 'lignes' && (
-              <button type="button" className="btn-primary" onClick={() => openAdd('ligne')}>
-                <Plus size={15} /> Ajouter une ligne
-              </button>
-            )}
-            
-          </>
-        }
-      />
+          <PageToolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Rechercher dans l'onglet..."
+            actions={
+              <>
+                {activeTab === 'achats' && canCreate && (
+                  <button type="button" className="btn-primary" onClick={() => openAdd('achat')}>
+                    <Plus size={15} /> Ajouter un achat
+                  </button>
+                )}
+                {activeTab === 'lignes' && canCreate && (
+                  <button type="button" className="btn-primary" onClick={() => openAdd('ligne')}>
+                    <Plus size={15} /> Ajouter une ligne
+                  </button>
+                )}
+                {activeTab === 'fournisseurs' && canCreate && (
+                  <button type="button" className="btn-primary" onClick={() => openAdd('fournisseur')}>
+                    <Plus size={15} /> Ajouter un fournisseur
+                  </button>
+                )}
+              </>
+            }
+          />
 
-      <PageTabs
-        tabs={achatsTabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+          <PageTabs
+            tabs={allowedTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
-      {activeTab === 'achats' && (
-        <AchatsTab
-          data={data}
-          search={search}
-          loading={loading.achats}
-          onOpenEdit={(item) => openEdit('achat', item)}
-          onDelete={(item) => setDeleteTarget({ kind: 'achat', item })}
-          onConfirm={(item) => setActionTarget({ action: 'confirmer', item })}
-          onAnnuler={(item) => setActionTarget({ action: 'annuler', item })}
-          onPrint={handlePrint}
-          onPreview={handlePreview}
-        />
-      )}
-
-      {activeTab === 'lignes' && (
-        <LignesAchatTab
-          data={lignesData}
-          achats={data}
-          search={search}
-          loading={loading.lignes}
-          onOpenEdit={(item) => openEdit('ligne', item)}
-          onDelete={(item) => setDeleteTarget({ kind: 'ligne', item })}
-        />
-      )}
-
-      {activeTab === 'fournisseurs' && (
-        <FournisseursTab
-          data={fournisseursData.filter((f) =>
-            data.some((a) => a.fournisseur_id === f.id)
+          {activeTab === 'achats' && (
+            <AchatsTab
+              data={data}
+              search={search}
+              loading={loading.achats}
+              onOpenEdit={canEdit ? (item) => openEdit('achat', item) : undefined}
+              onDelete={canDelete ? (item) => setDeleteTarget({ kind: 'achat', item }) : undefined}
+              onConfirm={canEdit ? (item) => setActionTarget({ action: 'confirmer', item }) : undefined}
+              onAnnuler={canEdit ? (item) => setActionTarget({ action: 'annuler', item }) : undefined}
+              onPrint={handlePrint}
+              onPreview={handlePreview}
+            />
           )}
-          search={search}
-          loading={loading.fournisseurs}
-          onOpenEdit={(item) => openEdit('fournisseur', item)}
-          onDelete={(item) => setDeleteTarget({ kind: 'fournisseur', item })}
-        />
+
+          {activeTab === 'lignes' && (
+            <LignesAchatTab
+              data={lignesData}
+              achats={data}
+              search={search}
+              loading={loading.lignes}
+              onOpenEdit={canEdit ? (item) => openEdit('ligne', item) : undefined}
+              onDelete={canDelete ? (item) => setDeleteTarget({ kind: 'ligne', item }) : undefined}
+            />
+          )}
+
+          {activeTab === 'fournisseurs' && (
+            <FournisseursTab
+              data={fournisseursData.filter((f) =>
+                data.some((a) => a.fournisseur_id === f.id)
+              )}
+              search={search}
+              loading={loading.fournisseurs}
+              onOpenEdit={canEdit ? (item) => openEdit('fournisseur', item) : undefined}
+              onDelete={canDelete ? (item) => setDeleteTarget({ kind: 'fournisseur', item }) : undefined}
+            />
+          )}
+        </>
       )}
 
       <AchatsModal

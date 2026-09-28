@@ -42,4 +42,56 @@ class AchatStatutController extends Controller
 
         return response()->json($statut, 201);
     }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $statut = $this->achatStatutRepository->trouver($id);
+
+        if (!$statut) {
+            return response()->json([
+                'message' => 'Statut d\'achat introuvable.'
+            ], 404);
+        }
+
+        try {
+            $donnees = $request->validate([
+                'statut_precedent' => ['nullable', 'string'],
+                'nouveau_statut' => ['sometimes', 'string'],
+                'commentaire' => ['nullable', 'string'],
+            ]);
+
+            $statut = $this->achatStatutRepository->modifier($statut, $donnees);
+
+            return response()->json($statut);
+
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $statut = $this->achatStatutRepository->trouver($id);
+
+        if (!$statut) {
+            return response()->json([
+                'message' => 'Statut d\'achat introuvable.'
+            ], 404);
+        }
+
+        try {
+            $this->achatStatutRepository->supprimer($statut);
+
+            return response()->json([
+                'message' => 'Statut d\'achat supprimé avec succès.'
+            ]);
+
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
 }

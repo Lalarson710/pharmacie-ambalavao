@@ -18,4 +18,6 @@ interface FactureRepositoryInterface
         Facture $facture,
         array $donnees
     ): Facture;
+
+    public function supprimer(Facture $facture): bool;
 }

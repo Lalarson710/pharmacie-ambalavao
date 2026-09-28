@@ -8,8 +8,8 @@ import type { Personnel } from '@/types';
 interface PersonnelTabProps {
   personnelData: Personnel[];
   search: string;
-  onOpenEdit: (item: Personnel) => void;
-  onDelete: (item: Personnel) => void;
+  onOpenEdit?: (item: Personnel) => void;
+  onDelete?: (item: Personnel) => void;
   loading?: boolean;
 }
 
@@ -67,8 +67,8 @@ export function PersonnelTab({ personnelData, search, onOpenEdit, onDelete, load
         actionsHeaderLabel="Actions"
         actions={(row) => (
           <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
+            onEdit={onOpenEdit ? () => onOpenEdit(row) : undefined}
+            onDelete={onDelete ? () => onDelete(row) : undefined}
           />
         )}
       />

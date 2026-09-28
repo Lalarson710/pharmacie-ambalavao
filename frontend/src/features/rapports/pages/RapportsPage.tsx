@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Printer, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
@@ -9,6 +9,8 @@ import { RowActions } from '@/components/RowActions';
 import { rapports } from '@/data/mockData';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import type { Rapport } from '@/types';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useToast } from '@/components/Toast';
 
 // Types de rapport disponibles (ordre d'affichage).
 const TYPES_RAPPORT: { value: string; label: string }[] = [
@@ -21,11 +23,44 @@ const TYPES_RAPPORT: { value: string; label: string }[] = [
 ];
 
 export function RapportsPage() {
-  const [data, setData] = useState<Rapport[]>(rapports);
+  const { hasPermission } = usePermissions();
+  const { showToast } = useToast();
+  
+  // Check permissions
+  const canView = hasPermission('rapport.view');
+  const canCreate = hasPermission('rapport.create');
+  const canUpdate = hasPermission('rapport.update');
+  const canDelete = hasPermission('rapport.delete');
+  const canPrint = hasPermission('rapport.print');
+  const canExport = hasPermission('rapport.export');
+
+  const [data, setData] = useState<Rapport[]>([]);
   const [search, setSearch] = useState('');
   const [typeRapport, setTypeRapport] = useState<string>('ventes');
   const [dateDebut, setDateDebut] = useState<string>('');
   const [dateFin, setDateFin] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  // Load data if user has view permission
+  useEffect(() => {
+    if (!canView) return;
+    const loadData = async () => {
+      try {
+        // TODO: Replace with actual API call
+        // const data = await rapportsApi.getAll();
+        setData(rapports);
+      } catch (error) {
+        console.error('Erreur lors du chargement des rapports:', error);
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+          showToast('Accès refusé : vous n\'avez pas la permission de voir les rapports.', 'error');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [canView, showToast]);
 
   const filtered = search
     ? data.filter(
@@ -93,6 +128,18 @@ export function RapportsPage() {
     setDateFin('');
   };
 
+  if (!canView) {
+    return (
+      <div className="page-container">
+        <div className="page-empty-state">
+          <div className="empty-state-icon">🔒</div>
+          <h2>Accès non autorisé</h2>
+          <p>Vous n'avez pas les permissions nécessaires pour accéder à ce module.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container">
       <PageHeader
@@ -105,9 +152,23 @@ export function RapportsPage() {
         onSearch={setSearch}
         placeholder="Rechercher un rapport..."
         actions={
-          <button type="button" className="btn-primary" onClick={handlePrint}>
-            <Printer size={15} /> Imprimer
-          </button>
+          <>
+            {canCreate && (
+              <button type="button" className="btn-primary" onClick={handleGenerer}>
+                <Plus size={16} /> Générer le rapport
+              </button>
+            )}
+            {canPrint && (
+              <button type="button" className="btn-primary" onClick={handlePrint}>
+                <Printer size={15} /> Imprimer
+              </button>
+            )}
+            {canExport && (
+              <button type="button" className="btn-secondary" onClick={() => { /* TODO: export */ }}>
+                Exporter
+              </button>
+            )}
+          </>
         }
       />
 
@@ -165,29 +226,31 @@ export function RapportsPage() {
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn-primary">
-              <Plus size={16} /> Générer le rapport
-            </button>
+            {canCreate && (
+              <button type="submit" className="btn-primary">
+                <Plus size={16} /> Générer le rapport
+              </button>
+            )}
           </div>
         </form>
       </SectionCard>
 
       <SectionCard title="Liste des rapports">
         <DataTable
-          data={filtered}
+          data={loading ? [] : filtered}
           columns={columns}
-          emptyMessage="Aucun rapport enregistré."
+          emptyMessage={loading ? 'Chargement des rapports...' : 'Aucun rapport enregistré.'}
           actionsHeaderLabel="Actions"
           actions={(row) => (
             <RowActions
-              onEdit={() => {
+              onEdit={canUpdate ? () => {
                 setTypeRapport(row.type);
                 setDateDebut(row.date_debut);
                 setDateFin(row.date_fin);
-              }}
-              onDelete={() => {
+              } : undefined}
+              onDelete={canDelete ? () => {
                 setData((prev) => prev.filter((r) => r.id !== row.id));
-              }}
+              } : undefined}
             />
           )}
         />

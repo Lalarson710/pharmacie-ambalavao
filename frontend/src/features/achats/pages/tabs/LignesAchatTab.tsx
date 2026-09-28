@@ -10,8 +10,8 @@ interface LignesAchatTabProps {
   achats: Achat[];
   search: string;
   loading?: boolean;
-  onOpenEdit: (item: AchatLigne) => void;
-  onDelete: (item: AchatLigne) => void;
+  onOpenEdit?: (item: AchatLigne) => void;
+  onDelete?: (item: AchatLigne) => void;
 }
 
 export function LignesAchatTab({
@@ -22,6 +22,9 @@ export function LignesAchatTab({
   onOpenEdit,
   onDelete,
 }: LignesAchatTabProps) {
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+
   const filteredLignes = search
     ? data.filter((row) =>
         [row.produit?.nom, row.numero_lot, row.date_peremption ?? '', String(row.quantite)]
@@ -93,8 +96,8 @@ export function LignesAchatTab({
 
     return (
       <RowActions
-        onEdit={() => onOpenEdit(row)}
-        onDelete={() => onDelete(row)}
+        onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+        onDelete={hasDelete ? () => onDelete!(row) : undefined}
       />
     );
   };
@@ -104,8 +107,8 @@ export function LignesAchatTab({
       <DataTable
         data={loading ? [] : filteredLignes}
         columns={columns}
-        emptyMessage={loading ? 'Chargement des lignes...' : 'Aucune ligne d’achat.'}
-        actionsHeaderLabel="Actions"
+        emptyMessage={loading ? 'Chargement des lignes...' : 'Aucune ligne d\'achat.'}
+        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
         actions={renderActions}
       />
     </SectionCard>

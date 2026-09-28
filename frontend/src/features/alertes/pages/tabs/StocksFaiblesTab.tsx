@@ -6,9 +6,10 @@ import type { AlerteStockFaible } from '@/types';
 interface StocksFaiblesTabProps {
   data: AlerteStockFaible[];
   search: string;
+  loading?: boolean;
 }
 
-export function StocksFaiblesTab({ data, search }: StocksFaiblesTabProps) {
+export function StocksFaiblesTab({ data, search, loading = false }: StocksFaiblesTabProps) {
   const filteredStocks = search
     ? data.filter((row) =>
         row.nom.toLowerCase().includes(search.toLowerCase())
@@ -32,11 +33,11 @@ export function StocksFaiblesTab({ data, search }: StocksFaiblesTabProps) {
   ];
 
   return (
-    <SectionCard title="Stocks faibles" subtitle={`${data.length} alerte(s)`}>
+    <SectionCard title="Stocks faibles" subtitle={loading ? 'Chargement...' : `${data.length} alerte(s)`}>
       <DataTable
-        data={filteredStocks}
+        data={loading ? [] : filteredStocks}
         columns={columns}
-        emptyMessage="Aucun stock faible."
+        emptyMessage={loading ? 'Chargement des alertes...' : 'Aucun stock faible.'}
       />
     </SectionCard>
   );

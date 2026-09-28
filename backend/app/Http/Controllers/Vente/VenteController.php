@@ -73,7 +73,7 @@ class VenteController
         try {
             if ($vente->statut !== 'brouillon') {
                 throw new RuntimeException(
-                    'Impossible de modifier une vente qui n’est plus en brouillon.'
+                    'Impossible de modifier une vente qui n\'est plus en brouillon.'
                 );
             }
 
@@ -149,7 +149,7 @@ class VenteController
         }
     }
 
-        public function annuler(int $id): JsonResponse
+    public function annuler(int $id): JsonResponse
     {
         $vente = $this->trouverVenteUseCase->executer($id);
 
@@ -178,4 +178,16 @@ class VenteController
         }
     }
 
+    public function impression(int $id): JsonResponse
+    {
+        $vente = $this->trouverVenteUseCase->executer($id);
+
+        if (!$vente) {
+            return response()->json([
+                'message' => 'Vente introuvable.'
+            ], 404);
+        }
+
+        return response()->json($vente);
+    }
 }

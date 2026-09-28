@@ -1,6 +1,7 @@
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
+import { RowActions } from '@/components/RowActions';
 import { formatDate } from '@/utils/formatters';
 import type { Lot } from '@/types';
 
@@ -12,7 +13,10 @@ interface LotsTabProps {
   onDelete?: (item: Lot) => void;
 }
 
-export function LotsTab({ data, search, loading }: LotsTabProps) {
+export function LotsTab({ data, search, loading, onOpenEdit, onDelete }: LotsTabProps) {
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+
   const filteredLots = search
     ? data.filter((row) =>
         [row.numero_lot, row.produit?.nom]
@@ -35,6 +39,13 @@ export function LotsTab({ data, search, loading }: LotsTabProps) {
         data={loading ? [] : filteredLots}
         columns={columns}
         emptyMessage={loading ? 'Chargement des lots...' : 'Aucun lot enregistré.'}
+        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
+        actions={(hasEdit || hasDelete) ? (row) => (
+          <RowActions
+            onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+            onDelete={hasDelete ? () => onDelete!(row) : undefined}
+          />
+        ) : undefined}
       />
     </SectionCard>
   );

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use App\Application\MouvementStock\CreerMouvementStockUseCase;
 use App\Application\MouvementStock\ListerMouvementsStockUseCase;
+use App\Application\MouvementStock\ModifierMouvementStockUseCase;
+use App\Application\MouvementStock\SupprimerMouvementStockUseCase;
 use App\Application\MouvementStock\TrouverMouvementStockUseCase;
 use Illuminate\Http\Request;
 
@@ -15,7 +17,8 @@ class MouvementStockController extends Controller
         private ListerMouvementsStockUseCase $listerMouvementsStockUseCase,
         private TrouverMouvementStockUseCase $trouverMouvementStockUseCase,
         private CreerMouvementStockUseCase $creerMouvementStockUseCase,
-        
+        private ModifierMouvementStockUseCase $modifierMouvementStockUseCase,
+        private SupprimerMouvementStockUseCase $supprimerMouvementStockUseCase
     ) {
     }
 
@@ -86,6 +89,59 @@ class MouvementStockController extends Controller
                 ->executer($donnees);
 
             return response()->json($mouvementStock, 201);
+
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $mouvementStock = $this->trouverMouvementStockUseCase->executer($id);
+
+        if (!$mouvementStock) {
+            return response()->json([
+                'message' => 'Mouvement de stock introuvable.'
+            ], 404);
+        }
+
+        try {
+            $donnees = $request->validate([
+                'type' => ['sometimes', 'in:entree,sortie,ajustement'],
+                'quantite' => ['sometimes', 'integer', 'min:1'],
+                'motif' => ['nullable', 'string'],
+            ]);
+
+            $mouvementStock = $this->modifierMouvementStockUseCase
+                ->executer($mouvementStock, $donnees);
+
+            return response()->json($mouvementStock);
+
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $mouvementStock = $this->trouverMouvementStockUseCase->executer($id);
+
+        if (!$mouvementStock) {
+            return response()->json([
+                'message' => 'Mouvement de stock introuvable.'
+            ], 404);
+        }
+
+        try {
+            $this->supprimerMouvementStockUseCase->executer($mouvementStock);
+
+            return response()->json([
+                'message' => 'Mouvement de stock supprimé avec succès.'
+            ]);
 
         } catch (\RuntimeException $e) {
             return response()->json([

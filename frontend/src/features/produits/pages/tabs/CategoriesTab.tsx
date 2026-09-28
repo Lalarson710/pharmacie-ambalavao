@@ -8,11 +8,14 @@ interface CategoriesTabProps {
   data: Categorie[];
   search: string;
   loading?: boolean;
-  onOpenEdit: (item: Categorie) => void;
-  onDelete: (item: Categorie) => void;
+  onOpenEdit?: (item: Categorie) => void;
+  onDelete?: (item: Categorie) => void;
 }
 
 export function CategoriesTab({ data, search, loading, onOpenEdit, onDelete }: CategoriesTabProps) {
+  const hasEdit = typeof onOpenEdit === 'function';
+  const hasDelete = typeof onDelete === 'function';
+
   const filteredCategories = search
     ? data.filter((row) =>
         [row.nom, row.description]
@@ -34,13 +37,13 @@ export function CategoriesTab({ data, search, loading, onOpenEdit, onDelete }: C
         data={loading ? [] : filteredCategories}
         columns={columns}
         emptyMessage={loading ? 'Chargement des catégories...' : 'Aucune catégorie.'}
-        actionsHeaderLabel="Actions"
-        actions={(row) => (
+        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
+        actions={(hasEdit || hasDelete) ? (row) => (
           <RowActions
-            onEdit={() => onOpenEdit(row)}
-            onDelete={() => onDelete(row)}
+            onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
+            onDelete={hasDelete ? () => onDelete!(row) : undefined}
           />
-        )}
+        ) : undefined}
       />
     </SectionCard>
   );

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Facture;
 use App\Application\Facture\CreerFactureUseCase;
 use App\Application\Facture\ListerFacturesUseCase;
 use App\Application\Facture\ModifierFactureUseCase;
+use App\Application\Facture\SupprimerFactureUseCase;
 use App\Application\Facture\TrouverFactureUseCase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,8 @@ class FactureController
         private ListerFacturesUseCase $listerFacturesUseCase,
         private TrouverFactureUseCase $trouverFactureUseCase,
         private CreerFactureUseCase $creerFactureUseCase,
-        private ModifierFactureUseCase $modifierFactureUseCase
+        private ModifierFactureUseCase $modifierFactureUseCase,
+        private SupprimerFactureUseCase $supprimerFactureUseCase
     ) {
     }
 
@@ -79,6 +81,30 @@ class FactureController
                 ->executer($facture, $donnees);
 
             return response()->json($facture);
+
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $facture = $this->trouverFactureUseCase->executer($id);
+
+        if (!$facture) {
+            return response()->json([
+                'message' => 'Facture introuvable.'
+            ], 404);
+        }
+
+        try {
+            $this->supprimerFactureUseCase->executer($facture);
+
+            return response()->json([
+                'message' => 'Facture supprimée avec succès.'
+            ]);
 
         } catch (RuntimeException $e) {
             return response()->json([

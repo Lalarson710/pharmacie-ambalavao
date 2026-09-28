@@ -21,5 +21,7 @@ interface CaisseRepositoryInterface
         array $donnees
     ): Caisse;
 
+    public function supprimer(Caisse $caisse): bool;
+
     public function calculerSoldeTheorique(int $caisseId): float;
 }

@@ -19,51 +19,183 @@ interface UserPermissionState {
 
 function _getPermissionLabel(permission: Permission): string {
   const map: Record<string, string> = {
-    'produit.view': 'Voir les produits',
+    // FOURNISSEURS
+    'fournisseur.view': 'Consulter les fournisseurs',
+    'fournisseur.create': 'Créer un fournisseur',
+    'fournisseur.update': 'Modifier un fournisseur',
+    'fournisseur.delete': 'Supprimer un fournisseur',
+
+    // PRODUITS
+    'produit.view': 'Consulter les produits',
     'produit.create': 'Créer un produit',
     'produit.update': 'Modifier un produit',
     'produit.delete': 'Supprimer un produit',
 
-    'stock.view': 'Voir le stock',
-    'stock.entry': 'Gérer Stock Entrée',
-    'stock.exit': 'Gérer Stock Sortie',
-    'stock.inventory': 'Réaliser Inventaire',
+    // CATÉGORIES
+    'categorie.view': 'Consulter les catégories',
+    'categorie.create': 'Créer une catégorie',
+    'categorie.update': 'Modifier une catégorie',
+    'categorie.delete': 'Supprimer une catégorie',
 
-    'achat.view': 'Voir les achats',
-    'achat.create': 'Créer un achat',
+    // UNITÉS
+    'unite.view': 'Consulter les unités',
+    'unite.create': 'Créer une unité',
+    'unite.update': 'Modifier une unité',
+    'unite.delete': 'Supprimer une unité',
 
-    'vente.view': 'Voir les ventes',
-    'vente.create': 'Créer une vente',
-    'vente.confirm': 'Confirmer une vente',
+    // LOTS
+    'lot.view': 'Consulter les lots',
+    'lot.create': 'Créer un lot',
+    'lot.update': 'Modifier un lot',
+    'lot.delete': 'Supprimer un lot',
 
-    'caisse.open': 'Ouvrir la caisse',
-    'caisse.close': 'Fermer la caisse',
-
-    'rapport.view': 'Voir les rapports',
-    'rapport.export': 'Exporter un rapport',
-
-    'statistique.view': 'Voir les statistiques',
-    'alerte.view': 'Voir les alertes',
-
-    'personnel.view': 'Voir le personnel',
-    'personnel.create': 'Créer du personnel',
-
-    'user.view': 'Voir les utilisateurs',
-    'user.create': 'Créer un utilisateur',
-
-    'permission.manage': 'Gérer les permissions',
-
-    'fournisseur.view': 'Voir les fournisseurs',
-    'fournisseur.create': 'Créer un fournisseur',
-
-    'client.view': 'Voir les clients',
+    // CLIENTS
+    'client.view': 'Consulter les clients',
     'client.create': 'Créer un client',
+    'client.update': 'Modifier un client',
+    'client.delete': 'Supprimer un client',
 
+    // ACHATS
+    'achat.view': 'Consulter les achats',
+    'achat.create': 'Créer un achat',
+    'achat.update': 'Modifier un achat',
+    'achat.delete': 'Supprimer un achat',
+    'achat.print': 'Imprimer un achat',
+
+    // LIGNES D'ACHAT
+    'achat_ligne.view': 'Consulter les lignes d\'achat',
+    'achat_ligne.create': 'Créer une ligne d\'achat',
+    'achat_ligne.update': 'Modifier une ligne d\'achat',
+    'achat_ligne.delete': 'Supprimer une ligne d\'achat',
+
+    // STATUTS ACHAT
+    'achat_statut.view': 'Consulter les statuts d\'achat',
+    'achat_statut.create': 'Créer un statut d\'achat',
+    'achat_statut.update': 'Modifier un statut d\'achat',
+    'achat_statut.delete': 'Supprimer un statut d\'achat',
+
+    // STOCK
+    'stock.view': 'Consulter le stock',
+    'stock.entry.view': 'Consulter les entrées de stock',
+    'stock.entry.create': 'Enregistrer une entrée de stock',
+    'stock.exit.view': 'Consulter les sorties de stock',
+    'stock.exit.create': 'Enregistrer une sortie de stock',
+    'stock.inventory': 'Effectuer un inventaire',
+    'stock.export': 'Exporter le stock (PDF)',
+
+    // MOUVEMENTS DE STOCK
+    'mouvement_stock.view': 'Consulter les mouvements de stock',
+    'mouvement_stock.create': 'Créer un mouvement de stock',
+    'mouvement_stock.update': 'Modifier un mouvement de stock',
+    'mouvement_stock.delete': 'Supprimer un mouvement de stock',
+
+    // INVENTAIRES
+    'inventaire.view': 'Consulter les inventaires',
+    'inventaire.create': 'Créer un inventaire',
+    'inventaire.update': 'Modifier un inventaire',
+    'inventaire.delete': 'Supprimer un inventaire',
+    'inventaire.print': 'Imprimer un inventaire',
+
+    // VENTES
+    'vente.view': 'Consulter les ventes',
+    'vente.create': 'Créer une vente',
+    'vente.update': 'Modifier une vente',
+    'vente.delete': 'Supprimer une vente',
+    'vente.cancel': 'Annuler une vente',
+    'vente.confirm': 'Confirmer une vente',
+    'vente.print': 'Imprimer une vente',
+
+    // LIGNES DE VENTE
+    'vente_ligne.view': 'Consulter les lignes de vente',
+    'vente_ligne.create': 'Créer une ligne de vente',
+    'vente_ligne.update': 'Modifier une ligne de vente',
+    'vente_ligne.delete': 'Supprimer une ligne de vente',
+
+    // FACTURES
+    'facture.view': 'Consulter les factures',
+    'facture.create': 'Créer une facture',
+    'facture.update': 'Modifier une facture',
+    'facture.delete': 'Supprimer une facture',
     'facture.print': 'Imprimer une facture',
 
-    'sauvegarde.view': 'Voir les sauvegardes',
+    // RÈGLEMENTS
+    'reglement.view': 'Consulter les règlements',
+    'reglement.create': 'Enregistrer un règlement',
+    'reglement.update': 'Modifier un règlement',
+    'reglement.delete': 'Supprimer un règlement',
+
+    // CAISSE
+    'caisse.view': 'Consulter les caisses',
+    'caisse.create': 'Créer une caisse',
+    'caisse.update': 'Modifier une caisse',
+    'caisse.delete': 'Supprimer une caisse',
+    'caisse.open': 'Ouvrir la caisse',
+    'caisse.close': 'Fermer la caisse',
+    'caisse.print': 'Imprimer une caisse',
+
+    // MOUVEMENTS DE CAISSE
+    'mouvement_caisse.view': 'Consulter les mouvements de caisse',
+    'mouvement_caisse.create': 'Créer un mouvement de caisse',
+    'mouvement_caisse.update': 'Modifier un mouvement de caisse',
+    'mouvement_caisse.delete': 'Supprimer un mouvement de caisse',
+
+    // PERSONNEL
+    'personnel.view': 'Consulter le personnel',
+    'personnel.create': 'Créer un personnel',
+    'personnel.update': 'Modifier un personnel',
+    'personnel.delete': 'Supprimer un personnel',
+
+    // RÔLES
+    'role.view': 'Consulter les rôles',
+    'role.create': 'Créer un rôle',
+    'role.update': 'Modifier un rôle',
+    'role.delete': 'Supprimer un rôle',
+
+    // UTILISATEURS
+    'user.view': 'Consulter les utilisateurs',
+    'user.create': 'Créer un utilisateur',
+    'user.update': 'Modifier un utilisateur',
+    'user.delete': 'Supprimer un utilisateur',
+
+    // PERMISSIONS
+    'permission.view': 'Consulter les permissions',
+    'permission.create': 'Créer une permission',
+    'permission.update': 'Modifier une permission',
+    'permission.delete': 'Supprimer une permission',
+    'permission.manage': 'Gérer les permissions (attribution)',
+
+    // ALERTES
+    'alerte.view': 'Consulter les alertes',
+    'alerte.create': 'Créer une alerte',
+    'alerte.update': 'Modifier une alerte',
+    'alerte.delete': 'Supprimer une alerte',
+
+    // TABLEAU DE BORD
+    'dashboard.view': 'Consulter le tableau de bord',
+
+    // SAUVEGARDES
+    'sauvegarde.view': 'Consulter les sauvegardes',
     'sauvegarde.create': 'Créer une sauvegarde',
+    'sauvegarde.update': 'Modifier une sauvegarde',
+    'sauvegarde.delete': 'Supprimer une sauvegarde',
     'sauvegarde.restore': 'Restaurer une sauvegarde',
+    'sauvegarde.import': 'Importer une sauvegarde',
+
+    // STATISTIQUES
+    'statistique.view': 'Consulter les statistiques',
+    'statistique.create': 'Créer une statistique',
+    'statistique.update': 'Modifier une statistique',
+    'statistique.delete': 'Supprimer une statistique',
+    'statistique.export': 'Exporter les statistiques',
+    'statistique.print': 'Imprimer les statistiques',
+
+    // RAPPORTS
+    'rapport.view': 'Consulter les rapports',
+    'rapport.create': 'Créer un rapport',
+    'rapport.update': 'Modifier un rapport',
+    'rapport.delete': 'Supprimer un rapport',
+    'rapport.export': 'Exporter les rapports',
+    'rapport.print': 'Imprimer un rapport',
   };
 
   return map[permission.code] ?? permission.nom;
@@ -149,15 +281,25 @@ export function PermissionsPage() {
   // ── Permissions triées ──
   const sortedPermissions = useMemo(() => {
     const menuOrder = [
-      'fournisseur', 'produit', 'client', 'achat', 'stock', 'vente',
-      'caisse', 'personnel', 'user', 'permission', 'alerte', 'statistique',
-      'rapport', 'sauvegarde', 'facture',
+      'fournisseur',
+      'produit', 'categorie', 'unite', 'lot',
+      'client',
+      'achat', 'achat_ligne', 'achat_statut',
+      'stock', 'mouvement_stock', 'inventaire',
+      'vente', 'vente_ligne', 'facture', 'reglement',
+      'caisse', 'mouvement_caisse',
+      'personnel', 'role', 'user', 'permission',
+      'alerte',
+      'dashboard',
+      'sauvegarde',
+      'statistique',
+      'rapport',
     ];
 
     const permissionOrder: Record<string, number> = {
       view: 1, create: 2, update: 3, delete: 4, entry: 5, exit: 6,
       inventory: 7, confirm: 8, open: 9, close: 10, export: 11, print: 12,
-      restore: 13, manage: 14,
+      restore: 13, manage: 14, cancel: 15, import: 16,
     };
 
     return [...allPermissions].sort((a, b) => {

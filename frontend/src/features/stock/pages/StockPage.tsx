@@ -23,6 +23,8 @@ import {
   type StockReportFilters,
   type StockReportTab,
 } from '../utils/exportStockPdf';
+import { useAuth } from '@/features/auth/store/authStore';
+import { usePermissions } from '@/hooks/usePermissions';
 
 function isMovementInPeriod(
   movement: MouvementStock,
@@ -60,7 +62,29 @@ function getLotExpiryState(datePeremption: string): {
 
 export function StockPage() {
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<StockReportTab>('stock-produit');
+  const { hasPermission } = usePermissions();
+
+  // Filtrer les onglets selon les permissions
+  const allowedTabs = useMemo(() => {
+    const tabPermissions: Record<string, string> = {
+      'stock-produit': 'stock.view',
+      lots: 'lot.view',
+      entrees: 'stock.entry.view',
+      sorties: 'stock.exit.view',
+      mouvements: 'mouvement_stock.view',
+      inventaires: 'inventaire.view',
+    };
+
+    return stockTabs.filter((tab) => {
+      const permCode = tabPermissions[tab.id];
+      return permCode ? hasPermission(permCode) : true;
+    });
+  }, [hasPermission]);
+
+  const defaultActiveTab = allowedTabs.length > 0 ? allowedTabs[0].id : 'stock-produit';
+
+  const canExportStock = hasPermission('stock.export');
+  const [activeTab, setActiveTab] = useState<StockReportTab>(defaultActiveTab as StockReportTab);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [expiryFilter, setExpiryFilter] =
@@ -75,27 +99,43 @@ export function StockPage() {
 
   const loadStockData = useCallback(async () => {
     try {
-      const [stocks, lots, mouvements, inventaires] = await Promise.all([
-        stockApi.getStockParProduit(),
-        stockApi.getLots(),
-        stockApi.getMouvements(),
-        stockApi.getInventaires(),
-      ]);
+      const promises: Promise<unknown>[] = [];
 
-      setStockData(stocks);
-      setLotsData(lots);
-      setMouvementsData(mouvements);
-      setInventairesData(inventaires);
+      if (hasPermission('stock.view')) {
+        promises.push(
+          stockApi.getStockParProduit().then((data) => setStockData(data))
+        );
+      }
+      if (hasPermission('lot.view')) {
+        promises.push(stockApi.getLots().then((data) => setLotsData(data)));
+      }
+      if (hasPermission('mouvement_stock.view')) {
+        promises.push(
+          stockApi.getMouvements().then((data) => setMouvementsData(data))
+        );
+      }
+      if (hasPermission('inventaire.view')) {
+        promises.push(
+          stockApi.getInventaires().then((data) => setInventairesData(data))
+        );
+      }
+
+      await Promise.all(promises);
     } catch (error: unknown) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Impossible de charger les données du stock.';
-      showToast(message, 'error');
+      const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+      if (axiosError.response?.status === 403 || axiosError.response?.status === 500) {
+        showToast('Accès refusé : vous n\'avez pas la permission de consulter ces données.', 'error');
+      } else {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Impossible de charger les données du stock.';
+        showToast(message, 'error');
+      }
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, hasPermission]);
 
   useEffect(() => {
     void loadStockData();
@@ -135,10 +175,49 @@ export function StockPage() {
     (movement) => movement.type === 'sortie',
   );
 
+  // Permissions d'action pour l'onglet actif
+  const canAdd = useMemo(() => {
+    switch (activeTab) {
+      case 'entrees':
+        return hasPermission('stock.entry.create');
+      case 'sorties':
+        return hasPermission('stock.exit.create');
+      case 'inventaires':
+        return hasPermission('inventaire.create');
+      default:
+        return false;
+    }
+  }, [activeTab, hasPermission]);
+
+  const canEdit = useMemo(() => {
+    switch (activeTab) {
+      case 'mouvements':
+        return hasPermission('mouvement_stock.update');
+      case 'inventaires':
+        return hasPermission('inventaire.update');
+      default:
+        return false;
+    }
+  }, [activeTab, hasPermission]);
+
+  const canDelete = useMemo(() => {
+    switch (activeTab) {
+      case 'mouvements':
+        return hasPermission('mouvement_stock.delete');
+      case 'inventaires':
+        return hasPermission('inventaire.delete');
+      default:
+        return false;
+    }
+  }, [activeTab, hasPermission]);
+
   function openAdd(kind: StockModalKind) {
+    if (!canAdd) {
+      showToast('Vous n\'avez pas la permission d\'ajouter cet élément.', 'error');
+      return;
+    }
     setModal({ kind, item: null });
   }
-
 
   async function handleSaved() {
     await loadStockData();
@@ -148,6 +227,11 @@ export function StockPage() {
 
   function handleExportPdf() {
     if (loading) return;
+
+    if (!canExportStock) {
+      showToast('Vous n\'avez pas la permission d\'exporter le stock.', 'error');
+      return;
+    }
 
     const exported = downloadStockReport(
       activeTab,
@@ -168,6 +252,30 @@ export function StockPage() {
     showToast('PDF téléchargé avec succès.', 'success');
   }
 
+  // Si aucun onglet n'est autorisé
+  if (allowedTabs.length === 0) {
+    return (
+      <div className="page-container">
+        <PageHeader
+          title="Gestion du stock"
+          subtitle="Aucune permission pour accéder à ce module"
+        />
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+          <p className="text-yellow-800">
+            Vous n'avez pas les permissions nécessaires pour accéder à aucune section de ce module.
+            Contactez votre administrateur pour obtenir les droits d'accès.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Réinitialiser l'onglet actif s'il n'est plus autorisé
+  useEffect(() => {
+    if (!allowedTabs.some((tab) => tab.id === activeTab)) {
+      setActiveTab(defaultActiveTab as StockReportTab);
+    }
+  }, [allowedTabs, activeTab, defaultActiveTab]);
 
   return (
     <div className="page-container">
@@ -182,15 +290,17 @@ export function StockPage() {
         placeholder="Rechercher dans l'onglet actif..."
         actions={
           <>
-            <button
-              type="button"
-              className="btn-export-pdf"
-              onClick={handleExportPdf}
-              disabled={loading}
-              title="Télécharger le rapport PDF"
-            >
-              <Download size={15} /> Exporter PDF
-            </button>
+            {canExportStock && (
+              <button
+                type="button"
+                className="btn-export-pdf"
+                onClick={handleExportPdf}
+                disabled={loading}
+                title="Télécharger le rapport PDF"
+              >
+                <Download size={15} /> Exporter PDF
+              </button>
+            )}
 
             {activeTab === 'lots' && (
               <label className="stock-report-filter">
@@ -233,7 +343,7 @@ export function StockPage() {
               </div>
             )}
 
-            {['entrees', 'sorties'].includes(activeTab) && (
+            {['entrees', 'sorties'].includes(activeTab) && canAdd && (
               <button
                 type="button"
                 className="btn-primary"
@@ -248,7 +358,7 @@ export function StockPage() {
               </button>
             )}
 
-            {activeTab === 'inventaires' && (
+            {activeTab === 'inventaires' && canAdd && (
               <button
                 type="button"
                 className="btn-primary"
@@ -263,7 +373,7 @@ export function StockPage() {
       />
 
       <PageTabs
-        tabs={stockTabs}
+        tabs={allowedTabs}
         activeTab={activeTab}
         onTabChange={(id) => setActiveTab(id as StockReportTab)}
       />
@@ -273,6 +383,8 @@ export function StockPage() {
           data={stockParProduit}
           search={search}
           loading={loading}
+          onOpenEdit={canEdit ? () => { /* TODO: implémenter édition stock produit */ } : undefined}
+          onDelete={canDelete ? () => { /* TODO: implémenter suppression stock produit */ } : undefined}
         />
       )}
 
@@ -281,6 +393,8 @@ export function StockPage() {
           data={lotsFiltres}
           search={search}
           loading={loading}
+          onOpenEdit={canEdit ? () => { /* TODO: implémenter édition lot */ } : undefined}
+          onDelete={canDelete ? () => { /* TODO: implémenter suppression lot */ } : undefined}
         />
       )}
 
@@ -289,6 +403,8 @@ export function StockPage() {
           data={entreesData}
           search={search}
           loading={loading}
+          onOpenEdit={canEdit ? () => openAdd('entree') : undefined}
+          onDelete={canDelete ? () => { /* TODO: implémenter suppression entrée */ } : undefined}
         />
       )}
 
@@ -297,6 +413,8 @@ export function StockPage() {
           data={sortiesData}
           search={search}
           loading={loading}
+          onOpenEdit={canEdit ? () => openAdd('sortie') : undefined}
+          onDelete={canDelete ? () => { /* TODO: implémenter suppression sortie */ } : undefined}
         />
       )}
 
@@ -305,6 +423,8 @@ export function StockPage() {
           data={mouvementsPeriode}
           search={search}
           loading={loading}
+          onOpenEdit={canEdit ? () => { /* TODO: implémenter édition mouvement */ } : undefined}
+          onDelete={canDelete ? () => { /* TODO: implémenter suppression mouvement */ } : undefined}
         />
       )}
 
@@ -313,6 +433,8 @@ export function StockPage() {
           data={inventairesData}
           search={search}
           loading={loading}
+          onOpenEdit={canEdit ? () => openAdd('inventaire') : undefined}
+          onDelete={canDelete ? () => { /* TODO: implémenter suppression inventaire */ } : undefined}
         />
       )}
 
@@ -322,7 +444,6 @@ export function StockPage() {
         onClose={() => setModal(null)}
         onSaved={handleSaved}
       />
-
     </div>
   );
 }
