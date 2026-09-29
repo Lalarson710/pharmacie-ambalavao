@@ -8,7 +8,6 @@ import { StocksFaiblesTab } from './tabs/StocksFaiblesTab';
 import { RupturesTab } from './tabs/RupturesTab';
 import { PeremptionsTab } from './tabs/PeremptionsTab';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useToast } from '@/components/Toast';
 
 export function AlertesPage() {
   const { hasPermission } = usePermissions();

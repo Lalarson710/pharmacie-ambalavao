@@ -23,7 +23,6 @@ import {
   type StockReportFilters,
   type StockReportTab,
 } from '../utils/exportStockPdf';
-import { useAuth } from '@/features/auth/store/authStore';
 import { usePermissions } from '@/hooks/usePermissions';
 
 function isMovementInPeriod(

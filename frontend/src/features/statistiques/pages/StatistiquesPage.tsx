@@ -10,7 +10,6 @@ import { ResumeTab } from './tabs/ResumeTab';
 import { statistiquesTabs } from './tabs/tabsConfig';
 import { VentesTab } from './tabs/VentesTab';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useToast } from '@/components/Toast';
 
 export function StatistiquesPage() {
   const { hasPermission } = usePermissions();

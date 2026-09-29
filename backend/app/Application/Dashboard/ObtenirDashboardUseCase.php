@@ -11,8 +11,8 @@ class ObtenirDashboardUseCase
     ) {
     }
 
-    public function executer(): array
+    public function executer(int $jours = 30): array
     {
-        return $this->repository->obtenir();
+        return $this->repository->obtenir($jours);
     }
 }
