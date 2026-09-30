@@ -39,7 +39,8 @@ export function AchatsModal({
   const [fournisseursList, setFournisseursList] = useState<Fournisseur[]>(fournisseursData);
   const [produitsList, setProduitsList] = useState<Produit[]>([]);
   const [produitSelectionne, setProduitSelectionne] = useState<string>('');
-  const [conditionnementSelectionne, setConditionnementSelectionne] = useState<string>('');
+  // Seul le setter est necessaire : la valeur courante vit dans le formulaire.
+  const [, setConditionnementSelectionne] = useState<string>('');
 
   useEffect(() => {
     setFournisseursList(fournisseursData);
@@ -352,6 +353,7 @@ export function AchatsModal({
               value={String(_formData.produit_id ?? '')}
               onChange={(e) => {
                 setProduitSelectionne(e.target.value);
+                setConditionnementSelectionne('');
                 onChange('produit_id', e.target.value);
                 onChange('conditionnement_id', '');
               }}
@@ -374,7 +376,10 @@ export function AchatsModal({
               name="conditionnement_id"
               className="inline-input"
               value={String(_formData.conditionnement_id ?? '')}
-              onChange={(e) => onChange('conditionnement_id', e.target.value)}
+              onChange={(e) => {
+                setConditionnementSelectionne(e.target.value);
+                onChange('conditionnement_id', e.target.value);
+              }}
             >
               <option value="">— Choisir un conditionnement —</option>
               {conditionnementsDuProduit.map((row) => (

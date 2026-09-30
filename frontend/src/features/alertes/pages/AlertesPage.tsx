@@ -1,43 +1,37 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { PageTabs } from '@/components/PageTabs';
 import { PageToolbar } from '@/components/PageToolbar';
-import { alertesStockFaible, alertesRupture, alertesPeremption } from '@/data/mockData';
 import { alertesTabs } from './tabs/tabsConfig';
 import { StocksFaiblesTab } from './tabs/StocksFaiblesTab';
 import { RupturesTab } from './tabs/RupturesTab';
 import { PeremptionsTab } from './tabs/PeremptionsTab';
+import { useAlertes } from '../hooks/useAlertes';
 import { usePermissions } from '@/hooks/usePermissions';
 
 export function AlertesPage() {
   const { hasPermission } = usePermissions();
+  const { counts, stocksFaibles, ruptures, peremptions, loading, jours, setJours, reload } =
+    useAlertes();
 
-  // Permission mapping for tabs
-  const tabPermissions: Record<string, string> = {
-    'stocks-faibles': 'alerte.view',
-    ruptures: 'alerte.view',
-    peremptions: 'alerte.view',
-  };
-
-  // Filter tabs based on view permissions
-  const allowedTabs = alertesTabs.filter((tab) => hasPermission(tabPermissions[tab.id]));
-  const defaultActiveTab = allowedTabs[0]?.id ?? 'stocks-faibles';
-
-  const [activeTab, setActiveTab] = useState(defaultActiveTab);
+  const [activeTab, setActiveTab] = useState('stocks-faibles');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  // Check permissions for active tab
-  const canView = hasPermission(tabPermissions[activeTab]);
+  // Badge dynamique sur chaque onglet, selon les donnees du backend
+  const allowedTabs = useMemo(() => {
+    const badges: Record<string, number> = {
+      'stocks-faibles': counts.stocksFaibles,
+      ruptures: counts.ruptures,
+      peremptions: counts.peremptions,
+    };
 
-  // Load data if user has view permission
-  useEffect(() => {
-    if (!canView) return;
-    // Simulate data loading
-    setTimeout(() => {
-      setLoading(false);
-    }, 300);
-  }, [canView]);
+    return alertesTabs
+      .filter(() => hasPermission('alerte.view'))
+      .map((tab) => ({ ...tab, badge: badges[tab.id] ?? 0 }));
+  }, [counts, hasPermission]);
+
+  const canView = hasPermission('alerte.view');
 
   if (!canView || allowedTabs.length === 0) {
     return (
@@ -55,13 +49,44 @@ export function AlertesPage() {
     <div className="page-container">
       <PageHeader
         title="Alertes"
-        subtitle="Produits nécessitant une attention"
+        subtitle={
+          counts.total > 0
+            ? `${counts.total} alerte(s) nécessitent votre attention`
+            : 'Aucune alerte : tous les stocks sont sana'
+        }
       />
 
       <PageToolbar
         search={search}
         onSearch={setSearch}
         placeholder="Rechercher dans les alertes..."
+        actions={
+          <>
+            <label className="stock-report-filter">
+              <span>Péremption</span>
+              <select
+                value={jours}
+                onChange={(event) => setJours(Number(event.target.value))}
+              >
+                <option value={7}>Sous 7 jours</option>
+                <option value={30}>Sous 30 jours</option>
+                <option value={60}>Sous 60 jours</option>
+                <option value={90}>Sous 90 jours</option>
+                <option value={180}>Sous 180 jours</option>
+              </select>
+            </label>
+
+            <button
+              type="button"
+              className="btn-ghost btn-sm"
+              onClick={() => void reload()}
+              disabled={loading}
+              title="Actualiser les alertes"
+            >
+              <RefreshCw size={15} /> Actualiser
+            </button>
+          </>
+        }
       />
 
       <PageTabs
@@ -71,15 +96,15 @@ export function AlertesPage() {
       />
 
       {activeTab === 'stocks-faibles' && (
-        <StocksFaiblesTab data={alertesStockFaible} search={search} loading={loading} />
+        <StocksFaiblesTab data={stocksFaibles} search={search} loading={loading} />
       )}
 
       {activeTab === 'ruptures' && (
-        <RupturesTab data={alertesRupture} search={search} loading={loading} />
+        <RupturesTab data={ruptures} search={search} loading={loading} />
       )}
 
       {activeTab === 'peremptions' && (
-        <PeremptionsTab data={alertesPeremption} search={search} loading={loading} />
+        <PeremptionsTab data={peremptions} search={search} loading={loading} />
       )}
     </div>
   );

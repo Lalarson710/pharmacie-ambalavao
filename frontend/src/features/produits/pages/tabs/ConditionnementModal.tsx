@@ -4,8 +4,6 @@ import { EntityFormModal } from '@/components/EntityFormModal';
 import { useToast } from '@/components/Toast';
 import type { Produit, Unite, ProduitConditionnement } from '@/types';
 import { ConditionnementForm } from '../../components/ConditionnementForm';
-import { produitsApi } from '../../api/produits';
-import { unitesApi } from '../../api/unites';
 import { conditionnementsApi } from '../../api/conditionnements';
 
 export type ConditionnementModalKind = 'conditionnement';

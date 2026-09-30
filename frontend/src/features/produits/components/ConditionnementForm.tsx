@@ -4,7 +4,14 @@ interface ProductOption {
   id: number;
   nom: string;
   unite_id?: number;
-  unite?: { nom?: string; abreviation?: string } | null;
+  unite?: { nom?: string; abreviation?: string | null } | null;
+  actif?: boolean;
+}
+
+interface UnitOption {
+  id: number;
+  nom: string;
+  abreviation?: string | null;
   actif?: boolean;
 }
 
@@ -13,7 +20,7 @@ interface ConditionnementFormProps {
   onChange: (name: string, value: string) => void;
   errors: Record<string, string>;
   productsData: ProductOption[];
-  unitsData: { id: number; nom: string; abreviation?: string; actif?: boolean }[];
+  unitsData: UnitOption[];
   item?: {
     produit_id?: number;
     unite_id?: number;

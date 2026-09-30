@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/store/authStore';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { useAlertes } from '@/features/alertes/hooks/useAlertes';
 
 interface NavItem {
   label: string;
@@ -53,6 +54,7 @@ export function Layout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { counts: alertesCounts } = useAlertes();
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -106,18 +108,38 @@ export function Layout() {
 
         <nav className="sidebar-nav">
           <ul>
-            {visibleNavItems.map((item) => (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  className={`nav-link ${location.pathname === item.to ? 'active' : ''}`}
-                  title={collapsed ? item.label : undefined}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </NavLink>
-              </li>
-            ))}
+            {visibleNavItems.map((item) => {
+              const badge =
+                item.to === '/alertes' ? alertesCounts.total : 0;
+
+              return (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    className={`nav-link ${location.pathname === item.to ? 'active' : ''}`}
+                    title={
+                      collapsed
+                        ? badge > 0
+                          ? `${item.label} — ${badge} alerte(s)`
+                          : item.label
+                        : undefined
+                    }
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                    {badge > 0 && (
+                      <span
+                        className={`nav-badge ${
+                          location.pathname === item.to ? 'is-active' : ''
+                        }`}
+                      >
+                        {badge > 99 ? '99+' : badge}
+                      </span>
+                    )}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
