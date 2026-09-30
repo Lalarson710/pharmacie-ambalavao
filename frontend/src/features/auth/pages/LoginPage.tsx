@@ -61,11 +61,26 @@ export function LoginPage() {
           src="/logo 2.png"
           alt="Logo PharmaGestion Pro"
         />
-        <div>
-          <div className="brand-name">
-            PHARMA<span>GESTION</span> PRO
+        <div className="brand-text">
+          <span className="brand-eyebrow">Gestion</span>
+          <div className="brand-title">
+            <span className="brand-letters">
+              {'PHARMACIE'.split('').map((letter, index) => (
+                <span
+                  key={letter}
+                  className="brand-letter"
+                  style={{ animationDelay: `${120 + index * 45}ms` }}
+                >
+                  {letter}
+                </span>
+              ))}
+            </span>
+            <span className="brand-pro">PRO</span>
           </div>
-          <p>Ambalavao</p>
+          <p className="brand-city">
+            <span className="brand-city-line" />
+            Ambalavao
+          </p>
         </div>
       </header>
 

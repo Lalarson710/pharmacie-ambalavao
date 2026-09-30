@@ -65,7 +65,92 @@ a { color: inherit; }
 }
 .brand-name { font-family: 'Manrope', sans-serif; font-size: clamp(20px, 2.3vw, 32px); letter-spacing: -1.2px; line-height: 0.5; font-weight: 500; white-space: nowrap; }
 .brand-name span { color: var(--theme); }
-.brand-logo-image { width: 70px; height: 78px; object-fit: contain; object-position: left center; filter: drop-shadow(0 0 6px rgba(103, 175, 26, .42)); }
+.brand-logo-image { width: 70px; height: 78px; object-fit: contain; object-position: left center; filter: drop-shadow(0 3px 10px rgba(15, 45, 42, .38)); }
+
+/* Page de connexion — titre PHARMA GESTION PRO, style moderne */
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.brand-eyebrow {
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(9px, .78vw, 11px);
+  font-weight: 800;
+  letter-spacing: 4.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .62);
+}
+
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Manrope', sans-serif;
+  line-height: 1;
+}
+
+.brand-letters {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.brand-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.02em;
+  padding: 0.22em 0.1em 0.26em;
+  border: 1.6px solid rgba(255, 255, 255, .55);
+  border-radius: 7px;
+  color: #ffffff;
+  font: inherit;
+  font-size: clamp(19px, 2vw, 27px);
+  font-weight: 800;
+  letter-spacing: -.5px;
+  line-height: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .08));
+  box-shadow: 0 3px 10px rgba(15, 45, 42, .22), inset 0 1px 0 rgba(255, 255, 255, .35);
+  animation: letter-in .5s cubic-bezier(.2, .9, .25, 1) both;
+}
+
+.brand-pro {
+  padding: 5px 9px 6px;
+  border-radius: 7px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2f6f68 0%, #173d3b 100%);
+  box-shadow: 0 3px 10px rgba(15, 45, 42, .3), inset 0 1px 0 rgba(255, 255, 255, .22);
+  font-size: clamp(10px, .95vw, 13px);
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+.brand-city {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: rgba(255, 255, 255, .9);
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(10px, .92vw, 13px);
+  font-weight: 600;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+}
+
+.brand-city-line {
+  width: 26px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, .85), rgba(255, 255, 255, 0));
+}
+
+@keyframes letter-in {
+  from { opacity: 0; transform: translateY(-8px) scale(.86); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .login-panel {
   width: min(100%, 410px); position: relative; border: 1px solid rgba(255,255,255,.85);
@@ -122,7 +207,12 @@ a { color: inherit; }
   .brand-lockup { top: 24px; left: 22px; gap: 9px; }
   .brand-logo-image { width: 54px; height: 60px; }
   .brand-name { font-size: 19px; letter-spacing: -.7px; }
-  .brand-lockup p { font-size: 10px; margin-top: 4px; }
+  .brand-eyebrow { letter-spacing: 3px; }
+  .brand-letters { gap: 3px; }
+  .brand-letter { padding: .2em .08em .24em; border-width: 1.2px; border-radius: 5px; }
+  .brand-title { gap: 6px; }
+  .brand-city { font-size: 9px; letter-spacing: 1.4px; }
+  .brand-city-line { width: 16px; }
   .wave-top { width: 120vw; height: 58vh; top: -40vh; left: -28vw; }
   .login-panel { margin-top: 14px; }
   .page-footer { flex-wrap: wrap; justify-content: center; bottom: 18px; max-width: 350px; row-gap: 6px; }
