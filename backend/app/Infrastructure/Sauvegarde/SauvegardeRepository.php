@@ -82,8 +82,17 @@ class SauvegardeRepository implements SauvegardeRepositoryInterface
             ->filter(function ($fichier) {
                 return $fichier->getExtension() === 'dump';
             })
-            ->map(function ($fichier) {
+            ->sortByDesc(function ($fichier) {
+                return $fichier->getMTime();
+            })
+            ->values()
+            ->map(function ($fichier, $index) {
                 return [
+                    // Sauvegardes = fichiers disque : pas d'identifiant en base.
+                    // On expose donc un index stable base sur l'ordre de tri
+                    // (du plus recent au plus ancien) pour l'affichage et le
+                    // verrouillage des lignes cote interface.
+                    'id' => $index + 1,
                     'nom_fichier' => $fichier->getFilename(),
                     'chemin' => $fichier->getPathname(),
                     'taille' => $fichier->getSize(),
@@ -93,8 +102,31 @@ class SauvegardeRepository implements SauvegardeRepositoryInterface
                     ),
                 ];
             })
-            ->values()
             ->all();
+    }
+
+    public function supprimer(string $nomFichier): bool
+    {
+        // basename() neutralise toute tentative de traversee de repertoire.
+        $nomFichier = basename($nomFichier);
+
+        if (strtolower(pathinfo($nomFichier, PATHINFO_EXTENSION)) !== 'dump') {
+            throw new RuntimeException(
+                'Fichier de sauvegarde invalide.'
+            );
+        }
+
+        $chemin = $this->dossier . DIRECTORY_SEPARATOR . $nomFichier;
+
+        if (!File::exists($chemin)) {
+            throw new RuntimeException(
+                'Fichier de sauvegarde introuvable.'
+            );
+        }
+
+        File::delete($chemin);
+
+        return true;
     }
 
     public function restaurer(string $nomFichier): bool

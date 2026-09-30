@@ -235,7 +235,7 @@ export function PersonnelPage() {
                     {selectedUserId && hasPermission('permission.manage') && (
                       <button
                         type="button"
-                        className="btn-ghost"
+                        className="btn-action-red"
                         onClick={() => navigate(`/personnels/permissions?user_id=${selectedUserId}`)}
                       >
                         <Shield size={15} /> Permission

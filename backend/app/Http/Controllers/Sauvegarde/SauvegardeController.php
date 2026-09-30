@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Sauvegarde;
 
 use App\Application\Sauvegarde\CreerSauvegardeUseCase;
 use App\Application\Sauvegarde\ListerSauvegardesUseCase;
-use App\Application\Sauvegarde\ModifierSauvegardeUseCase;
 use App\Application\Sauvegarde\RestaurerSauvegardeUseCase;
-use App\Application\Sauvegarde\SupprimerSauvegardeUseCase;
-use App\Application\Sauvegarde\TrouverSauvegardeUseCase;
+use App\Application\Sauvegarde\SupprimerFichierSauvegardeUseCase;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class SauvegardeController extends Controller
 {
@@ -30,9 +29,16 @@ class SauvegardeController extends Controller
         ], 201);
     }
 
-    public function show(int $id, TrouverSauvegardeUseCase $useCase)
-    {
-        $sauvegarde = $useCase->executer($id);
+    /**
+     * Une sauvegarde est un fichier disque : elle est identifiee
+     * par son nom de fichier, pas par un identifiant en base.
+     */
+    public function show(
+        string $nomFichier,
+        ListerSauvegardesUseCase $useCase
+    ) {
+        $sauvegarde = collect($useCase->executer())
+            ->firstWhere('nom_fichier', $nomFichier);
 
         if (!$sauvegarde) {
             return response()->json([
@@ -43,37 +49,15 @@ class SauvegardeController extends Controller
         return response()->json($sauvegarde);
     }
 
-    public function update(Request $request, int $id, ModifierSauvegardeUseCase $useCase)
-    {
-        $sauvegarde = $useCase->executer($id);
-
-        if (!$sauvegarde) {
-            return response()->json([
-                'message' => 'Sauvegarde introuvable.'
-            ], 404);
-        }
-
+    public function destroy(
+        SupprimerFichierSauvegardeUseCase $useCase,
+        Request $request
+    ) {
         $donnees = $request->validate([
-            'nom' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
+            'nom_fichier' => 'required|string|max:255',
         ]);
 
-        $sauvegarde = $useCase->executer($sauvegarde, $donnees);
-
-        return response()->json($sauvegarde);
-    }
-
-    public function destroy(int $id, SupprimerSauvegardeUseCase $useCase)
-    {
-        $sauvegarde = $useCase->executer($id);
-
-        if (!$sauvegarde) {
-            return response()->json([
-                'message' => 'Sauvegarde introuvable.'
-            ], 404);
-        }
-
-        $useCase->executer($sauvegarde);
+        $useCase->executer($donnees['nom_fichier']);
 
         return response()->json([
             'message' => 'Sauvegarde supprimée avec succès.'
@@ -99,15 +83,42 @@ class SauvegardeController extends Controller
         ]);
     }
 
-    public function importer(Request $request): JsonResponse
+    public function importer(Request $request)
     {
         $request->validate([
-            'fichier' => 'required|file|mimes:sql,gz,zip',
+            'fichier' => [
+                'required',
+                'file',
+                'mimes:sql,gz,zip,dump',
+                'max:204800',
+            ],
         ]);
 
-        // L'import sera géré par le use case approprié
+        $fichier = $request->file('fichier');
+
+        $extension = strtolower($fichier->getClientOriginalExtension());
+
+        $dossier = storage_path('app/sauvegardes');
+
+        if (!File::exists($dossier)) {
+            File::makeDirectory($dossier, 0755, true);
+        }
+
+        // Le nom d'origine est conserve ; le suffixe unique
+        // evite tout ecrasement en cas de doublon.
+        $nomFichier = pathinfo($fichier->getClientOriginalName(), PATHINFO_FILENAME)
+            . '_import_' . now()->format('Ymd_His') . '.' . $extension;
+
+        $fichier->move($dossier, $nomFichier);
+
         return response()->json([
-            'message' => 'Fichier de sauvegarde reçu pour import.',
-        ]);
+            'message' => 'Sauvegarde importée avec succès.',
+            'data' => [
+                'nom_fichier' => $nomFichier,
+                'chemin' => $dossier . DIRECTORY_SEPARATOR . $nomFichier,
+                'taille' => File::size($dossier . DIRECTORY_SEPARATOR . $nomFichier),
+                'date_creation' => now()->toDateTimeString(),
+            ],
+        ], 201);
     }
 }

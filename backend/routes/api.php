@@ -542,15 +542,17 @@ Route::post('/sauvegardes', [
     'permission:sauvegarde.create'
 ]);
 
-Route::put('/sauvegardes/{id}', [
+// Les sauvegardes sont des fichiers disque : elles sont identifiees
+// par leur nom de fichier, pas par un id en base.
+Route::get('/sauvegardes/{nomFichier}', [
     SauvegardeController::class,
-    'update'
+    'show'
 ])->middleware([
     'auth:sanctum',
-    'permission:sauvegarde.update'
+    'permission:sauvegarde.view'
 ]);
 
-Route::delete('/sauvegardes/{id}', [
+Route::delete('/sauvegardes', [
     SauvegardeController::class,
     'destroy'
 ])->middleware([
