@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/authStore';
 import { LoginForm } from '../components/LoginForm';
 import { LoadingModal } from '@/components/LoadingModal';
+import { AnimatedBackground } from '@/components/AnimatedBackground';
 
 export function LoginPage() {
   const { login, error, isLoading, isAuthenticated } = useAuth();
@@ -38,6 +39,22 @@ export function LoginPage() {
     <main className="login-page">
       <div className="wave wave-top" />
       <div className="wave wave-bottom" />
+
+      <div className="login-aurora" aria-hidden="true">
+        <span className="aurora-blob aurora-blob-a" />
+        <span className="aurora-blob aurora-blob-b" />
+        <span className="aurora-blob aurora-blob-c" />
+      </div>
+
+      <div className="login-particles">
+        <AnimatedBackground
+          color="rgba(77, 140, 20, 0.72)"
+          crossColor="rgba(103, 175, 26, 0.78)"
+          density={44}
+          linkDistance={138}
+          opacity={0.5}
+        />
+      </div>
       <div className="science-orbit orbit-main" />
       <div className="science-orbit orbit-small" />
       <div className="molecule molecule-top" aria-hidden="true">
