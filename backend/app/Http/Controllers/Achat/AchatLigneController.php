@@ -74,6 +74,12 @@ class AchatLigneController extends Controller
                 'integer',
                 'exists:produits,id'
             ],
+            'conditionnement_id' => [
+                'sometimes',
+                'nullable',
+                'integer',
+                'exists:produit_conditionnements,id'
+            ],
             'numero_lot' => [
                 'required',
                 'string',

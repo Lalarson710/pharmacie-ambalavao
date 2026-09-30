@@ -6,10 +6,11 @@ import { PageToolbar } from '@/components/PageToolbar';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/Toast';
 import { usePermissions } from '@/hooks/usePermissions';
-import type { Client, Facture, Lot, Produit, Reglement, Vente, VenteLigne } from '@/types';
+import type { Client, Facture, Lot, Produit, ProduitConditionnement, Reglement, Vente, VenteLigne } from '@/types';
 import { clientsApi } from '../../clients/api/clients';
 import { produitsApi } from '../../produits/api/produits';
 import { lotsApi } from '../../produits/api/lots';
+import { conditionnementsApi } from '../../produits/api/conditionnements';
 import { ventesApi, ventesLignesApi, facturesApi, reglementsApi } from '../api/ventes';
 import { ventesTabs } from './tabs/tabsConfig';
 import {
@@ -67,6 +68,7 @@ export function VentesPage() {
   const [clientsData, setClientsData] = useState<Client[]>([]);
   const [produitsData, setProduitsData] = useState<Produit[]>([]);
   const [lotsData, setLotsData] = useState<Lot[]>([]);
+  const [conditionnementsData, setConditionnementsData] = useState<ProduitConditionnement[]>([]);
   const [facturesData, setFacturesData] = useState<Facture[]>([]);
   const [reglementsData, setReglementsData] = useState<Reglement[]>([]);
   const [modal, setModal] = useState<VenteModalState | null>(null);
@@ -85,6 +87,7 @@ export function VentesPage() {
     clients: true,
     produits: true,
     lots: true,
+    conditionnements: true,
     factures: true,
     reglements: true,
   });
@@ -182,6 +185,21 @@ export function VentesPage() {
         console.error('chargement lots:', error);
       } finally {
         setLoading((prev) => ({ ...prev, lots: false }));
+      }
+    };
+    load();
+  }, [showToast]);
+
+  useEffect(() => {
+    if (!hasPermission('produit.view')) return;
+    const load = async () => {
+      try {
+        const result = await conditionnementsApi.getAll();
+        setConditionnementsData(result);
+      } catch (error) {
+        console.error('chargement conditionnements:', error);
+      } finally {
+        setLoading((prev) => ({ ...prev, conditionnements: false }));
       }
     };
     load();
@@ -506,6 +524,7 @@ export function VentesPage() {
         clientsData={clientsData}
         produitsData={produitsData}
         lotsData={lotsData}
+        conditionnementsData={conditionnementsData}
         facturesData={facturesData}
         setReglementsData={setReglementsData}
       />

@@ -13,7 +13,10 @@ class VenteLigne extends Model
         'vente_id',
         'produit_id',
         'lot_id',
+        'conditionnement_id',
         'quantite',
+        'quantite_conditionnement',
+        'quantite_base',
         'prix_unitaire',
         'montant',
     ];
@@ -22,6 +25,8 @@ class VenteLigne extends Model
     {
         return [
             'quantite' => 'integer',
+            'quantite_conditionnement' => 'integer',
+            'quantite_base' => 'integer',
             'prix_unitaire' => 'decimal:2',
             'montant' => 'decimal:2',
         ];
@@ -40,5 +45,10 @@ class VenteLigne extends Model
     public function lot(): BelongsTo
     {
         return $this->belongsTo(Lot::class);
+    }
+
+    public function conditionnement(): BelongsTo
+    {
+        return $this->belongsTo(ProduitConditionnement::class, 'conditionnement_id');
     }
 }

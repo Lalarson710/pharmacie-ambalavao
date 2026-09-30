@@ -6,9 +6,10 @@ import { PageToolbar } from '@/components/PageToolbar';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/Toast';
 import { usePermissions } from '@/hooks/usePermissions';
-import type { Achat, AchatLigne, Fournisseur, AchatStatut } from '@/types';
+import type { Achat, AchatLigne, Fournisseur, AchatStatut, ProduitConditionnement } from '@/types';
 import { achatsApi, achatsLignesApi } from '../api/achats';
 import { fournisseursApi } from '../../fournisseurs/api/fournisseurs';
+import { conditionnementsApi } from '../../produits/api/conditionnements';
 import { achatsTabs } from './tabs/tabsConfig';
 import {
   AchatsModal,
@@ -56,11 +57,12 @@ export function AchatsPage() {
   const [data, setData] = useState<Achat[]>([]);
   const [lignesData, setLignesData] = useState<AchatLigne[]>([]);
   const [fournisseursData, setFournisseursData] = useState<Fournisseur[]>([]);
+  const [conditionnementsData, setConditionnementsData] = useState<ProduitConditionnement[]>([]);
   const [modal, setModal] = useState<AchatModalState | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AchatDeleteTarget | null>(null);
   const [actionTarget, setActionTarget] = useState<AchatActionTarget | null>(null);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState({ achats: true, lignes: true, fournisseurs: true });
+  const [loading, setLoading] = useState({ achats: true, lignes: true, fournisseurs: true, conditionnements: true });
   const [previewAchat, setPreviewAchat] = useState<Achat | null>(null);
   const [printAfterOpen, setPrintAfterOpen] = useState(false);
   const [statutHistory, setStatutHistory] = useState<AchatStatut[]>([]);
@@ -129,6 +131,21 @@ export function AchatsPage() {
         }
       } finally {
         setLoading((prev) => ({ ...prev, fournisseurs: false }));
+      }
+    };
+    load();
+  }, [showToast]);
+
+  useEffect(() => {
+    if (!hasPermission('produit.view')) return;
+    const load = async () => {
+      try {
+        const result = await conditionnementsApi.getAll();
+        setConditionnementsData(result);
+      } catch (error) {
+        console.error('chargement conditionnements:', error);
+      } finally {
+        setLoading((prev) => ({ ...prev, conditionnements: false }));
       }
     };
     load();
@@ -364,6 +381,7 @@ export function AchatsPage() {
         setLignesData={setLignesData}
         fournisseursData={fournisseursData}
         setFournisseursData={setFournisseursData}
+        conditionnementsData={conditionnementsData}
       />
 
       <AchatDetailModal

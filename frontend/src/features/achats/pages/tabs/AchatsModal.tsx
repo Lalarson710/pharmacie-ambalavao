@@ -1,9 +1,9 @@
-import { type Dispatch, type SetStateAction, type ReactNode, useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Building2, ClipboardList, ReceiptText, ShoppingCart } from 'lucide-react';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { useToast } from '@/components/Toast';
 import { produitsApi } from '../../../produits/api/produits';
-import type { Achat, AchatLigne, Fournisseur, Produit } from '@/types';
+import type { Achat, AchatLigne, Fournisseur, Produit, ProduitConditionnement } from '@/types';
 import { achatsApi, achatsLignesApi } from '../../api/achats';
 import { fournisseursApi } from '../../../fournisseurs/api/fournisseurs';
 
@@ -22,6 +22,7 @@ interface AchatsModalProps {
   setLignesData: Dispatch<SetStateAction<AchatLigne[]>>;
   fournisseursData: Fournisseur[];
   setFournisseursData: Dispatch<SetStateAction<Fournisseur[]>>;
+  conditionnementsData: ProduitConditionnement[];
 }
 
 export function AchatsModal({
@@ -32,10 +33,13 @@ export function AchatsModal({
   setLignesData,
   fournisseursData,
   setFournisseursData,
+  conditionnementsData,
 }: AchatsModalProps) {
   const { showToast } = useToast();
   const [fournisseursList, setFournisseursList] = useState<Fournisseur[]>(fournisseursData);
   const [produitsList, setProduitsList] = useState<Produit[]>([]);
+  const [produitSelectionne, setProduitSelectionne] = useState<string>('');
+  const [conditionnementSelectionne, setConditionnementSelectionne] = useState<string>('');
 
   useEffect(() => {
     setFournisseursList(fournisseursData);
@@ -52,6 +56,27 @@ export function AchatsModal({
     };
     loadProduits();
   }, []);
+
+  // Le produit selectionne pilote la liste des conditionnements proposes.
+  useEffect(() => {
+    if (modal?.kind !== 'ligne') {
+      setProduitSelectionne('');
+      setConditionnementSelectionne('');
+      return;
+    }
+
+    const ligne = modal.item as AchatLigne | null;
+    setProduitSelectionne(ligne ? String(ligne.produit_id) : '');
+    setConditionnementSelectionne(ligne && ligne.conditionnement_id ? String(ligne.conditionnement_id) : '');
+  }, [modal?.kind, modal?.item]);
+
+  /** Conditionnements disponibles pour le produit sélectionné. */
+  const conditionnementsDuProduit = useMemo(() => {
+    if (!produitSelectionne) return conditionnementsData;
+    return conditionnementsData
+      .filter((c) => c.produit_id === Number(produitSelectionne) && c.actif)
+      .sort((a, b) => a.quantite_base - b.quantite_base);
+  }, [conditionnementsData, produitSelectionne]);
 
   const handleSave = async (formData: Record<string, unknown>) => {
     if (!modal) return;
@@ -84,6 +109,7 @@ export function AchatsModal({
         const payload = {
           achat_id: Number(formData.achat_id),
           produit_id: Number(formData.produit_id),
+          conditionnement_id: formData.conditionnement_id ? Number(formData.conditionnement_id) : null,
           quantite: Number(formData.quantite),
           prix_unitaire: Number(formData.prix_unitaire),
           numero_lot: (formData.numero_lot as string) || null,
@@ -158,6 +184,7 @@ export function AchatsModal({
       return {
         achat_id: row ? String(row.achat_id) : '',
         produit_id: row ? String(row.produit_id) : '',
+        conditionnement_id: row && row.conditionnement_id ? String(row.conditionnement_id) : '',
         quantite: row ? String(row.quantite) : '',
         prix_unitaire: row?.prix_unitaire ?? '',
         numero_lot: row?.numero_lot ?? '',
@@ -185,6 +212,7 @@ export function AchatsModal({
     if (modal?.kind === 'ligne') {
       if (!formData.achat_id) errors.achat_id = 'L\'achat est obligatoire.';
       if (!formData.produit_id) errors.produit_id = 'Le produit est obligatoire.';
+      if (!formData.conditionnement_id) errors.conditionnement_id = 'Le conditionnement est obligatoire.';
       if (!formData.quantite || Number(formData.quantite) <= 0) {
         errors.quantite = 'La quantité est invalide.';
       }
@@ -322,7 +350,11 @@ export function AchatsModal({
               name="produit_id"
               className="inline-input"
               value={String(_formData.produit_id ?? '')}
-              onChange={(e) => onChange('produit_id', e.target.value)}
+              onChange={(e) => {
+                setProduitSelectionne(e.target.value);
+                onChange('produit_id', e.target.value);
+                onChange('conditionnement_id', '');
+              }}
             >
               <option value="">— Choisir un produit —</option>
               {produitsList.map((row) => (
@@ -332,6 +364,27 @@ export function AchatsModal({
               ))}
             </select>
             {errors.produit_id && <span className="form-error">{errors.produit_id}</span>}
+          </div>
+          <div className="form-field form-field-full">
+            <label htmlFor="ligne-conditionnement">
+              Conditionnement <span className="required-mark">*</span>
+            </label>
+            <select
+              id="ligne-conditionnement"
+              name="conditionnement_id"
+              className="inline-input"
+              value={String(_formData.conditionnement_id ?? '')}
+              onChange={(e) => onChange('conditionnement_id', e.target.value)}
+            >
+              <option value="">— Choisir un conditionnement —</option>
+              {conditionnementsDuProduit.map((row) => (
+                <option key={row.id} value={String(row.id)}>
+                  {row.unite?.nom} ({row.quantite_base} {row.unite?.abreviation || 'unité(s) de base'}) — {row.prix_vente} Ar
+                </option>
+              ))}
+            </select>
+            {errors.conditionnement_id && <span className="form-error">{errors.conditionnement_id}</span>}
+            <span className="form-hint">Le prix d'achat dépend du conditionnement choisi.</span>
           </div>
           <div className="form-field">
             <label htmlFor="ligne-quantite">

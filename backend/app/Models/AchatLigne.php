@@ -12,7 +12,9 @@ class AchatLigne extends Model
     protected $fillable = [
         'achat_id',
         'produit_id',
+        'conditionnement_id',
         'quantite',
+        'quantite_base',
         'prix_unitaire',
         'montant',
         'numero_lot',
@@ -23,6 +25,7 @@ class AchatLigne extends Model
     {
         return [
             'quantite' => 'integer',
+            'quantite_base' => 'integer',
             'prix_unitaire' => 'decimal:2',
             'montant' => 'decimal:2',
             'date_peremption' => 'date',
@@ -37,5 +40,10 @@ class AchatLigne extends Model
     public function produit(): BelongsTo
     {
         return $this->belongsTo(Produit::class);
+    }
+
+    public function conditionnement(): BelongsTo
+    {
+        return $this->belongsTo(ProduitConditionnement::class, 'conditionnement_id');
     }
 }

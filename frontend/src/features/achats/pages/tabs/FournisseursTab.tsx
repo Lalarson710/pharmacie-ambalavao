@@ -1,7 +1,6 @@
 import { DataTable } from '@/components/DataTable';
 import type { Column } from '@/components/DataTable';
 import { SectionCard } from '@/components/SectionCard';
-import { RowActions } from '@/components/RowActions';
 import type { Fournisseur } from '@/types';
 
 interface FournisseursTabProps {
@@ -12,16 +11,7 @@ interface FournisseursTabProps {
   onDelete?: (item: Fournisseur) => void;
 }
 
-export function FournisseursTab({
-  data,
-  search,
-  loading,
-  onOpenEdit,
-  onDelete,
-}: FournisseursTabProps) {
-  const hasEdit = typeof onOpenEdit === 'function';
-  const hasDelete = typeof onDelete === 'function';
-
+export function FournisseursTab({ data, search, loading }: FournisseursTabProps) {
   const filteredFournisseurs = search
     ? data.filter((row) =>
         [row.nom, row.telephone ?? '', row.email ?? '', row.adresse ?? '']
@@ -44,13 +34,6 @@ export function FournisseursTab({
         data={loading ? [] : filteredFournisseurs}
         columns={columns}
         emptyMessage={loading ? 'Chargement des fournisseurs...' : 'Aucun fournisseur.'}
-        actionsHeaderLabel={hasEdit || hasDelete ? 'Actions' : undefined}
-        actions={(hasEdit || hasDelete) ? (row) => (
-          <RowActions
-            onEdit={hasEdit ? () => onOpenEdit!(row) : undefined}
-            onDelete={hasDelete ? () => onDelete!(row) : undefined}
-          />
-        ) : undefined}
       />
     </SectionCard>
   );

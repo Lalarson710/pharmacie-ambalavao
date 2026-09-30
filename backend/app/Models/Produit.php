@@ -30,6 +30,21 @@ class Produit extends Model
         return $this->belongsTo(Unite::class);
     }
 
+    public function conditionnements(): HasMany
+    {
+        return $this->hasMany(ProduitConditionnement::class);
+    }
+
+    public function conditionnementsActifs(): HasMany
+    {
+        return $this->hasMany(ProduitConditionnement::class)->where('actif', true);
+    }
+
+    public function uniteBase(): BelongsTo
+    {
+        return $this->belongsTo(Unite::class, 'unite_id');
+    }
+
     public function lots(): HasMany
     {
         return $this->hasMany(Lot::class);
@@ -38,5 +53,10 @@ class Produit extends Model
     public function ventesLignes(): HasMany
     {
         return $this->hasMany(VenteLigne::class);
+    }
+
+    public function achatsLignes(): HasMany
+    {
+        return $this->hasMany(AchatLigne::class);
     }
 }

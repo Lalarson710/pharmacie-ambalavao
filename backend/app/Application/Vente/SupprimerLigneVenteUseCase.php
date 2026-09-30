@@ -48,11 +48,12 @@ class SupprimerLigneVenteUseCase
                 );
             }
 
-            // Remettre la quantité dans le stock
+            // Remettre la quantité dans le stock (utiliser quantite_base si disponible)
+            $quantiteBase = $ligne->quantite_base ?? $ligne->quantite;
             $this->creerMouvementStockUseCase->executer([
                 'lot_id' => $lot->id,
                 'type' => 'entree',
-                'quantite' => $ligne->quantite,
+                'quantite' => $quantiteBase,
                 'motif' => 'Annulation de la ligne de vente',
             ]);
 

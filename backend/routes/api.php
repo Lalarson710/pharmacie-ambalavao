@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Categorie\CategorieController;
 use App\Http\Controllers\Unite\UniteController;
 use App\Http\Controllers\Produit\ProduitController;
+use App\Http\Controllers\Produit\ProduitConditionnementController;
 use App\Http\Controllers\Lot\LotController;
 use App\Http\Controllers\MouvementStock\MouvementStockController;
 use App\Http\Controllers\Stock\StockController;
@@ -96,6 +97,20 @@ Route::delete('/produits/{id}', [ProduitController::class, 'destroy'])
         'auth:sanctum',
         'permission:produit.delete'
     ]);
+
+// CONDITIONNEMENTS PRODUITS
+Route::get('/produits/{produitId}/conditionnements', [ProduitConditionnementController::class, 'parProduit'])
+    ->middleware(['auth:sanctum', 'permission:produit.view']);
+Route::get('/produit-conditionnements', [ProduitConditionnementController::class, 'index'])
+    ->middleware(['auth:sanctum', 'permission:produit.view']);
+Route::post('/produit-conditionnements', [ProduitConditionnementController::class, 'store'])
+    ->middleware(['auth:sanctum', 'permission:produit.create']);
+Route::get('/produit-conditionnements/{id}', [ProduitConditionnementController::class, 'show'])
+    ->middleware(['auth:sanctum', 'permission:produit.view']);
+Route::put('/produit-conditionnements/{id}', [ProduitConditionnementController::class, 'update'])
+    ->middleware(['auth:sanctum', 'permission:produit.update']);
+Route::delete('/produit-conditionnements/{id}', [ProduitConditionnementController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'permission:produit.delete']);
 
 Route::get('/lots', [LotController::class, 'index'])
     ->middleware(['auth:sanctum', 'permission:lot.view']);

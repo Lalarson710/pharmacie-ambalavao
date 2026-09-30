@@ -52,10 +52,12 @@ class AnnulerVenteUseCase
                     );
                 }
 
+                // Utiliser quantite_base si disponible pour l'annulation
+                $quantiteBase = $ligne->quantite_base ?? $ligne->quantite;
                 $this->creerMouvementStockUseCase->executer([
                     'lot_id' => $lot->id,
                     'type' => 'entree',
-                    'quantite' => $ligne->quantite,
+                    'quantite' => $quantiteBase,
                     'motif' => 'Annulation de la vente ' . $vente->numero,
                 ]);
             }

@@ -5,25 +5,35 @@ import { PageTabs } from '@/components/PageTabs';
 import { PageToolbar } from '@/components/PageToolbar';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/Toast';
-import type { Categorie, Lot, Produit, Unite } from '@/types';
+import type { Categorie, Lot, Produit, Unite, ProduitConditionnement } from '@/types';
 import {
   CatalogueModal,
   type CatalogueModalState,
 } from './tabs/CatalogueModal';
+import {
+  ConditionnementModal,
+  type ConditionnementModalState,
+} from './tabs/ConditionnementModal';
 import { CategoriesTab } from './tabs/CategoriesTab';
 import { LotsTab } from './tabs/LotsTab';
 import { ProduitsTab } from './tabs/ProduitsTab';
 import { produitsTabs } from './tabs/tabsConfig';
 import { UnitesTab } from './tabs/UnitesTab';
+import { ConditionnementsTab } from './tabs/ConditionnementsTab';
 import { produitsApi } from '../api/produits';
 import { categoriesApi } from '../api/categories';
 import { unitesApi } from '../api/unites';
 import { lotsApi } from '../api/lots';
+import { conditionnementsApi } from '../api/conditionnements';
 import { usePermissions } from '@/hooks/usePermissions';
 
 type CatalogueDeleteTarget = {
   kind: CatalogueModalState['kind'];
   item: Produit | Categorie | Unite | Lot;
+};
+
+type ConditionnementDeleteTarget = {
+  item: ProduitConditionnement;
 };
 
 const tabKind: Record<string, CatalogueModalState['kind']> = {
@@ -45,6 +55,9 @@ const tabPermissions: Record<string, string> = {
   produits: 'produit.view',
   categories: 'categorie.view',
   unites: 'unite.view',
+  // Les conditionnements sont une donnee du produit : on reutilise les
+  // permissions produit deja en place (aucune nouvelle permission).
+  conditionnements: 'produit.view',
   lots: 'lot.view',
 };
 
@@ -53,6 +66,7 @@ const tabActionPermissions: Record<string, { create?: string; update?: string; d
   produits: { create: 'produit.create', update: 'produit.update', delete: 'produit.delete' },
   categories: { create: 'categorie.create', update: 'categorie.update', delete: 'categorie.delete' },
   unites: { create: 'unite.create', update: 'unite.update', delete: 'unite.delete' },
+  conditionnements: { create: 'produit.create', update: 'produit.update', delete: 'produit.delete' },
   lots: { create: 'lot.create', update: 'lot.update', delete: 'lot.delete' },
 };
 
@@ -76,14 +90,18 @@ export function ProduitsPage() {
   const [categoriesData, setCategoriesData] = useState<Categorie[]>([]);
   const [unitsData, setUnitsData] = useState<Unite[]>([]);
   const [lotsData, setLotsData] = useState<Lot[]>([]);
+  const [conditionnementsData, setConditionnementsData] = useState<ProduitConditionnement[]>([]);
   const [loading, setLoading] = useState({
     produits: true,
     categories: true,
     unites: true,
+    conditionnements: true,
     lots: true,
   });
   const [modal, setModal] = useState<CatalogueModalState | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CatalogueDeleteTarget | null>(null);
+  const [conditionnementModal, setConditionnementModal] = useState<ConditionnementModalState | null>(null);
+  const [conditionnementDeleteTarget, setConditionnementDeleteTarget] = useState<ConditionnementDeleteTarget | null>(null);
   const [search, setSearch] = useState('');
 
   // Charger les produits si l'utilisateur a la permission
@@ -190,6 +208,26 @@ export function ProduitsPage() {
     load();
   }, [showToast, hasPermission]);
 
+  // Charger les conditionnements si l'utilisateur a la permission produit
+  useEffect(() => {
+    if (!hasPermission('produit.view')) {
+      setLoading((prev) => ({ ...prev, conditionnements: false }));
+      return;
+    }
+
+    const load = async () => {
+      try {
+        const data = await conditionnementsApi.getAll();
+        setConditionnementsData(data);
+      } catch (error) {
+        console.error(' chargement conditionnements:', error);
+      } finally {
+        setLoading((prev) => ({ ...prev, conditionnements: false }));
+      }
+    };
+    load();
+  }, [showToast, hasPermission]);
+
   // Vérifier si l'utilisateur peut ajouter pour l'onglet actif
   const canAdd = useMemo(() => {
     const perms = tabActionPermissions[activeTab];
@@ -213,8 +251,12 @@ export function ProduitsPage() {
       showToast('Vous n\'avez pas la permission d\'ajouter cet élément.', 'error');
       return;
     }
-    const kind = tabKind[activeTab] ?? 'produit';
-    setModal({ kind, item: null });
+    if (activeTab === 'conditionnements') {
+      setConditionnementModal({ kind: 'conditionnement', item: null });
+    } else {
+      const kind = tabKind[activeTab] ?? 'produit';
+      setModal({ kind, item: null });
+    }
   };
 
   const openEdit = (
@@ -290,8 +332,55 @@ export function ProduitsPage() {
     })();
   };
 
+  const openConditionnementEdit = (item: ProduitConditionnement) => {
+    if (!canEdit) {
+      showToast('Vous n\'avez pas la permission de modifier cet élément.', 'error');
+      return;
+    }
+    setConditionnementModal({ kind: 'conditionnement', item });
+  };
+
+  const confirmConditionnementDelete = () => {
+    if (!conditionnementDeleteTarget) return;
+
+    if (!canDelete) {
+      showToast('Vous n\'avez pas la permission de supprimer cet élément.', 'error');
+      setConditionnementDeleteTarget(null);
+      return;
+    }
+
+    const { item } = conditionnementDeleteTarget;
+
+    setConditionnementsData((prev) => prev.filter((row) => row.id !== item.id));
+    setConditionnementDeleteTarget(null);
+
+    (async () => {
+      try {
+        await conditionnementsApi.delete(item.id);
+        showToast('Conditionnement supprimé avec succès', 'success');
+      } catch (error: unknown) {
+        console.error(' suppression conditionnement:', error);
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        const specificMessage = axiosError.response?.data?.message;
+
+        if (axiosError.response?.status === 403) {
+          showToast('Accès refusé : vous n\'avez pas la permission de supprimer cet élément.', 'error');
+        } else if (specificMessage) {
+          showToast(specificMessage, 'error');
+        } else {
+          showToast('Impossible de supprimer cet élément.', 'error');
+        }
+
+        setConditionnementsData((prev) => [...prev, item]);
+      }
+    })();
+  };
+
   const currentKind = tabKind[activeTab] ?? 'produit';
-  const currentLabel = addLabels[currentKind].replace('Ajouter ', '');
+  const currentLabel =
+    activeTab === 'conditionnements'
+      ? 'un conditionnement'
+      : addLabels[currentKind].replace('Ajouter ', '');
 
   // Si aucun onglet n'est autorisé, afficher un message
   if (allowedTabs.length === 0) {
@@ -384,6 +473,16 @@ export function ProduitsPage() {
         />
       )}
 
+      {activeTab === 'conditionnements' && (
+        <ConditionnementsTab
+          data={conditionnementsData}
+          search={search}
+          loading={loading.conditionnements}
+          onOpenEdit={canEdit ? (item) => openConditionnementEdit(item) : undefined}
+          onDelete={canDelete ? (item) => setConditionnementDeleteTarget({ item }) : undefined}
+        />
+      )}
+
       <CatalogueModal
         modal={modal}
         setModal={setModal}
@@ -397,6 +496,15 @@ export function ProduitsPage() {
         setLotsData={setLotsData}
       />
 
+      <ConditionnementModal
+        modal={conditionnementModal}
+        setModal={setConditionnementModal}
+        productsData={products}
+        unitsData={unitsData}
+        conditionnementsData={conditionnementsData}
+        setConditionnementsData={setConditionnementsData}
+      />
+
       <ConfirmModal
         open={Boolean(deleteTarget)}
         title="Supprimer l'élément"
@@ -407,6 +515,14 @@ export function ProduitsPage() {
         } » ?`}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmModal
+        open={Boolean(conditionnementDeleteTarget)}
+        title="Supprimer le conditionnement"
+        message={`Confirmer la suppression de ce conditionnement ?`}
+        onConfirm={confirmConditionnementDelete}
+        onCancel={() => setConditionnementDeleteTarget(null)}
       />
     </div>
   );

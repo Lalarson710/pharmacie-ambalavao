@@ -43,10 +43,13 @@ class ConfirmerAchatUseCase
                     'quantite' => 0,
                 ]);
 
+                // Utiliser quantite_base si disponible, sinon quantite (compatibilité)
+                $quantiteBase = $ligne->quantite_base ?? $ligne->quantite;
+
                 $this->creerMouvementStockUseCase->executer([
                     'lot_id' => $lot->id,
                     'type' => 'entree',
-                    'quantite' => $ligne->quantite,
+                    'quantite' => $quantiteBase,
                     'motif' => 'Entrée suite à la confirmation de l’achat',
                 ]);
             }

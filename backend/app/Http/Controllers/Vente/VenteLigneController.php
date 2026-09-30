@@ -48,6 +48,7 @@ class VenteLigneController
         $donnees = $request->validate([
             'produit_id' => 'required|exists:produits,id',
             'lot_id' => 'required|exists:lots,id',
+            'conditionnement_id' => 'sometimes|nullable|integer|exists:produit_conditionnements,id',
             'quantite' => 'required|integer|min:1',
         ]);
 

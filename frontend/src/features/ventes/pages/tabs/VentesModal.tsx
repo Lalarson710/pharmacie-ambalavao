@@ -9,7 +9,7 @@ import {
 import { ClipboardList, ReceiptText, ShoppingCart, Wallet } from 'lucide-react';
 import { EntityFormModal } from '@/components/EntityFormModal';
 import { useToast } from '@/components/Toast';
-import type { Client, Facture, Lot, Produit, Reglement, Vente, VenteLigne } from '@/types';
+import type { Client, Facture, Lot, Produit, ProduitConditionnement, Reglement, Vente, VenteLigne } from '@/types';
 import { ventesApi, ventesLignesApi, reglementsApi } from '../../api/ventes';
 
 export type VenteModalKind = 'vente' | 'ligne' | 'reglement';
@@ -28,6 +28,7 @@ interface VentesModalProps {
   clientsData: Client[];
   produitsData: Produit[];
   lotsData: Lot[];
+  conditionnementsData: ProduitConditionnement[];
   facturesData: Facture[];
   setReglementsData: Dispatch<SetStateAction<Reglement[]>>;
 }
@@ -41,6 +42,7 @@ export function VentesModal({
   clientsData,
   produitsData,
   lotsData,
+  conditionnementsData,
   facturesData,
   setReglementsData,
 }: VentesModalProps) {
@@ -48,6 +50,7 @@ export function VentesModal({
   const [clientsList, setClientsList] = useState<Client[]>(clientsData);
   const [facturesList, setFacturesList] = useState<Facture[]>(facturesData);
   const [produitSelectionne, setProduitSelectionne] = useState<string>('');
+  const [conditionnementSelectionne, setConditionnementSelectionne] = useState<string>('');
 
   useEffect(() => {
     setClientsList(clientsData);
@@ -62,11 +65,13 @@ export function VentesModal({
   useEffect(() => {
     if (modal?.kind !== 'ligne') {
       setProduitSelectionne('');
+      setConditionnementSelectionne('');
       return;
     }
 
     const ligne = modal.item as VenteLigne | null;
     setProduitSelectionne(ligne ? String(ligne.produit_id) : '');
+    setConditionnementSelectionne(ligne && ligne.conditionnement_id ? String(ligne.conditionnement_id) : '');
   }, [modal?.kind, modal?.item]);
 
   /** Lots disponibles pour le produit sélectionné. */
@@ -74,6 +79,14 @@ export function VentesModal({
     if (!produitSelectionne) return lotsData;
     return lotsData.filter((lot) => String(lot.produit_id) === produitSelectionne);
   }, [lotsData, produitSelectionne]);
+
+  /** Conditionnements disponibles pour le produit sélectionné. */
+  const conditionnementsDuProduit = useMemo(() => {
+    if (!produitSelectionne) return conditionnementsData;
+    return conditionnementsData
+      .filter((c) => c.produit_id === Number(produitSelectionne) && c.actif)
+      .sort((a, b) => a.quantite_base - b.quantite_base);
+  }, [conditionnementsData, produitSelectionne]);
 
   const extraireMessage = (error: unknown, defaut: string) => {
     const axiosError = error as {
@@ -117,6 +130,7 @@ export function VentesModal({
           vente_id: Number(formData.vente_id),
           produit_id: Number(formData.produit_id),
           lot_id: Number(formData.lot_id),
+          conditionnement_id: formData.conditionnement_id ? Number(formData.conditionnement_id) : null,
           quantite: Number(formData.quantite),
         };
 
@@ -186,6 +200,7 @@ export function VentesModal({
         vente_id: row ? String(row.vente_id) : '',
         produit_id: row ? String(row.produit_id) : '',
         lot_id: row ? String(row.lot_id) : '',
+        conditionnement_id: row && row.conditionnement_id ? String(row.conditionnement_id) : '',
         quantite: row ? String(row.quantite) : '',
       };
     }
@@ -216,6 +231,7 @@ export function VentesModal({
       if (!formData.vente_id) errors.vente_id = 'La vente est obligatoire.';
       if (!formData.produit_id) errors.produit_id = 'Le produit est obligatoire.';
       if (!formData.lot_id) errors.lot_id = 'Le lot est obligatoire.';
+      if (!formData.conditionnement_id) errors.conditionnement_id = 'Le conditionnement est obligatoire.';
       if (!formData.quantite || Number(formData.quantite) <= 0) {
         errors.quantite = 'La quantité est invalide.';
       }
@@ -387,6 +403,27 @@ export function VentesModal({
             </select>
             {errors.lot_id && <span className="form-error">{errors.lot_id}</span>}
           </div>
+          <div className="form-field form-field-full">
+            <label htmlFor="ligne-conditionnement">
+              Conditionnement <span className="required-mark">*</span>
+            </label>
+            <select
+              id="ligne-conditionnement"
+              name="conditionnement_id"
+              className="inline-input"
+              value={String(formData.conditionnement_id ?? '')}
+              onChange={(e) => onChange('conditionnement_id', e.target.value)}
+            >
+              <option value="">— Choisir un conditionnement —</option>
+              {conditionnementsDuProduit.map((row) => (
+                <option key={row.id} value={String(row.id)}>
+                  {row.unite?.nom} ({row.quantite_base} {row.unite?.abreviation || 'unité(s) de base'}) — {row.prix_vente} Ar
+                </option>
+              ))}
+            </select>
+            {errors.conditionnement_id && <span className="form-error">{errors.conditionnement_id}</span>}
+            <span className="form-hint">Le prix de vente dépend du conditionnement choisi.</span>
+          </div>
           <div className="form-field">
             <label htmlFor="ligne-quantite">
               Quantité <span className="required-mark">*</span>
@@ -402,7 +439,7 @@ export function VentesModal({
               onChange={(e) => onChange('quantite', e.target.value)}
             />
             {errors.quantite && <span className="form-error">{errors.quantite}</span>}
-            <span className="form-hint">Le prix unitaire provient du produit.</span>
+            <span className="form-hint">Quantité dans le conditionnement sélectionné.</span>
           </div>
         </>
       );

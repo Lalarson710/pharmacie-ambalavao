@@ -19,6 +19,7 @@ export interface CreateVenteLigneData {
   vente_id: number;
   produit_id: number;
   lot_id: number;
+  conditionnement_id?: number | null;
   quantite: number;
 }
 
@@ -26,6 +27,7 @@ export interface UpdateVenteLigneData {
   vente_id?: number;
   produit_id?: number;
   lot_id?: number;
+  conditionnement_id?: number | null;
   quantite?: number;
 }
 
@@ -155,6 +157,7 @@ export const ventesLignesApi = {
     const venteId = data.vente_id ?? (await lireSiNecessaire()).vente_id;
     const produitId = data.produit_id ?? (await lireSiNecessaire()).produit_id;
     const lotId = data.lot_id ?? (await lireSiNecessaire()).lot_id;
+    const conditionnementId = data.conditionnement_id ?? (await lireSiNecessaire()).conditionnement_id ?? null;
     const quantite = data.quantite ?? (await lireSiNecessaire()).quantite;
 
     // La suppression remet la quantite dans le stock, la recreation la re-sort.
@@ -162,7 +165,7 @@ export const ventesLignesApi = {
 
     const response = await apiClient.post<VenteLigne>(
       `/ventes/${venteId}/lignes`,
-      { vente_id: venteId, produit_id: produitId, lot_id: lotId, quantite }
+      { vente_id: venteId, produit_id: produitId, lot_id: lotId, conditionnement_id: conditionnementId, quantite }
     );
 
     return response.data;

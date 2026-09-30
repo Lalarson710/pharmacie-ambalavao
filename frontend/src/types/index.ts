@@ -79,6 +79,21 @@ export interface Unite {
   updated_at?: string;
 }
 
+export interface ProduitConditionnement {
+  id: number;
+  produit_id: number;
+  unite_id: number;
+  quantite_base: number;
+  prix_vente: string; // decimal(12,2)
+  code_barres: string | null;
+  est_unite_base: boolean;
+  actif: boolean;
+  unite?: Unite;
+  produit?: Produit;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Produit {
   id: number;
   categorie_id: number;
@@ -92,6 +107,7 @@ export interface Produit {
   actif: boolean;
   categorie?: Categorie;
   unite?: Unite;
+  conditionnements?: ProduitConditionnement[];
   created_at?: string;
   updated_at?: string;
 }
@@ -176,12 +192,15 @@ export interface AchatLigne {
   id: number;
   achat_id: number;
   produit_id: number;
+  conditionnement_id?: number | null;
   quantite: number;
+  quantite_base?: number | null;
   prix_unitaire: string; // decimal(12,2)
   montant: string; // decimal(12,2)
   numero_lot: string | null;
   date_peremption: string | null; // date
   produit?: Produit;
+  conditionnement?: ProduitConditionnement;
   created_at?: string;
   updated_at?: string;
 }
@@ -221,11 +240,15 @@ export interface VenteLigne {
   vente_id: number;
   produit_id: number;
   lot_id: number;
+  conditionnement_id?: number | null;
   quantite: number;
+  quantite_conditionnement?: number | null;
+  quantite_base?: number | null;
   prix_unitaire: string; // decimal(12,2)
   montant: string; // decimal(12,2)
   produit?: Produit;
   lot?: Lot;
+  conditionnement?: ProduitConditionnement;
   created_at?: string;
   updated_at?: string;
 }

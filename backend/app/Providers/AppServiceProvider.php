@@ -44,6 +44,11 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
+            \App\Application\Produit\Ports\ProduitConditionnementRepositoryInterface::class,
+            \App\Infrastructure\Produit\ProduitConditionnementRepository::class
+        );
+
+        $this->app->bind(
             \App\Application\Lot\Ports\LotRepositoryInterface::class,
             \App\Infrastructure\Lot\LotRepository::class
         );
