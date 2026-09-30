@@ -985,6 +985,229 @@ a { color: inherit; }
   cursor: not-allowed;
 }
 
+/* Bouton export moderne (statistiques, stock, ...) */
+.btn-export-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #16a34a 0%, #0f766e 100%);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, .28);
+  transition: transform .15s, box-shadow .15s, filter .15s;
+}
+
+.btn-export-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgba(15, 118, 110, .36);
+  filter: brightness(1.06);
+}
+
+.btn-export-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-export-primary:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MODAL D'EXPORTATION
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.export-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.export-modal-intro {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.export-period-label {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #16a34a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.export-period-value {
+  white-space: nowrap;
+}
+
+.export-modal-intro strong {
+  color: #14532d;
+  font-weight: 700;
+}
+
+.export-period-sep {
+  width: 1px;
+  height: 16px;
+  background: #86efac;
+}
+
+.export-section h4 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.export-datasets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.export-dataset {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+
+.export-dataset:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.export-dataset.is-selected {
+  border-color: var(--theme);
+  background: rgba(16, 133, 96, .07);
+  box-shadow: inset 0 0 0 1px var(--theme);
+}
+
+.export-dataset-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.export-dataset.is-selected .export-dataset-label {
+  color: var(--theme);
+}
+
+.export-dataset-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.export-formats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.export-format {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+}
+
+.export-format:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .10);
+}
+
+.export-format strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.export-format small {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.export-format.is-pdf { color: #dc2626; }
+.export-format.is-excel { color: #15803d; }
+.export-format.is-csv { color: #0369a1; }
+
+.export-format.is-selected.is-pdf { border-color: #dc2626; background: rgba(220, 38, 38, .06); }
+.export-format.is-selected.is-excel { border-color: #15803d; background: rgba(21, 128, 61, .06); }
+.export-format.is-selected.is-csv { border-color: #0369a1; background: rgba(3, 105, 161, .06); }
+
+.export-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.export-summary-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+.export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.export-actions .btn-ghost {
+  padding: 10px 18px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .stock-report-filter,
 .stock-date-filter {
   display: inline-flex;
